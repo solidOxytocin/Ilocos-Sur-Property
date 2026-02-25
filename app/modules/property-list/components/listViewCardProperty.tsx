@@ -1,13 +1,17 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
-import { FlatList, Image, Text, View } from "react-native";
+import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+
+import { useRouter } from "expo-router";
 import {
   MATERIAL_ICON_NAMES,
   MaterialIconName,
 } from "../constants/material-icon-names";
 import { Feature, Property } from "../constants/mock-properties";
 
-interface gridViewCardPropertyProps {
+const router = useRouter();
+
+interface ListViewCardPropertyProps {
   property: Property;
 }
 
@@ -52,31 +56,38 @@ function FeatureIconsComponent({
   }
 }
 
-export default function gridViewCardProperty({
-  property: property,
-}: gridViewCardPropertyProps) {
+export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
+  const renderItem = ({ item, index }: { item: Feature; index: number }) => {};
+
   return (
-    <View className="bg-white rounded-lg m-2  shadow-md shadow-gray-300  w-60">
+    <TouchableOpacity
+      onPress={() =>
+        router.push({
+          pathname: "/details",
+          params: { property: JSON.stringify(property) },
+        })
+      }
+      className="flex-row bg-white rounded-lg m-2 shadow-md shadow-gray-300 px-3 py-2"
+    >
       <Image
         source={{ uri: property.photo }}
-        className=" w-full h-24 rounded-lg"
-        resizeMode="cover"
+        className="w-36 h-36 rounded-sm"
       />
-      <View className="flex-1 justify-between py-4 px-5">
-        <View className=" p-3">
-          {/* Header */}
-          <View className="items-center">
-            <Text className="font-bold text-xl" numberOfLines={1}>
-              {property.city}
-            </Text>
-            <Text className="text-base" numberOfLines={1}>
-              {property.barangay}
-            </Text>
-          </View>
+
+      <View className="flex-1 ml-3 justify-between">
+        {/* Header */}
+        <View className="items-center">
+          <Text className="font-bold text-xl" numberOfLines={1}>
+            {property.city}
+          </Text>
+          <Text className="text-base" numberOfLines={1}>
+            {property.barangay}
+          </Text>
         </View>
 
         {/* Features */}
-        <View className="flex-col items-center">
+
+        <View className="flex-col items-start justify-start ">
           <FlatList
             data={property.features}
             renderItem={({ item, index }) => (
@@ -88,11 +99,6 @@ export default function gridViewCardProperty({
             )}
             numColumns={2}
             showsVerticalScrollIndicator={false}
-            columnWrapperStyle={{
-              justifyContent: "center",
-              paddingHorizontal: 8,
-            }}
-            contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
           />
         </View>
 
@@ -106,6 +112,7 @@ export default function gridViewCardProperty({
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
+export default ListViewCardProperty;

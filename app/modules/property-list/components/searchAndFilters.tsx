@@ -2,14 +2,14 @@ import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
-interface SearcAndFiltersProps {
+interface SearchAndFiltersProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isListView: boolean;
   setListView: (isListView: boolean) => void;
 }
 
-export function SearcAndFilters({ searchQuery, setSearchQuery, isListView, setListView }: SearcAndFiltersProps) {
+export function SearchAndFilters({ searchQuery, setSearchQuery, isListView, setListView }: SearchAndFiltersProps) {
   return (
        <View className = "flex-row px-4 py-3 bg-white">
           <TextInput
@@ -32,4 +32,4 @@ export function SearcAndFilters({ searchQuery, setSearchQuery, isListView, setLi
        </View>
   )
 }
-export default  SearcAndFilters
+export default SearchAndFilters
