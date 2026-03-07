@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export default function DetailsHeader({ properties }: HeaderProps) {
   return (
-    <View className="flex-row px-4 py-3 border-b border-gray-200 ">
+    <View className="flex-row px-4 py-3 border border-gray-200 ">
       <TouchableOpacity
         className="mr-4"
         onPress={() => {

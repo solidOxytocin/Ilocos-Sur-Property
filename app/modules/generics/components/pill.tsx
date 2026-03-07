@@ -10,7 +10,7 @@ interface PillProps {
   iconSize?: number;
   iconColor?: string;
   textSize?: string;
-  font?: string;
+  weight?: string;
   backGroundColor?: string;
 }
 
@@ -20,17 +20,19 @@ export default function Pill({
   icon,
   iconSize = 11,
   iconColor = "#fff",
-  textSize = "xs",
-  font = "semi-bold",
+  textSize = "text-xs",
+  weight = "font-semibold",
   backGroundColor,
 }: PillProps) {
+
+
   return (
     <View
-      className={`flex-row items-center px-3 gap-1 py-1.5 ${backGroundColor || "bg-blue-700"} rounded-full ml-2`}
+      className={`flex-row items-center px-3 gap-1 py-1.5 ${backGroundColor || "bg-blue-700"} rounded-full ml-2 mr-1`}
     >
       <MaterialCommunityIcons name={icon} size={iconSize} color={iconColor} />
       <Text
-        className={`text-${textSize || "xs"} ${textColor || "text-white"} font-${font || "semi-bold"}`}
+        className={`${textSize || "text-xs"} ${textColor || "text-white"} ${weight || "font-semibold"}`}
       >
         {text}
       </Text>

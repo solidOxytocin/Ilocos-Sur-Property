@@ -13,7 +13,8 @@ export default function PropertyDetails() {
   const { property } = useLocalSearchParams();
   const parsedProperty = property ? JSON.parse(property as string) : null;
   const properties = parsedProperty as Property;
-  console.log("Parsed Property:", parsedProperty);
+  const ICON_SIZE = 14;
+  const TEXT_SIZE = "base";
   return (
     <SafeAreaView className=" flex-1 bg-gray-100">
       <DetailsHeader properties={properties} />
@@ -36,7 +37,7 @@ export default function PropertyDetails() {
           </View>
 
           <View className="flex-row flex-wrap">
-            <Text className="text-lg font-bold mr-2">Area:</Text>
+            <Text className="text-lg  font-bold mr-2">Area:</Text>
             <Text className="text-lg text-orange-400 font-bold">
               {properties?.lotArea?.toString()} SQM
             </Text>
@@ -50,6 +51,8 @@ export default function PropertyDetails() {
                   icon={
                     FEATURE_ICONS[feature.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY]
                   }
+                  iconSize={ICON_SIZE}
+                  textSize={TEXT_SIZE}
                 />
               </View>
             ))}

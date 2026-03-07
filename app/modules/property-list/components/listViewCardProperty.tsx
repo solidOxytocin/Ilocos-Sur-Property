@@ -1,6 +1,9 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
+import { color, pillColor } from "@/app/theme/color";
+import { size } from "@/app/theme/size";
+import { typography } from "@/app/theme/typography";
 import { useRouter } from "expo-router";
 import Pill from "../../generics/components/pill";
 import {
@@ -25,7 +28,18 @@ function FeatureIconsComponent({
   index,
   length,
 }: FeatureIconsComponentProps) {
-  const MAX_FEATURE = 4;
+  const MAX_FEATURE = size.gridMaxFeatures;
+
+  //color
+  const ICON_COLOR = pillColor.iconColor;
+  const TEXT_COLOR = pillColor.textColorSecondary;
+  const BACKGROUND_COLOR = pillColor.backGroundColorSecondary;
+
+  //Size
+  const ICON_SIZE = size.pillIconSize;
+  const TEXT_SIZE = typography.pill.size;
+  const TEXT_WEIGHT = typography.pill.weight;
+
   if (index > MAX_FEATURE) {
     return null;
   }
@@ -38,10 +52,12 @@ function FeatureIconsComponent({
       <Pill
         text={length - MAX_FEATURE + "+"}
         icon={iconName}
-        iconSize={14}
-        iconColor="#3B82F6"
-        backGroundColor="bg-blue-50"
-        textColor="text-gray-700"
+        iconSize={ICON_SIZE}
+        iconColor={ICON_COLOR}
+        backGroundColor={BACKGROUND_COLOR}
+        textColor={TEXT_COLOR}
+        textSize={TEXT_SIZE}
+        weight={TEXT_WEIGHT}
       />
     );
   } else {
@@ -49,10 +65,12 @@ function FeatureIconsComponent({
       <Pill
         text={item.name}
         icon={iconName}
-        iconSize={14}
-        iconColor="#3B82F6"
-        backGroundColor="bg-blue-50"
-        textColor="text-gray-700"
+        iconSize={ICON_SIZE}
+        iconColor={ICON_COLOR}
+        backGroundColor={BACKGROUND_COLOR}
+        textColor={TEXT_COLOR}
+        textSize={TEXT_SIZE}
+        weight={TEXT_WEIGHT}
       />
     );
   }
@@ -63,7 +81,7 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
 
   return (
     <TouchableOpacity
-      className="flex-col bg-white rounded-lg m-2 shadow-md shadow-gray-300 "
+      className={`flex-col ${color.bgWhite} rounded-lg m-2 shadow-md ${ color.shadowGray}  `}
       onPress={() => {
         router.push({
           pathname: "/details",
@@ -76,8 +94,8 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
         source={{ uri: property.media[0]?.url }}
       />
       <View className="flex-col justify-center items-center gap-1">
-        <Text className=" font-bold "> {property.location.city}</Text>
-        <Text className="  "> {property.location.barangay}</Text>
+        <Text className={`${typography.title.weight} ${typography.title.size}`}> {property.location.city}</Text>
+        <Text className={`${typography.normal.weight} ${typography.normal.size}`}> {property.location.barangay}</Text>
       </View>
       <View className="flex-row m-2">
         {property.features.slice(0, 4).map((item, index) => {
@@ -93,11 +111,11 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
       </View>
 
       <View className=" flex-row justify-evenly mb-3">
-        <Text className=" font-bold text-orange-400 ">
+        <Text className={`${typography.headerBold.weight} ${typography.headerBold.size} ${color.txtOrange} `}>
           {" "}
           {property.lotArea} SQM
         </Text>
-        <Text className=" font-bold text-blue-600"> ₱{property.price}</Text>
+        <Text className={`${typography.headerBold.weight} ${typography.headerBold.size} ${color.txtBlue} `}> ₱{property.price}</Text>
       </View>
     </TouchableOpacity>
   );
