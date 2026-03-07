@@ -3,7 +3,10 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DetailsHeader from "./modules/details-view/components/detailsHeader";
 import Pill from "./modules/generics/components/pill";
-import { MaterialIconName } from "./modules/property-list/constants/material-icon-names";
+import {
+  EMPTY_ICON_KEY,
+  FEATURE_ICONS,
+} from "./modules/property-list/constants/material-icon-names";
 import { Property } from "./modules/property-list/constants/mock-properties";
 
 export default function PropertyDetails() {
@@ -44,7 +47,9 @@ export default function PropertyDetails() {
               <View key={index} className="mt-2">
                 <Pill
                   text={feature.name}
-                  icon={feature.icon as MaterialIconName}
+                  icon={
+                    FEATURE_ICONS[feature.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY]
+                  }
                 />
               </View>
             ))}

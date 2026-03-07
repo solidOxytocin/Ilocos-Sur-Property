@@ -1,11 +1,12 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Pill from "../../generics/components/pill";
 import {
-  MATERIAL_ICON_NAMES,
-  MaterialIconName,
+  EMPTY_ICON_KEY,
+  FEATURE_ICONS,
+  MORE_ICON_KEY,
 } from "../constants/material-icon-names";
 import { Feature, Property } from "../constants/mock-properties";
 
@@ -29,36 +30,30 @@ function FeatureIconsComponent({
     return null;
   }
 
-  const iconName = MATERIAL_ICON_NAMES.includes(item.icon as MaterialIconName)
-    ? (item.icon as MaterialIconName)
-    : ("help-icon" as MaterialIconName);
+  let iconName = FEATURE_ICONS[item.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
+
   if (index === MAX_FEATURE && length > MAX_FEATURE) {
+    iconName = FEATURE_ICONS[MORE_ICON_KEY] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
     return (
-      <View className="bg-blue-50 rounded-full px-3 py-1.5 flex-row items-center">
-        <MaterialCommunityIcons
-          name="dots-horizontal"
-          color="#3B82F6"
-          size={14}
-        />
-        <Text
-          className="text-xs text-blue-600 font-medium ml-1"
-          numberOfLines={1}
-        >
-          {length - MAX_FEATURE}+
-        </Text>
-      </View>
+      <Pill
+        text={length - MAX_FEATURE + "+"}
+        icon={iconName}
+        iconSize={14}
+        iconColor="#3B82F6"
+        backGroundColor="bg-blue-50"
+        textColor="text-gray-700"
+      />
     );
   } else {
     return (
-      <View className="bg-blue-50 rounded-full px-3 py-1.5 flex-row items-center">
-        <MaterialCommunityIcons name={iconName} color="#3B82F6" size={14} />
-        <Text
-          className="text-xs text-gray-700 font-medium ml-1.5"
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
-      </View>
+      <Pill
+        text={item.name}
+        icon={iconName}
+        iconSize={14}
+        iconColor="#3B82F6"
+        backGroundColor="bg-blue-50"
+        textColor="text-gray-700"
+      />
     );
   }
 }

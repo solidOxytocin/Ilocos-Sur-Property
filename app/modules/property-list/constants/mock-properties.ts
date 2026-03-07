@@ -1,12 +1,12 @@
 // Define the Property type
 export interface Feature {
   name: string;
-  icon: string;
+  key: string;
 }
 
 export interface Amenity {
   name: string;
-  icon: string;
+  key: string;
 }
 export interface Coordinate {
   lat: number;
@@ -78,8 +78,8 @@ export const mockProperties: Property[] = [
     ],
 
     features: [
-      { name: "Main Road", icon: "road" },
-      { name: "Hospital", icon: "hospital" },
+      { name: "Main Road", key: "road" },
+      { name: "Hospital", key: "hospital" },
     ],
 
     amenities: [],
@@ -116,9 +116,9 @@ export const mockProperties: Property[] = [
     ],
 
     features: [
-      { name: "Main Road", icon: "road" },
-      { name: "School", icon: "school" },
-      { name: "Hospital", icon: "hospital" },
+      { name: "Main Road", key: "road" },
+      { name: "School", key: "school" },
+      { name: "Hospital", key: "hospital" },
     ],
 
     amenities: [],
@@ -156,10 +156,10 @@ export const mockProperties: Property[] = [
     ],
 
     features: [
-      { name: "Market", icon: "store" },
-      { name: "University", icon: "school" },
-      { name: "Hospital", icon: "hospital" },
-      { name: "Main Road", icon: "road" },
+      { name: "Market", key: "store" },
+      { name: "University", key: "school" },
+      { name: "Hospital", key: "hospital" },
+      { name: "Main Road", key: "road" },
     ],
 
     amenities: [],
@@ -195,7 +195,7 @@ export const mockProperties: Property[] = [
       },
     ],
 
-    features: [{ name: "Parking", icon: "parking" }],
+    features: [{ name: "Parking", key: "parking" }],
 
     amenities: [],
 
@@ -232,11 +232,11 @@ export const mockProperties: Property[] = [
     ],
 
     features: [
-      { name: "Beach Spot", icon: "beach" },
-      { name: "Market", icon: "store" },
-      { name: "University", icon: "school" },
-      { name: "Hospital", icon: "hospital" },
-      { name: "Main Road", icon: "road" },
+      { name: "Beach Spot", key: "beach" },
+      { name: "Market", key: "store" },
+      { name: "University", key: "school" },
+      { name: "Hospital", key: "hospital" },
+      { name: "Main Road", key: "road" },
     ],
 
     amenities: [],
@@ -273,7 +273,7 @@ export const mockProperties: Property[] = [
       },
     ],
 
-    features: [{ name: "Mall Nearby", icon: "shopping" }],
+    features: [{ name: "Mall Nearby", key: "shopping" }],
 
     amenities: [],
 

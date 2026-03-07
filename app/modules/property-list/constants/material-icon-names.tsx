@@ -1,3 +1,6 @@
+export const EMPTY_ICON_KEY = "empty";
+export const MORE_ICON_KEY = "more";
+
 export type MaterialIconName =
   | "road"
   | "hospital"
@@ -6,8 +9,8 @@ export type MaterialIconName =
   | "parking"
   | "beach"
   | "shopping"
-  | "help-circle";
-
+  | "help-circle"
+  | "dots-horizontal";
 
 export const MATERIAL_ICON_NAMES = [
   "road",
@@ -18,6 +21,16 @@ export const MATERIAL_ICON_NAMES = [
   "beach",
   "shopping",
   "help-circle",
-] as const; 
-// This type includes all possible icon values that could be used in features
-export type FeatureIconName = MaterialIconName;
+] as const;
+
+export const FEATURE_ICONS: Record<string, MaterialIconName> = {
+  road: "road",
+  hospital: "hospital",
+  school: "school",
+  store: "store",
+  parking: "parking",
+  beach: "beach",
+  shopping: "shopping",
+  empty: "help-circle",
+  more: "dots-horizontal",
+};

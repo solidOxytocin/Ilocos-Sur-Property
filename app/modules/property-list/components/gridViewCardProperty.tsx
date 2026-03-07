@@ -3,7 +3,8 @@ import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import Pill from "../../generics/components/pill";
 import {
-  MATERIAL_ICON_NAMES,
+  EMPTY_ICON_KEY,
+  FEATURE_ICONS,
   MaterialIconName,
 } from "../constants/material-icon-names";
 import { Feature, Property } from "../constants/mock-properties";
@@ -27,22 +28,14 @@ function FeatureIconsComponent({
   if (index > MAX_FEATURE) {
     return null;
   }
-  let iconName: MaterialIconName = MATERIAL_ICON_NAMES.includes(
-    item.icon as MaterialIconName,
-  )
-    ? (item.icon as MaterialIconName)
-    : "help-circle";
+  let iconName = FEATURE_ICONS[item.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
   if (index === MAX_FEATURE && length > MAX_FEATURE) {
     iconName = "dots-horizontal" as MaterialIconName;
     return (
-      <Pill
-        text={length - MAX_FEATURE + "+"}
-        icon={iconName as MaterialIconName}
-        iconSize={9}
-      />
+      <Pill text={length - MAX_FEATURE + "+"} icon={iconName} iconSize={9} />
     );
   } else {
-    return <Pill text={item.name} icon={iconName as MaterialIconName} />;
+    return <Pill text={item.name} icon={iconName} />;
   }
 }
 
