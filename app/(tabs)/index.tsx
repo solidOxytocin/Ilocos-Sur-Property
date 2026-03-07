@@ -15,8 +15,25 @@ export default function PropertyList() {
 
   // Filter properties based on search query
   const data = mockProperties;
-  const filteredProperties = data.filter((property) =>
-    property.address.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredProperties = data.filter(
+    (property) =>
+      property.location.city
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      property.location.barangay
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      property.location.address
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      property.price
+        .toString()
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      property.lotArea
+        ?.toString()
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   );
 
   // Render property item based on current view mode
@@ -52,16 +69,13 @@ export default function PropertyList() {
       />
 
       {/* Property List/Grid in renderItem */}
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 flexjustify-center items-center mt-3">
         <FlatList
           key={numColumns}
           data={filteredProperties}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           numColumns={numColumns}
-          columnWrapperStyle={
-            isListView ? undefined : { justifyContent: "flex-start" }
-          }
           showsVerticalScrollIndicator={false}
         />
       </View>

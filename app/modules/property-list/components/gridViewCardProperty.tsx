@@ -1,13 +1,12 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
+import Pill from "../../generics/components/pill";
 import {
   MATERIAL_ICON_NAMES,
   MaterialIconName,
 } from "../constants/material-icon-names";
 import { Feature, Property } from "../constants/mock-properties";
-const router = useRouter();
 
 interface gridViewCardPropertyProps {
   property: Property;
@@ -25,91 +24,76 @@ function FeatureIconsComponent({
   length,
 }: FeatureIconsComponentProps) {
   const MAX_FEATURE = 4;
-  const iconName: MaterialIconName = MATERIAL_ICON_NAMES.includes(
+  if (index > MAX_FEATURE) {
+    return null;
+  }
+  let iconName: MaterialIconName = MATERIAL_ICON_NAMES.includes(
     item.icon as MaterialIconName,
   )
     ? (item.icon as MaterialIconName)
     : "help-circle";
-  if (index > MAX_FEATURE) {
-    return null;
-  }
   if (index === MAX_FEATURE && length > MAX_FEATURE) {
+    iconName = "dots-horizontal" as MaterialIconName;
     return (
-      <View className="  bg-gray-200 rounded-lg m-1 px-2 py-1 flex-row gap-1">
-        <MaterialCommunityIcons
-          name="dots-horizontal"
-          color="black"
-          size={20}
-        />{" "}
-        <Text className="text-sm">+{length - MAX_FEATURE} more </Text>
-      </View>
+      <Pill
+        text={length - MAX_FEATURE + "+"}
+        icon={iconName as MaterialIconName}
+        iconSize={9}
+      />
     );
   } else {
-    return (
-      <View className=" m-1 bg-gray-200 rounded-lg px-2 py-1 flex-row items-center">
-        <MaterialCommunityIcons name={iconName} color="black" size={19} />
-        <Text className=" text-xs ml-1">{item.name}</Text>
-      </View>
-    );
+    return <Pill text={item.name} icon={iconName as MaterialIconName} />;
   }
 }
 
 export default function gridViewCardProperty({
   property: property,
 }: gridViewCardPropertyProps) {
+  const router = useRouter();
   return (
     <TouchableOpacity
-      onPress={() =>
+      className=" flex-col bg-white rounded-lg  gap-2 m-2 w-[13rem]"
+      onPress={() => {
         router.push({
           pathname: "/details",
           params: { property: JSON.stringify(property) },
-        })
-      }
-      className="bg-white rounded-lg m-2  shadow-md shadow-gray-300  w-60"
+        });
+      }}
     >
       <Image
-        source={{ uri: property.photo }}
-        className=" w-full h-24 rounded-lg"
-        resizeMode="cover"
+        source={{ uri: property.media[0]?.url }}
+        className="w-full h-40 rounded-t-lg mb-2 "
       />
-      <View className="flex-1 justify-between py-4 px-5">
-        <View className=" p-3">
-          {/* Header */}
-          <View className="items-center">
-            <Text className="font-bold text-xl" numberOfLines={1}>
-              {property.city}
-            </Text>
-            <Text className="text-base" numberOfLines={1}>
-              {property.barangay}
-            </Text>
-          </View>
-        </View>
 
-        {/* Features */}
-        <View className="flex-col items-start justify-start ">
-          <FlatList
-            data={property.features}
-            renderItem={({ item, index }) => (
+      <View className="flex-1 ">
+        <View className=" flex-col justify-center items-center mb-2">
+          <Text className="text-lg font-medium text-gray-800">
+            {property.location.city}
+          </Text>
+          <Text className="text-lg font-medium text-gray-800">
+            {property.location.barangay}
+          </Text>
+        </View>
+        <View className="flex-row flex-wrap gap-1 flex-">
+          {property.features.slice(0, 4).map((feature, index) => {
+            return (
               <FeatureIconsComponent
-                item={item}
+                key={index}
+                item={feature}
                 index={index + 1}
                 length={property.features.length}
               />
-            )}
-            numColumns={2}
-            showsVerticalScrollIndicator={false}
-          />
+            );
+          })}
         </View>
-
-        {/* Push to bottom */}
-        <View className="flex-row justify-evenly">
-          <Text className="text-lg text-orange-400 font-bold">
-            {property.sqm}sqm
-          </Text>
-          <Text className="text-lg text-blue-500 font-bold">
-            {property.price}
-          </Text>
-        </View>
+      </View>
+      <View className="flex-row justify-evenly mb-2 ">
+        <Text className="text-lg font-bold text-orange-400">
+          {property.lotArea}SQM
+        </Text>
+        <Text className="text-lg font-bold text-blue-800">
+          ₱{property.price}
+        </Text>
       </View>
     </TouchableOpacity>
   );

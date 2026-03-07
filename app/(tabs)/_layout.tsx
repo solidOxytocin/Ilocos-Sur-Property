@@ -9,10 +9,11 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Properties",
+
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
               name="home-outline"
-              size={22}
+              size={24}
               color={focused ? "blue" : "gray"}
             />
           ),
@@ -32,6 +33,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen name="profile" />
+      <Tabs.Screen
+        name="contact"
+        options={{
+          title: "Contact",
+          tabBarIcon: ({ focused }) => (
+            <MaterialCommunityIcons
+              name="phone-outline"
+              size={24}
+              color={focused ? "blue" : "gray"}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

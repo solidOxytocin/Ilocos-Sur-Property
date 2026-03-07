@@ -7,7 +7,7 @@ interface HeaderProps {
   setIsListView?: (value: boolean) => void;
 }
 
-export function Header({ isListView, setIsListView }: HeaderProps) {
+export function ListHeader({ isListView, setIsListView }: HeaderProps) {
   return (
     <View className="flex-row px-4 py-3 border-b border-gray-200 ">
       <Pressable className=" justify-center items-center " onPress={() => {}}>
@@ -18,4 +18,4 @@ export function Header({ isListView, setIsListView }: HeaderProps) {
   );
 }
 
-export default Header;
+export default ListHeader;
