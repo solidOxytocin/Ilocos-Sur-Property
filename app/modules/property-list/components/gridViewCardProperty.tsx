@@ -5,7 +5,7 @@ import Pill from "../../generics/components/pill";
 import {
   EMPTY_ICON_KEY,
   FEATURE_ICONS,
-  MaterialIconName,
+  MORE_ICON_KEY
 } from "../constants/material-icon-names";
 import { Feature, Property } from "../constants/mock-properties";
 
@@ -30,7 +30,7 @@ function FeatureIconsComponent({
   }
   let iconName = FEATURE_ICONS[item.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
   if (index === MAX_FEATURE && length > MAX_FEATURE) {
-    iconName = "dots-horizontal" as MaterialIconName;
+    iconName = FEATURE_ICONS[MORE_ICON_KEY] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
     return (
       <Pill text={length - MAX_FEATURE + "+"} icon={iconName} iconSize={9} />
     );
