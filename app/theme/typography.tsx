@@ -13,6 +13,15 @@ interface TextTheme {
 }
 
 export const typography = {
+  bigTextBold:{
+    size: "text-3xl ",
+    weight: "font-bold",
+  },
+  bigText:{
+    size: "text-3xl ",
+    weight: "font-medium",
+  }
+  ,
   title: {
     size: "text-xl",
     weight: "font-bold",
@@ -23,7 +32,7 @@ export const typography = {
   },
   header: {
     size: "text-lg",
-    weight: "font-normal",
+    weight: "font-medium",
   },
   normalBold: {
     size: "text-base",
@@ -35,6 +44,10 @@ export const typography = {
   },
   pill:{
     size: "text-xs",
+    weight: "font-semibold",
+  },
+  detailPill:{
+    size: "text-base",
     weight: "font-semibold",
   }
   

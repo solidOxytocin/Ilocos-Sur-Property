@@ -95,10 +95,10 @@ export default function gridViewCardProperty({
 
       <View className="flex-1 ">
         <View className=" flex-col justify-center items-center mb-2">
-          <Text className="text-lg font-medium text-gray-800">
+          <Text className={`${typography.header.weight} ${typography.header.size}  `}>
             {property.location.city}
           </Text>
-          <Text className="text-lg font-medium text-gray-800">
+          <Text className={`${typography.normal.weight} ${typography.normal.size}  `}>
             {property.location.barangay}
           </Text>
         </View>

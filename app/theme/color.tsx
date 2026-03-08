@@ -3,18 +3,21 @@ export const color = {
   //Main Colors
   bgPrimary: "bg-blue-700",
   bgSecondary: "bg-blue-50",
+  bgGray: "bg-gray-100",
 
   //Text Colors
-  txtBlack: "#111827",
+  txtBlack: "#text-gray-800",
   txtBlue: "text-blue-600",
   txtWhite: "text-white",
   txtGray: "text-gray-700",
+  txtGrayParagraph: "text-gray-600",
   txtOrange: "text-orange-400",
 
   //Icon Colors
   iconPrimary: "#3B82F6",
   iconSecondary: "#fff",
   featherColorPrimary: "blue",
+  iconBlack: "black",
 
  
 

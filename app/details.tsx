@@ -8,15 +8,18 @@ import {
   FEATURE_ICONS,
 } from "./modules/property-list/constants/material-icon-names";
 import { Property } from "./modules/property-list/constants/mock-properties";
+import { color } from "./theme/color";
+import { size } from "./theme/size";
+import { typography } from "./theme/typography";
 
 export default function PropertyDetails() {
   const { property } = useLocalSearchParams();
   const parsedProperty = property ? JSON.parse(property as string) : null;
   const properties = parsedProperty as Property;
-  const ICON_SIZE = 14;
-  const TEXT_SIZE = "base";
+  const ICON_SIZE = size.pillDetailsIcon;
+  const TEXT_SIZE = typography.detailPill.size;
   return (
-    <SafeAreaView className=" flex-1 bg-gray-100">
+    <SafeAreaView className={` flex-1 ${color.bgGray}`}>
       <DetailsHeader properties={properties} />
       <Image
         source={{ uri: properties?.media[0]?.url }}
@@ -25,21 +28,29 @@ export default function PropertyDetails() {
 
       <View className="flex-1  justify-between px-4 mt-4 gap-1 ml-2">
         <View className="gap-1">
-          <Text className="text-3xl font-bold mb-2">
+          <Text className={`${typography.bigTextBold.size} ${typography.bigTextBold.weight} mb-2`}>
             {properties?.location.address} , {properties?.location.barangay},
             {properties?.location.city}
           </Text>
           <View className="flex-row flex-wrap">
-            <Text className="text-lg font-bold mr-2">Price:</Text>
-            <Text className="text-lg text-blue-500 font-bold">
+            <Text className={`${typography.headerBold.size} ${typography.headerBold.weight} mr-2`}>Price:</Text>
+            <Text className={`${typography.headerBold.size} ${typography.headerBold.weight} ${color.txtBlue}`}>
               ₱{properties?.price.toString().toLocaleString()}
             </Text>
           </View>
 
           <View className="flex-row flex-wrap">
-            <Text className="text-lg  font-bold mr-2">Area:</Text>
-            <Text className="text-lg text-orange-400 font-bold">
-              {properties?.lotArea?.toString()} SQM
+            <Text className={`
+              ${typography.headerBold.size} 
+              ${typography.headerBold.weight} 
+              mr-2`}>Area:
+            </Text>
+            <Text className={`
+              ${typography.headerBold.size} 
+              ${typography.headerBold.weight} 
+              ${color.txtOrange}`}>
+              {properties?.lotArea?.toString()} 
+              SQM
             </Text>
           </View>
           {/* <Text className="text-lg font-bold">Features:</Text> */}
@@ -59,13 +70,24 @@ export default function PropertyDetails() {
           </View>
 
           <View className="flex-row flex-wrap">
-            <Text className="text-lg font-bold mr-2">Description:</Text>
-            <Text className="text-lg text-gray-700">{properties?.details}</Text>
+            <Text className={`
+              ${typography.headerBold.size} 
+              ${typography.headerBold.weight} 
+              mr-2`}>Description:</Text>
+            <Text className={`
+              ${typography.headerBold.size} 
+              ${color.txtGrayParagraph}`}
+            >
+              {properties?.details}
+            </Text>
           </View>
         </View>
         <View className=" justify-center">
           <TouchableOpacity
-            className=" rounded-md bg-blue-600 mb-5"
+            className={`
+              ${color.bgPrimary} 
+              rounded-md 
+              mb-5`}
             onPress={() => {
               // Handle the button press, e.g., navigate to an inquiry form or open a contact modal
               console.log(
@@ -74,7 +96,12 @@ export default function PropertyDetails() {
               );
             }}
           >
-            <Text className="text-lg font-bold text-white self-center py-2">
+            <Text className={`
+              ${typography.headerBold.size} 
+              ${typography.headerBold.weight} 
+              ${color.txtWhite}
+              self-center 
+              py-2`}>
               Inquire
             </Text>
           </TouchableOpacity>

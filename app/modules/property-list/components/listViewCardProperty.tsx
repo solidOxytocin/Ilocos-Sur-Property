@@ -93,9 +93,13 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
         className="w-full h-40 rounded-t-lg mb-1"
         source={{ uri: property.media[0]?.url }}
       />
-      <View className="flex-col justify-center items-center gap-1">
-        <Text className={`${typography.title.weight} ${typography.title.size}`}> {property.location.city}</Text>
-        <Text className={`${typography.normal.weight} ${typography.normal.size}`}> {property.location.barangay}</Text>
+      <View className="flex-col   justify-center items-center gap-1">
+        <Text className={`${typography.header.weight} ${typography.header.size}  `}>
+          {property.location.city}
+        </Text>
+        <Text className={`${typography.normal.weight} ${typography.normal.size} `}>
+          {property.location.barangay}
+        </Text>
       </View>
       <View className="flex-row m-2">
         {property.features.slice(0, 4).map((item, index) => {
