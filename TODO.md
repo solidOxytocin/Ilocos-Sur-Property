@@ -9,13 +9,22 @@
 - [x] Grid View
 - [x] Pills Component
 - [x] Improve Models
-- [] Theme
-- [] Dark Mode
+- [x] Theme
+
+Follow Up:
+- [] Dark Mode 
 - [] Contacts View
+- [] Settings?
+- [] Coordinate to Map
 
 ## 2. Back-end
 
-    ### 2.a Search For Backend Stack
-    ### 2.a Search For Backend Stack
+### 2.a Search For Backend Stack
+- [ ] R&D backend stack
 
-- [x] API for fetching properties
+### 2.b Setup Backend
+- [ ] Prerequisites
+- [ ] Installation
+
+### 2.c Backend Development
+- [ ] API for fetching properties
