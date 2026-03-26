@@ -11,7 +11,7 @@ import {
   FEATURE_ICONS,
   MORE_ICON_KEY,
 } from "../constants/material-icon-names";
-import { Feature, Property } from "../constants/mock-properties";
+import { Feature, Property } from "../../../constants/mock/mock-properties";
 
 interface ListViewCardPropertyProps {
   property: Property;
@@ -102,7 +102,7 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
         </Text>
       </View>
       <View className="flex-row m-2">
-        {property.features.slice(0, 4).map((item, index) => {
+        {(property.features ?? [] ).slice(0, 4).map((item, index) => {
           return (
             <FeatureIconsComponent
               key={index}

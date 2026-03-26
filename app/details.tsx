@@ -7,7 +7,7 @@ import {
   EMPTY_ICON_KEY,
   FEATURE_ICONS,
 } from "./modules/property-list/constants/material-icon-names";
-import { Property } from "./modules/property-list/constants/mock-properties";
+import { Property } from "./constants/mock/mock-properties";
 import { color } from "./theme/color";
 import { size } from "./theme/size";
 import { typography } from "./theme/typography";

@@ -1,21 +1,41 @@
 import GridViewCardProperty from "@/app/modules/property-list/components/gridViewCardProperty";
 import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
 import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   mockProperties,
   Property,
-} from "../modules/property-list/constants/mock-properties";
+} from "../constants/mock/mock-properties";
+import { PROPERTY } from "../constants/paths";
+import { getProperties } from "../service/property-service";
 
-export default function PropertyList() {
+export  default function PropertyList() {
   const [isListView, setIsListView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [properties, setProperties] = useState<Property[]>([]); 
+  const [loading, setLoading] = useState(true);
 
+  useEffect(()=>{
+    async function fetchData() {
+      if(process.env.EXPO_PUBLIC_IS_MOCK){
+        setProperties(mockProperties)
+      }
+      else{
+        const data = await getProperties();
+        setProperties(data)
+      }
+     
+      console.log("Properties", properties)
+      setLoading(false)
+    }
+     fetchData();
+  },[])
   // Filter properties based on search query
-  const data = mockProperties;
-  const filteredProperties = data.filter(
+
+
+  const filteredProperties = properties.filter(
     (property) =>
       property.location.city
         .toLowerCase()
@@ -82,3 +102,5 @@ export default function PropertyList() {
     </SafeAreaView>
   );
 }
+
+ 

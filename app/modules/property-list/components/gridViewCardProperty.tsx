@@ -10,7 +10,7 @@ import {
   FEATURE_ICONS,
   MORE_ICON_KEY,
 } from "../constants/material-icon-names";
-import { Feature, Property } from "../constants/mock-properties";
+import { Feature, Property } from "../../../constants/mock/mock-properties";
 
 interface gridViewCardPropertyProps {
   property: Property;
@@ -103,7 +103,7 @@ export default function gridViewCardProperty({
           </Text>
         </View>
         <View className="flex-row flex-wrap gap-1 flex-">
-          {property.features.slice(0, 4).map((feature, index) => {
+          {(property.features ?? []).slice(0, 4).map((feature, index) => {
             return (
               <FeatureIconsComponent
                 key={index}

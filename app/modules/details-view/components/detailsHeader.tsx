@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Property } from "../../property-list/constants/mock-properties";
+import { Property } from "../../../constants/mock/mock-properties";
 
 interface HeaderProps {
   properties: Property;
