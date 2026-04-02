@@ -28,9 +28,9 @@ function FeatureIconsComponent({
   const MAX_FEATURE = size.gridMaxFeatures;
 
   //Color
-  const ICON_COLOR = "#fff";
-  const BACKGROUND_COLOR = "bg-blue-700";
-  const TEXT_COLOR = "text-white";
+  const ICON_COLOR = "#3B82F6";
+  const BACKGROUND_COLOR = "bg-blue-50 border border-blue-100";
+  const TEXT_COLOR = "text-gray-700";
 
   //Size
   const ICON_SIZE = size.pillIconSize;
@@ -101,7 +101,7 @@ export default function gridViewCardProperty({
             {property.location.barangay}
           </Text>
         </View>
-        <View className="flex-row flex-wrap gap-1 flex-">
+        <View className="flex-row flex-wrap justify-center gap-1 mx-2">
           {(property.features ?? []).slice(0, 4).map((feature, index) => {
             return (
               <FeatureIconsComponent
