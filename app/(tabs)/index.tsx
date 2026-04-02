@@ -10,6 +10,7 @@ import {
 } from "../constants/mock/mock-properties";
 import { PROPERTY } from "../constants/paths";
 import { getProperties } from "../service/property-service";
+import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
 
 export  default function PropertyList() {
   const [isListView, setIsListView] = useState(false);
@@ -19,6 +20,7 @@ export  default function PropertyList() {
 
   useEffect(()=>{
     async function fetchData() {
+       console.log("is MOCK: ", process.env.EXPO_PUBLIC_IS_MOCK)
       if(process.env.EXPO_PUBLIC_IS_MOCK){
         setProperties(mockProperties)
       }
@@ -27,7 +29,7 @@ export  default function PropertyList() {
         setProperties(data)
       }
      
-      console.log("Properties", properties)
+     
       setLoading(false)
     }
      fetchData();
@@ -56,15 +58,29 @@ export  default function PropertyList() {
   );
 }, [properties, searchQuery]);
 
+  const width = useWindowDimensions().width;
+  const isWebDesktop = width >= 1024;
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
+
+  const selectedProperty = useMemo(() => {
+    if (!selectedPropertyId) return null;
+    return properties.find(p => p.id === selectedPropertyId) || null;
+  }, [selectedPropertyId, properties]);
+
   // Render property item based on current view mode
   const renderItem = ({ item }: { item: Property }) => {
     if (isListView) {
-      return <ListViewCardProperty property={item} />;
+      return (
+        <ListViewCardProperty 
+          property={item} 
+          onPress={isWebDesktop ? () => setSelectedPropertyId(item.id) : undefined}
+        />
+      );
     } else {
       return <GridViewCardProperty property={item} />;
     }
   };
-  const width = useWindowDimensions().width;
+
   const numColumns = isListView
     ? 1
     : width > 1200
@@ -77,40 +93,64 @@ export  default function PropertyList() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
-      {/* Header */}
+      <View className="flex-1 flex-row px-2 pt-3">
+        {/* Main List/Grid Area */}
+        <View className="flex-1">
+          <View className="mb-2">
+            <SearchAndFilters
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              isListView={isListView}
+              setListView={setIsListView}
+            />
+          </View>
 
-      {/* <Header isListView={isListView} setIsListView={setIsListView} /> */}
+          {loading ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#1d4ed8" />
+            </View>
+          ) : filteredProperties.length === 0 ? (
+            <View className="flex-1 justify-center items-center">
+              <Text className="text-lg text-gray-500">
+                No properties found matching your search.
+              </Text>
+            </View>
+          ) : (
+            <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
+              <FlatList
+                key={numColumns + (isListView ? "-list" : "-grid")}
+                data={filteredProperties}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id.toString()}
+                numColumns={numColumns}
+                showsVerticalScrollIndicator={false}
+                className={isListView ? "w-full" : ""}
+              />
+            </View>
+          )}
+        </View>
 
-      <SearchAndFilters
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        isListView={isListView}
-        setListView={setIsListView}
-      />
-
-      {/* Property List/Grid in renderItem */}
-      {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#1d4ed8" />
-        </View>
-      ) : filteredProperties.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-lg text-gray-500">
-            No properties found matching your search.
-          </Text>
-        </View>
-      ) : (
-        <View className="flex-1 justify-center items-center mt-3">
-          <FlatList
-            key={numColumns}
-            data={filteredProperties}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            numColumns={numColumns}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      )}
+        {/* Web Split View Details Panel */}
+        {isWebDesktop && isListView && (
+          <>
+            {/* Divider */}
+            <View className="w-[1px] bg-gray-300 mx-2" />
+            
+            <View className="w-2/3 bg-white rounded-lg shadow-sm shadow-gray-200 overflow-hidden mb-2">
+              {selectedProperty ? (
+                <PropertyDetailsContent 
+                  property={selectedProperty} 
+                  onClose={() => setSelectedPropertyId(null)}
+                />
+              ) : (
+                <View className="flex-1 justify-center items-center h-full">
+                  <Text className="text-xl text-gray-400">Select a Property to View Details</Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+      </View>
     </SafeAreaView>
   );
 }

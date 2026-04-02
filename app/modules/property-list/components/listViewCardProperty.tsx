@@ -13,6 +13,7 @@ import { Feature, Property } from "../../../constants/mock/mock-properties";
 
 interface ListViewCardPropertyProps {
   property: Property;
+  onPress?: () => void;
 }
 
 interface FeatureIconsComponentProps {
@@ -74,18 +75,25 @@ function FeatureIconsComponent({
   }
 }
 
-export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
+export function ListViewCardProperty({ property, onPress }: ListViewCardPropertyProps) {
   const router = useRouter();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push({
+        pathname: "/details",
+        params: { id: property.id },
+      });
+    }
+  };
 
   return (
     <TouchableOpacity
-      className="flex-col bg-white rounded-lg m-2 shadow-md shadow-gray-300"
-      onPress={() => {
-        router.push({
-          pathname: "/details",
-          params: { id: property.id },
-        });
-      }}
+      className="flex-col bg-white rounded-lg m-2 shadow-sm hover:shadow-gray-400 hover:shadow-md transition-shadow"
+      activeOpacity={0.8}
+      onPress={handlePress}
     >
       <Image
         className="w-full h-40 rounded-t-lg mb-1"

@@ -78,7 +78,8 @@ export default function gridViewCardProperty({
   const router = useRouter();
   return (
     <TouchableOpacity
-      className="bg-white shadow-gray-300 flex-col rounded-lg gap-2 m-2 w-[13rem]"
+      className="bg-white shadow-gray-300 flex-col rounded-lg gap-2 m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow"
+      activeOpacity={0.8}
       onPress={() => {
         router.push({
           pathname: "/details",
