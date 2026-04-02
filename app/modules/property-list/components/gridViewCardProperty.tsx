@@ -1,6 +1,4 @@
-import { color, pillColor } from "@/app/theme/color";
 import { size } from "@/app/theme/size";
-import { typography } from "@/app/theme/typography";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
@@ -30,14 +28,14 @@ function FeatureIconsComponent({
   const MAX_FEATURE = size.gridMaxFeatures;
 
   //Color
-  const ICON_COLOR = pillColor.iconColorSecondary;
-  const BACKGROUND_COLOR = pillColor.backGroundColorPrimary;
-  const TEXT_COLOR = pillColor.textColorPrimary;
+  const ICON_COLOR = "#fff";
+  const BACKGROUND_COLOR = "bg-blue-700";
+  const TEXT_COLOR = "text-white";
 
   //Size
   const ICON_SIZE = size.pillIconSize;
-  const TEXT_SIZE = typography.pill.size;
-  const TEXT_WEIGHT = typography.pill.weight;
+  const TEXT_SIZE = "text-xs";
+  const TEXT_WEIGHT = "font-semibold";
 
   if (index > MAX_FEATURE) {
     return null;
@@ -80,11 +78,11 @@ export default function gridViewCardProperty({
   const router = useRouter();
   return (
     <TouchableOpacity
-      className={`${color.bgWhite}  ${ color.shadowGray}  flex-col  rounded-lg  gap-2 m-2 w-[13rem]`}
+      className="bg-white shadow-gray-300 flex-col rounded-lg gap-2 m-2 w-[13rem]"
       onPress={() => {
         router.push({
           pathname: "/details",
-          params: { property: JSON.stringify(property) },
+          params: { id: property.id },
         });
       }}
     >
@@ -95,10 +93,10 @@ export default function gridViewCardProperty({
 
       <View className="flex-1 ">
         <View className=" flex-col justify-center items-center mb-2">
-          <Text className={`${typography.header.weight} ${typography.header.size}  `}>
+          <Text className="font-medium text-lg">
             {property.location.city}
           </Text>
-          <Text className={`${typography.normal.weight} ${typography.normal.size}  `}>
+          <Text className="font-normal text-base">
             {property.location.barangay}
           </Text>
         </View>
@@ -116,10 +114,10 @@ export default function gridViewCardProperty({
         </View>
       </View>
       <View className="flex-row justify-evenly mb-2 ">
-        <Text className={`${typography.headerBold.weight} ${typography.headerBold.size} ${color.txtOrange} `}>
+        <Text className="font-bold text-lg text-orange-400">
           {property.lotArea}SQM
         </Text>
-        <Text className={`${typography.headerBold.weight} ${typography.headerBold.size} ${color.txtBlue} `}>
+        <Text className="font-bold text-lg text-blue-600">
           ₱{property.price}
         </Text>
       </View>

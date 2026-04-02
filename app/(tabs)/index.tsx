@@ -1,8 +1,8 @@
 import GridViewCardProperty from "@/app/modules/property-list/components/gridViewCardProperty";
 import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
 import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
-import { useEffect, useState } from "react";
-import { FlatList, useWindowDimensions, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   mockProperties,
@@ -34,10 +34,9 @@ export  default function PropertyList() {
   },[])
   // Filter properties based on search query
 
-
-  const filteredProperties = properties.filter(
-    (property) =>
-      property.location.city
+  const filteredProperties = useMemo(() => {
+  return properties.filter((property) =>
+     property.location.city
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       property.location.barangay
@@ -55,6 +54,7 @@ export  default function PropertyList() {
         .toLowerCase()
         .includes(searchQuery.toLowerCase()),
   );
+}, [properties, searchQuery]);
 
   // Render property item based on current view mode
   const renderItem = ({ item }: { item: Property }) => {
@@ -89,16 +89,28 @@ export  default function PropertyList() {
       />
 
       {/* Property List/Grid in renderItem */}
-      <View className="flex-1 flexjustify-center items-center mt-3">
-        <FlatList
-          key={numColumns}
-          data={filteredProperties}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          numColumns={numColumns}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#1d4ed8" />
+        </View>
+      ) : filteredProperties.length === 0 ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-lg text-gray-500">
+            No properties found matching your search.
+          </Text>
+        </View>
+      ) : (
+        <View className="flex-1 justify-center items-center mt-3">
+          <FlatList
+            key={numColumns}
+            data={filteredProperties}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            numColumns={numColumns}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }

@@ -1,9 +1,7 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-import { color, pillColor } from "@/app/theme/color";
 import { size } from "@/app/theme/size";
-import { typography } from "@/app/theme/typography";
 import { useRouter } from "expo-router";
 import Pill from "../../generics/components/pill";
 import {
@@ -31,14 +29,14 @@ function FeatureIconsComponent({
   const MAX_FEATURE = size.gridMaxFeatures;
 
   //color
-  const ICON_COLOR = pillColor.iconColor;
-  const TEXT_COLOR = pillColor.textColorSecondary;
-  const BACKGROUND_COLOR = pillColor.backGroundColorSecondary;
+  const ICON_COLOR = "#3B82F6";
+  const TEXT_COLOR = "text-gray-700";
+  const BACKGROUND_COLOR = "bg-blue-50";
 
   //Size
   const ICON_SIZE = size.pillIconSize;
-  const TEXT_SIZE = typography.pill.size;
-  const TEXT_WEIGHT = typography.pill.weight;
+  const TEXT_SIZE = "text-xs";
+  const TEXT_WEIGHT = "font-semibold";
 
   if (index > MAX_FEATURE) {
     return null;
@@ -81,11 +79,11 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
 
   return (
     <TouchableOpacity
-      className={`flex-col ${color.bgWhite} rounded-lg m-2 shadow-md ${ color.shadowGray}  `}
+      className="flex-col bg-white rounded-lg m-2 shadow-md shadow-gray-300"
       onPress={() => {
         router.push({
           pathname: "/details",
-          params: { property: JSON.stringify(property) },
+          params: { id: property.id },
         });
       }}
     >
@@ -94,10 +92,10 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
         source={{ uri: property.media[0]?.url }}
       />
       <View className="flex-col   justify-center items-center gap-1">
-        <Text className={`${typography.header.weight} ${typography.header.size}  `}>
+        <Text className="font-medium text-lg">
           {property.location.city}
         </Text>
-        <Text className={`${typography.normal.weight} ${typography.normal.size} `}>
+        <Text className="font-normal text-base">
           {property.location.barangay}
         </Text>
       </View>
@@ -115,11 +113,11 @@ export function ListViewCardProperty({ property }: ListViewCardPropertyProps) {
       </View>
 
       <View className=" flex-row justify-evenly mb-3">
-        <Text className={`${typography.headerBold.weight} ${typography.headerBold.size} ${color.txtOrange} `}>
+        <Text className="font-bold text-lg text-orange-400">
           {" "}
           {property.lotArea} SQM
         </Text>
-        <Text className={`${typography.headerBold.weight} ${typography.headerBold.size} ${color.txtBlue} `}> ₱{property.price}</Text>
+        <Text className="font-bold text-lg text-blue-600"> ₱{property.price}</Text>
       </View>
     </TouchableOpacity>
   );

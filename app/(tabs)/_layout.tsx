@@ -17,13 +17,11 @@ export default function TabLayout() {
               color={focused ? "blue" : "gray"}
             />
           ),
-          tabBarStyle: { display: "none" },
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          href: null,
           title: "Settings",
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
@@ -38,7 +36,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="contact"
         options={{
-          href: null,
           title: "Contact",
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
