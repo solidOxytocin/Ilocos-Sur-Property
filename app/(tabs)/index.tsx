@@ -20,13 +20,11 @@ export  default function PropertyList() {
 
   useEffect(()=>{
     async function fetchData() {
-       console.log("is MOCK: ", process.env.EXPO_PUBLIC_IS_MOCK)
-      if(process.env.EXPO_PUBLIC_IS_MOCK){
-        setProperties(mockProperties)
-      }
-      else{
+      if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
+        setProperties(mockProperties);
+      } else {
         const data = await getProperties();
-        setProperties(data)
+        setProperties(data);
       }
      
      

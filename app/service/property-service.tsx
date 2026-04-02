@@ -5,6 +5,7 @@ import { PROPERTY } from "../constants/paths"
 
 export async function getProperties(): Promise<Property[]> {
    try{
+      console.log("getProperties")
     const response = await fetch(PROPERTY.getProperties)
     console.log("RESPONSE", response)
     if(!response.ok){
@@ -22,7 +23,7 @@ export async function getProperties(): Promise<Property[]> {
 }
 
 export async function getPropertyById(id: string): Promise<Property | null> {
-  if (process.env.EXPO_PUBLIC_IS_MOCK || config.useMock) {
+  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
     return mockProperties.find(p => p.id === Number(id)) || null;
   }
   try {

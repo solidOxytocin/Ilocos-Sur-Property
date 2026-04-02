@@ -10,7 +10,11 @@ export type MaterialIconName =
   | "beach"
   | "shopping"
   | "help-circle"
-  | "dots-horizontal";
+  | "dots-horizontal"
+  | "pool"
+  | "dumbbell"
+  | "security"
+  | "elevator";
 
 export const MATERIAL_ICON_NAMES = [
   "road",
@@ -21,6 +25,10 @@ export const MATERIAL_ICON_NAMES = [
   "beach",
   "shopping",
   "help-circle",
+  "pool",
+  "dumbbell",
+  "security",
+  "elevator",
 ] as const;
 
 export const FEATURE_ICONS: Record<string, MaterialIconName> = {
@@ -31,6 +39,15 @@ export const FEATURE_ICONS: Record<string, MaterialIconName> = {
   parking: "parking",
   beach: "beach",
   shopping: "shopping",
+  empty: "help-circle",
+  more: "dots-horizontal",
+};
+
+export const AMENITY_ICONS: Record<string, MaterialIconName> = {
+  pool: "pool",
+  gym: "dumbbell",
+  security: "security",
+  elevator: "elevator",
   empty: "help-circle",
   more: "dots-horizontal",
 };

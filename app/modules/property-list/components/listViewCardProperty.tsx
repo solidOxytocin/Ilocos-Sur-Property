@@ -7,32 +7,35 @@ import Pill from "../../generics/components/pill";
 import {
   EMPTY_ICON_KEY,
   FEATURE_ICONS,
+  AMENITY_ICONS,
   MORE_ICON_KEY,
 } from "../constants/material-icon-names";
-import { Feature, Property } from "../../../constants/mock/mock-properties";
+import { Feature, Amenity, Property } from "../../../constants/mock/mock-properties";
 
 interface ListViewCardPropertyProps {
   property: Property;
   onPress?: () => void;
 }
 
-interface FeatureIconsComponentProps {
-  item: Feature;
+interface ItemPillComponentProps {
+  item: Feature | Amenity;
   index: number;
   length: number;
+  isAmenity?: boolean;
 }
-// color="#3B82F6"
-function FeatureIconsComponent({
+
+function ItemPillComponent({
   item,
   index,
   length,
-}: FeatureIconsComponentProps) {
+  isAmenity = false,
+}: ItemPillComponentProps) {
   const MAX_FEATURE = size.gridMaxFeatures;
 
   //color
-  const ICON_COLOR = "#3B82F6";
+  const ICON_COLOR = isAmenity ? "#16A34A" : "#3B82F6";
   const TEXT_COLOR = "text-gray-700";
-  const BACKGROUND_COLOR = "bg-blue-50";
+  const BACKGROUND_COLOR = isAmenity ? "bg-green-50": "bg-blue-50";
 
   //Size
   const ICON_SIZE = size.pillIconSize;
@@ -43,10 +46,14 @@ function FeatureIconsComponent({
     return null;
   }
 
-  let iconName = FEATURE_ICONS[item.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
+  let iconName = isAmenity 
+    ? (AMENITY_ICONS[item.key] ?? AMENITY_ICONS[EMPTY_ICON_KEY])
+    : (FEATURE_ICONS[item.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY]);
 
   if (index === MAX_FEATURE && length > MAX_FEATURE) {
-    iconName = FEATURE_ICONS[MORE_ICON_KEY] ?? FEATURE_ICONS[EMPTY_ICON_KEY];
+    iconName = isAmenity 
+      ? (AMENITY_ICONS[MORE_ICON_KEY] ?? AMENITY_ICONS[EMPTY_ICON_KEY])
+      : (FEATURE_ICONS[MORE_ICON_KEY] ?? FEATURE_ICONS[EMPTY_ICON_KEY]);
     return (
       <Pill
         text={length - MAX_FEATURE + "+"}
@@ -108,16 +115,21 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         </Text>
       </View>
       <View className="flex-row m-2">
-        {(property.features ?? [] ).slice(0, 4).map((item, index) => {
-          return (
-            <FeatureIconsComponent
+        {(() => {
+          const combined = [
+            ...(property.features ?? []).map((f) => ({ ...f, isAmenity: false })),
+            ...(property.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
+          ];
+          return combined.slice(0, 4).map((item, index) => (
+            <ItemPillComponent
               key={index}
               item={item}
               index={index + 1}
-              length={property.features.length}
+              length={combined.length}
+              isAmenity={item.isAmenity}
             />
-          );
-        })}
+          ));
+        })()}
       </View>
 
       <View className=" flex-row justify-evenly mb-3">

@@ -5,6 +5,7 @@ import Pill from "../../generics/components/pill";
 import {
   EMPTY_ICON_KEY,
   FEATURE_ICONS,
+  AMENITY_ICONS,
 } from "../../property-list/constants/material-icon-names";
 import { Property } from "../../../constants/mock/mock-properties";
 import { size } from "../../../theme/size";
@@ -59,14 +60,24 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
              <Text className="text-lg font-bold text-orange-500">{property?.lotArea} <Text className="text-xs font-semibold text-orange-400">SQM</Text></Text>
           </View>
           
-          <View className="flex-row flex-wrap flex-1 gap-2">
-            {property?.features.map((feature, index) => (
+          <View className="flex-row flex-wrap flex-1 gap-2 pt-2 pb-2">
+            {(property?.features || []).map((feature, index) => (
               <Pill
-                key={index}
+                key={`feat-${index}`}
                 text={feature.name}
                 icon={FEATURE_ICONS[feature.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY]}
                 iconSize={16}
                 textSize="text-xs"
+              />
+            ))}
+            {(property?.amenities || []).map((amenity, index) => (
+              <Pill
+                key={`ame-${index}`}
+                text={amenity.name}
+                icon={AMENITY_ICONS[amenity.key] ?? AMENITY_ICONS[EMPTY_ICON_KEY]}
+                iconSize={16}
+                textSize="text-xs"
+                backGroundColor="bg-green-600"
               />
             ))}
           </View>
