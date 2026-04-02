@@ -23,12 +23,14 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
       <DetailsHeader properties={property} onClose={onClose} />
       
       {/* Modern image container */}
-      <View className="px-5 mt-4">
-        <Image
-          source={{ uri: property?.media[0]?.url }}
-          className="w-full h-56 rounded-2xl bg-gray-200"
-          resizeMode="cover"
-        />
+      <View className="px-5 mt-5">
+        <View className="shadow-lg shadow-gray-300 rounded-[2rem] bg-gray-100">
+          <Image
+            source={{ uri: property?.media[0]?.url }}
+            className="w-full h-72 rounded-[2rem] bg-gray-200 overflow-hidden"
+            resizeMode="cover"
+          />
+        </View>
       </View>
 
       <View className="px-5 mt-6 mb-8 gap-6">
