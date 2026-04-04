@@ -8,53 +8,70 @@ import {
   mockProperties,
   Property,
 } from "../constants/mock/mock-properties";
-import { PROPERTY } from "../constants/paths";
 import { getProperties } from "../service/property-service";
 import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
+import { FilterModal, FilterState } from "../modules/property-list/components/filterModal";
 
-export  default function PropertyList() {
+export default function PropertyList() {
   const [isListView, setIsListView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [properties, setProperties] = useState<Property[]>([]); 
   const [loading, setLoading] = useState(true);
+  
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    type: [],
+    status: [],
+    minPrice: 0,
+    maxPrice: 0,
+    city: '',
+    minArea: 0,
+    maxArea: 0,
+  });
+
+  const hasActiveFilters = useMemo(() => {
+    return filters.type.length > 0 || 
+           filters.status.length > 0 || 
+           filters.city !== '' || 
+           filters.minPrice > 0 || 
+           (filters.maxPrice > 0 && filters.maxPrice < 50000000) || 
+           filters.minArea > 0 || 
+           (filters.maxArea > 0 && filters.maxArea < 10000);
+  }, [filters]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   useEffect(()=>{
     async function fetchData() {
+      setLoading(true);
       if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
         setProperties(mockProperties);
       } else {
-        const data = await getProperties();
+        const fetchFilters: Record<string, any> = {};
+        if (debouncedSearchQuery) {
+            fetchFilters.searchQuery = debouncedSearchQuery;
+        }
+        if (filters.type.length > 0) fetchFilters.type = filters.type;
+        if (filters.status.length > 0) fetchFilters.status = filters.status;
+        if (filters.city) fetchFilters.city = filters.city;
+        if (filters.minPrice > 0) fetchFilters.minPrice = filters.minPrice;
+        if (filters.maxPrice > 0) fetchFilters.maxPrice = filters.maxPrice;
+        if (filters.minArea > 0) fetchFilters.minArea = filters.minArea;
+        if (filters.maxArea > 0) fetchFilters.maxArea = filters.maxArea;
+
+        const data = await getProperties(fetchFilters);
         setProperties(data);
       }
-     
-     
       setLoading(false)
     }
      fetchData();
-  },[])
-  // Filter properties based on search query
-
-  const filteredProperties = useMemo(() => {
-  return properties.filter((property) =>
-     property.location.city
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      property.location.barangay
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      property.location.address
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      property.price
-        .toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      property.lotArea
-        ?.toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
-  );
-}, [properties, searchQuery]);
+  },[debouncedSearchQuery, filters])
 
   const width = useWindowDimensions().width;
   const isWebDesktop = width >= 1024;
@@ -100,6 +117,8 @@ export  default function PropertyList() {
               setSearchQuery={setSearchQuery}
               isListView={isListView}
               setListView={setIsListView}
+              onOpenFilters={() => setIsFilterModalVisible(true)}
+              hasActiveFilters={hasActiveFilters}
             />
           </View>
 
@@ -107,7 +126,7 @@ export  default function PropertyList() {
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#1d4ed8" />
             </View>
-          ) : filteredProperties.length === 0 ? (
+          ) : properties.length === 0 ? (
             <View className="flex-1 justify-center items-center">
               <Text className="text-lg text-gray-500">
                 No properties found matching your search.
@@ -117,7 +136,7 @@ export  default function PropertyList() {
             <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
               <FlatList
                 key={numColumns + (isListView ? "-list" : "-grid")}
-                data={filteredProperties}
+                data={properties}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id.toString()}
                 numColumns={numColumns}
@@ -149,8 +168,12 @@ export  default function PropertyList() {
           </>
         )}
       </View>
+      <FilterModal 
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
+        filters={filters}
+        setFilters={setFilters}
+      />
     </SafeAreaView>
   );
 }
-
- 

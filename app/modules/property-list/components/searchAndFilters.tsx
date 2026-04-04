@@ -8,6 +8,8 @@ interface SearchAndFiltersProps {
   setSearchQuery: (query: string) => void;
   isListView: boolean;
   setListView: (isListView: boolean) => void;
+  onOpenFilters: () => void;
+  hasActiveFilters: boolean;
 }
 
 export function SearchAndFilters({
@@ -15,6 +17,8 @@ export function SearchAndFilters({
   setSearchQuery,
   isListView,
   setListView,
+  onOpenFilters,
+  hasActiveFilters,
 }: SearchAndFiltersProps) {
   return (
     <View className="flex-row bg-white px-4 py-3">
@@ -24,8 +28,11 @@ export function SearchAndFilters({
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
-      <Pressable className="h-12 w-12 items-center justify-center rounded-full">
+      <Pressable onPress={onOpenFilters} className="h-12 w-12 items-center justify-center rounded-full relative">
         <Feather name="filter" color="blue" size={size.featherIconPrimary} />
+        {hasActiveFilters && (
+            <View className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border border-white" />
+        )}
       </Pressable>
 
       {/* To Do: Add Toggle for Grid/List View */}
