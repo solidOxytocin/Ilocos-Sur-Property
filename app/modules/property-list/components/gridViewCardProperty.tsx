@@ -2,6 +2,7 @@ import { size } from "@/app/theme/size";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Pill from "../../generics/components/pill";
 import {
   EMPTY_ICON_KEY,
@@ -95,10 +96,18 @@ export default function gridViewCardProperty({
         });
       }}
     >
-      <Image
-        source={{ uri: property.media[0]?.url }}
-        className="w-full h-40 rounded-t-lg mb-2 "
-      />
+      <View className="relative">
+        <Image
+          source={{ uri: property.media[0]?.url }}
+          className="w-full h-40 rounded-t-lg mb-2 "
+        />
+        {property.media.length > 1 && (
+          <View className="absolute bottom-3 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
+            <MaterialCommunityIcons name="camera-outline" size={14} color="white" />
+            <Text className="text-white text-xs font-bold ml-1">+{property.media.length - 1}</Text>
+          </View>
+        )}
+      </View>
 
       <View className="flex-1 ">
         <View className=" flex-col justify-center items-center mb-2">

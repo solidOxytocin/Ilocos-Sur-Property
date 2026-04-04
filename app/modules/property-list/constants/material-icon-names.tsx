@@ -14,7 +14,14 @@ export type MaterialIconName =
   | "pool"
   | "dumbbell"
   | "security"
-  | "elevator";
+  | "elevator"
+  | "home-city"
+  | "check-circle"
+  | "bed-empty"
+  | "shower"
+  | "car"
+  | "texture-box"
+  | "floor-plan";
 
 export const MATERIAL_ICON_NAMES = [
   "road",
@@ -29,6 +36,13 @@ export const MATERIAL_ICON_NAMES = [
   "dumbbell",
   "security",
   "elevator",
+  "home-city",
+  "check-circle",
+  "bed-empty",
+  "shower",
+  "car",
+  "texture-box",
+  "floor-plan",
 ] as const;
 
 export const FEATURE_ICONS: Record<string, MaterialIconName> = {

@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { size } from "@/app/theme/size";
 import { useRouter } from "expo-router";
@@ -102,10 +103,18 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
       activeOpacity={0.8}
       onPress={handlePress}
     >
-      <Image
-        className="w-full h-40 rounded-t-lg mb-1"
-        source={{ uri: property.media[0]?.url }}
-      />
+      <View className="relative">
+        <Image
+          className="w-full h-40 rounded-t-lg mb-1"
+          source={{ uri: property.media[0]?.url }}
+        />
+        {property.media.length > 1 && (
+          <View className="absolute bottom-2 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
+            <MaterialCommunityIcons name="camera-outline" size={14} color="white" />
+            <Text className="text-white text-xs font-bold ml-1">+{property.media.length - 1}</Text>
+          </View>
+        )}
+      </View>
       <View className="flex-col   justify-center items-center gap-1">
         <Text className="font-medium text-lg">
           {property.location.city}
