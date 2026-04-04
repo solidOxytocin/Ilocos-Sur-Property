@@ -14,13 +14,7 @@
 - [x] Admin
 
 
-Follow Up:
-- [] Admin UI Enhancement
-- [] Sorting in The list admin and user
-- [] Dark Mode 
-- [] Contacts View
-- [] Settings?
-- [] Coordinate to Map
+
 
 ## 2. Back-end
 
@@ -33,5 +27,26 @@ Follow Up:
 
 ### 2.c Backend Development
 - [x] API for fetching properties
+- [x] Integrate ORM Prisma
+- [x] Create Seeding with Existing Mock Data
 
 
+
+
+# Follow Up:
+- [x] Add Status and Type in the Cards (U)
+- [] Fix Filtering (A)
+- [] Admin UI Enhancement (A)
+- [] Admin Fix bugs = (not reloading after edit, Fields not populated in edit) 
+- 
+- [] Sorting in The list admin and user 
+- [] Slide in Image Carousel (U)
+- [] Add header for WEB (U)
+- [] Add Splash Screen for Mobile Device(U)
+- [] Add Loading Screens (U)
+- [] Add Animations(U)
+- [] Image make Primary Feature 
+- [] Dark Mode (U)
+- [] Contacts View (U)
+- [] Settings? (U)
+- [] Coordinate to Map (U)

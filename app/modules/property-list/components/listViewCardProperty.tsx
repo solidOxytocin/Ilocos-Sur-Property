@@ -114,6 +114,23 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
             <Text className="text-white text-xs font-bold ml-1">+{property.media.length - 1}</Text>
           </View>
         )}
+
+         <View className="flex-row absolute bottom-3 left-2">
+          <Pill 
+                          text={property?.type?.toUpperCase() || "PROPERTY"} 
+                          icon="home-city" 
+                          iconSize={14} 
+                          textSize="text-xs" 
+                          backGroundColor="bg-purple-600" 
+                    />
+            <Pill 
+                text={property?.status?.toUpperCase() || "AVAILABLE"} 
+                icon="check-circle" 
+                iconSize={14} 
+                textSize="text-xs" 
+                backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-yellow-600" : "bg-teal-600"} 
+            />
+        </View>
       </View>
       <View className="flex-col   justify-center items-center gap-1">
         <Text className="font-medium text-lg">

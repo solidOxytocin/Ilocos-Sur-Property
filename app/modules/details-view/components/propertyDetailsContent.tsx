@@ -108,9 +108,12 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
       <View className="px-5 mt-6 mb-8 gap-6">
         
         {/* Title & Price Section */}
+        
         <View className="flex-row justify-between items-start flex-wrap gap-4">
           <View className="flex-1 min-w-[200px]">
-            <View className="flex-row gap-2 mb-2">
+{!onClose ? 
+
+<View className="flex-row gap-2 mb-2">
               <Pill 
                  text={property?.type?.toUpperCase() || "PROPERTY"} 
                  icon="home-city" 
@@ -125,7 +128,12 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                  textSize="text-xs" 
                  backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-yellow-600" : "bg-teal-600"} 
               />
-            </View>
+            </View>: <View></View>
+}  
+            
+
+
+
             <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
               {property?.location.address}
             </Text>

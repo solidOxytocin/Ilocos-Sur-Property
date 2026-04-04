@@ -102,11 +102,29 @@ export default function gridViewCardProperty({
           className="w-full h-40 rounded-t-lg mb-2 "
         />
         {property.media.length > 1 && (
-          <View className="absolute bottom-3 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
+          <View className="absolute top-3 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
             <MaterialCommunityIcons name="camera-outline" size={14} color="white" />
             <Text className="text-white text-xs font-bold ml-1">+{property.media.length - 1}</Text>
           </View>
+          
         )}
+
+         <View className="flex-row absolute bottom-3 left-2">
+           <Pill 
+                text={property?.type?.toUpperCase() || "PROPERTY"} 
+                icon="home-city" 
+                iconSize={14} 
+                textSize="text-xs" 
+                backGroundColor="bg-purple-600" 
+          />
+              <Pill 
+                  text={property?.status?.toUpperCase() || "AVAILABLE"} 
+                  icon="check-circle" 
+                  iconSize={14} 
+                  textSize="text-xs" 
+                  backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-yellow-600" : "bg-teal-600"} 
+              />
+          </View>
       </View>
 
       <View className="flex-1 ">
