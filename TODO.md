@@ -10,8 +10,13 @@
 - [x] Pills Component
 - [x] Improve Models
 - [x] Theme
+- [x] API Integration
+- [x] Admin
+
 
 Follow Up:
+- [] Admin UI Enhancement
+- [] Sorting in The list admin and user
 - [] Dark Mode 
 - [] Contacts View
 - [] Settings?
@@ -20,11 +25,13 @@ Follow Up:
 ## 2. Back-end
 
 ### 2.a Search For Backend Stack
-- [ ] R&D backend stack
+- [x] R&D backend stack
 
 ### 2.b Setup Backend
-- [ ] Prerequisites
-- [ ] Installation
+- [x] Prerequisites
+- [x] Installation
 
 ### 2.c Backend Development
-- [ ] API for fetching properties
+- [x] API for fetching properties
+
+
