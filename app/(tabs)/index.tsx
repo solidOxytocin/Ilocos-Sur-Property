@@ -2,7 +2,7 @@ import GridViewCardProperty from "@/app/modules/property-list/components/gridVie
 import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
 import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, FlatList, Text, useWindowDimensions, View, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   mockProperties,
@@ -39,6 +39,25 @@ export default function PropertyList() {
            filters.minArea > 0 || 
            (filters.maxArea > 0 && filters.maxArea < 10000);
   }, [filters]);
+
+  const quickFilters = [
+    { label: 'Available', key: 'status', value: 'AVAILABLE' },
+    { label: 'House', key: 'type', value: 'HOUSE' },
+    { label: 'Lot', key: 'type', value: 'LOT' },
+    { label: 'Condo', key: 'type', value: 'CONDO' },
+    { label: 'Commercial', key: 'type', value: 'COMMERCIAL' },
+  ];
+
+  const handleQuickFilterToggle = (key: 'type' | 'status', value: string) => {
+    setFilters(prev => {
+      const arr = prev[key];
+      if (arr.includes(value)) {
+        return { ...prev, [key]: arr.filter(i => i !== value) };
+      } else {
+        return { ...prev, [key]: [...arr, value] };
+      }
+    });
+  };
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -120,6 +139,23 @@ export default function PropertyList() {
               onOpenFilters={() => setIsFilterModalVisible(true)}
               hasActiveFilters={hasActiveFilters}
             />
+            {/* Quick Filters */}
+            <View className="px-4 py-2 bg-white border-t border-gray-100">
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                 {quickFilters.map((qf) => {
+                   const isActive = filters[qf.key as 'type' | 'status'].includes(qf.value);
+                   return (
+                     <Pressable
+                       key={qf.value}
+                       onPress={() => handleQuickFilterToggle(qf.key as 'type' | 'status', qf.value)}
+                       className={`px-4 py-2 mr-2 rounded-full border ${isActive ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`}
+                     >
+                       <Text className={isActive ? 'text-white font-medium text-sm' : 'text-gray-600 text-sm'}>{qf.label}</Text>
+                     </Pressable>
+                   );
+                 })}
+              </ScrollView>
+            </View>
           </View>
 
           {loading ? (
