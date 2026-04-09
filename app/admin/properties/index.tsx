@@ -106,9 +106,9 @@ export default function AdminPropertiesScreen() {
                 </View>
             </View>
 
-            <ScrollView horizontal className="flex-1">
+            <ScrollView horizontal className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
                 <ScrollView className="flex-1">
-                    <View className="min-w-[1000px] w-full">
+                    <View className="flex-1 min-w-full">
                         {/* Table Header */}
                         <View className="flex-row bg-gray-50 border-b border-gray-200 py-4 px-4 items-center">
                             <TouchableOpacity 
@@ -127,7 +127,7 @@ export default function AdminPropertiesScreen() {
                             <Text className="w-32 font-bold text-gray-600 text-sm uppercase tracking-wider">Status</Text>
                             <Text className="w-32 font-bold text-gray-600 text-sm uppercase tracking-wider">Price</Text>
                             <Text className="w-48 font-bold text-gray-600 text-sm uppercase tracking-wider">Location</Text>
-                            <Text className="flex-1 font-bold text-gray-600 text-sm uppercase tracking-wider text-right pr-4">Actions</Text>
+                            <Text className="flex-1 font-bold text-gray-600 text-sm uppercase tracking-wider text-right pr-2">Actions</Text>
                         </View>
 
                         {/* Table Body */}

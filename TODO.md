@@ -35,10 +35,10 @@
 
 # Follow Up:
 - [x] Add Status and Type in the Cards (U)
-- [] Fix Filtering (A)
-- [] Admin UI Enhancement (A)
+- [x] Fix Filtering (A)
+- [x] Admin UI Enhancement (A)
 - [] Admin Fix bugs = (not reloading after edit, Fields not populated in edit) 
-- 
+- [] Filter Slider to One
 - [] Sorting in The list admin and user 
 - [] Slide in Image Carousel (U)
 - [] Add header for WEB (U)

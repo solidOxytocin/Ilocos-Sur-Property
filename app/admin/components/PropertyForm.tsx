@@ -11,13 +11,14 @@ interface PropertyFormProps {
 }
 
 export default function PropertyForm({ initialData, isEdit = false }: PropertyFormProps) {
+    console.log(initialData)
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   
   // Basic Info
   const [title, setTitle] = useState(initialData?.title || '');
-  const [type, setType] = useState(initialData?.type || 'house');
-  const [status, setStatus] = useState(initialData?.status || 'available');
+  const [type, setType] = useState(initialData?.type || 'HOUSE');
+  const [status, setStatus] = useState(initialData?.status || 'AVAILABLE');
   const [price, setPrice] = useState(initialData?.price?.toString() || '');
   const [details, setDetails] = useState(initialData?.details || '');
 
@@ -191,7 +192,8 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 <View className="w-1/3 px-2 mb-4">
                      <Text className="text-gray-700 font-semibold mb-2">Type</Text>
                      <View className="flex-row border border-gray-200 rounded-lg overflow-hidden">
-                        {['lot', 'house', 'condo'].map(t => (
+                        
+                        {['LOT', 'HOUSE', 'CONDO'].map(t => (
                             <TouchableOpacity 
                                 key={t} 
                                 className={`flex-1 py-3 items-center ${type === t ? 'bg-blue-600' : 'bg-white'}`}
@@ -205,7 +207,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 <View className="w-1/3 px-2 mb-4">
                      <Text className="text-gray-700 font-semibold mb-2">Status</Text>
                      <View className="flex-row border border-gray-200 rounded-lg overflow-hidden">
-                        {['available', 'sold', 'reserved'].map(s => (
+                        {['AVAILABLE', 'SOLD', 'RESERVED'].map(s => (
                             <TouchableOpacity 
                                 key={s} 
                                 className={`flex-1 py-3 items-center ${status === s ? 'bg-blue-600' : 'bg-white'}`}
