@@ -37,7 +37,7 @@
 - [x] Add Status and Type in the Cards (U)
 - [x] Fix Filtering (A)
 - [x] Admin UI Enhancement (A)
-- [] Admin Fix bugs = (not reloading after edit, Fields not populated in edit) 
+- [x] Admin Fix bugs = (not reloading after edit, Fields not populated in edit) 
 - [] Filter Slider to One
 - [] Sorting in The list admin and user 
 - [] Slide in Image Carousel (U)

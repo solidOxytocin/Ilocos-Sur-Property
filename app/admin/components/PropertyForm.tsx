@@ -17,8 +17,8 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   
   // Basic Info
   const [title, setTitle] = useState(initialData?.title || '');
-  const [type, setType] = useState(initialData?.type || 'HOUSE');
-  const [status, setStatus] = useState(initialData?.status || 'AVAILABLE');
+  const [type, setType] = useState((initialData?.type || 'HOUSE').toUpperCase());
+  const [status, setStatus] = useState((initialData?.status || 'AVAILABLE').toUpperCase());
   const [price, setPrice] = useState(initialData?.price?.toString() || '');
   const [details, setDetails] = useState(initialData?.details || '');
 
@@ -57,8 +57,8 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
       { key: "elevator", name: "Elevator" },
   ];
 
-  const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(new Set(initialData?.features?.map(f => f.key) || []));
-  const [selectedAmenities, setSelectedAmenities] = useState<Set<string>>(new Set(initialData?.amenities?.map(a => a.key) || []));
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(new Set((initialData?.features || (initialData as any)?.feature || []).map((f: any) => f.key)));
+  const [selectedAmenities, setSelectedAmenities] = useState<Set<string>>(new Set((initialData?.amenities || (initialData as any)?.amenity || []).map((a: any) => a.key)));
 
   const toggleFeature = (key: string) => {
       const next = new Set(selectedFeatures);

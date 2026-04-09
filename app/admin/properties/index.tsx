@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { getProperties } from '../../service/property-service';
 import { deleteProperty, deleteManyProperties } from '../../service/admin-service';
 import { Property } from '../../constants/mock/mock-properties';
@@ -12,16 +12,18 @@ export default function AdminPropertiesScreen() {
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const router = useRouter();
 
-    const fetchProperties = async () => {
+    const fetchProperties = useCallback(async () => {
         setLoading(true);
         const data = await getProperties();
         setProperties(data || []);
         setLoading(false);
-    };
-
-    useEffect(() => {
-        fetchProperties();
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchProperties();
+        }, [fetchProperties])
+    );
 
     const handleSelect = (id: number) => {
         const newSelected = new Set(selectedIds);

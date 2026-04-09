@@ -36,5 +36,5 @@ export default function EditPropertyScreen() {
       );
   }
 
-  return <PropertyForm isEdit={true} initialData={property} />;
+  return <PropertyForm key={property.id} isEdit={true} initialData={property} />;
 }
