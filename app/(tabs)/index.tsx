@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  ScrollView,
   Text,
   useWindowDimensions,
   View,
-  ScrollView,
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,50 +16,77 @@ import { mockProperties, Property } from "../constants/mock/mock-properties";
 import { getPropertiesPaginated } from "../service/property-service";
 import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
 import { FilterModal, FilterState } from "../modules/property-list/components/filterModal";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const PAGE_SIZE = 12;
 
+type SortField = "createdAt" | "price" | "lotArea" | "city";
+type SortOrder = "asc" | "desc";
+
+interface SortOption {
+  label: string;
+  field: SortField;
+  order: SortOrder;
+  icon: keyof typeof MaterialIcons.glyphMap;
+}
+
+const SORT_OPTIONS: SortOption[] = [
+  { label: "Newest",   field: "createdAt", order: "desc", icon: "schedule" },
+  { label: "Oldest",   field: "createdAt", order: "asc",  icon: "history" },
+  { label: "Price ↑",  field: "price",     order: "desc",  icon: "trending-up" },
+  { label: "Price ↓",  field: "price",     order: "asc", icon: "trending-down" },
+  { label: "Area ↑",   field: "lotArea",   order: "asc",  icon: "expand" },
+  { label: "Area ↓",   field: "lotArea",   order: "desc", icon: "compress" },
+  { label: "A → Z",    field: "city",     order: "asc",  icon: "sort-by-alpha" },
+  { label: "Z → A",    field: "city",     order: "desc", icon: "sort-by-alpha" },
+];
+
+// Client-side sort for mock mode
+function sortMockProperties(list: Property[], field: SortField, order: SortOrder): Property[] {
+  return [...list].sort((a, b) => {
+    let av: any = a[field as keyof Property] ?? "";
+    let bv: any = b[field as keyof Property] ?? "";
+    if (field === "createdAt") { av = new Date(av).getTime(); bv = new Date(bv).getTime(); }
+    if (typeof av === "string") return order === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+    return order === "asc" ? av - bv : bv - av;
+  });
+}
+
 export default function PropertyList() {
-  const [isListView, setIsListView] = useState(false);
+  const [isListView, setIsListView]   = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]         = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages]   = useState(1);
+  const [total, setTotal]             = useState(0);
+
+  // Sort state (default: Newest)
+  const [activeSortIdx, setActiveSortIdx] = useState(0);
+  const activeSort = SORT_OPTIONS[activeSortIdx];
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    type: [],
-    status: [],
-    minPrice: 0,
-    maxPrice: 0,
-    city: "",
-    minArea: 0,
-    maxArea: 0,
+    type: [], status: [], minPrice: 0, maxPrice: 0, city: "", minArea: 0, maxArea: 0,
   });
 
   const hasActiveFilters = useMemo(
     () =>
-      filters.type.length > 0 ||
-      filters.status.length > 0 ||
-      filters.city !== "" ||
-      filters.minPrice > 0 ||
-      (filters.maxPrice > 0 && filters.maxPrice < 50000000) ||
-      filters.minArea > 0 ||
-      (filters.maxArea > 0 && filters.maxArea < 10000),
+      filters.type.length > 0 || filters.status.length > 0 || filters.city !== "" ||
+      filters.minPrice > 0 || (filters.maxPrice > 0 && filters.maxPrice < 50000000) ||
+      filters.minArea > 0 || (filters.maxArea > 0 && filters.maxArea < 10000),
     [filters]
   );
 
   const quickFilters = [
     { label: "Available", key: "status", value: "AVAILABLE" },
-    { label: "House", key: "type", value: "HOUSE" },
-    { label: "Lot", key: "type", value: "LOT" },
-    { label: "Condo", key: "type", value: "CONDO" },
-    { label: "Commercial", key: "type", value: "COMMERCIAL" },
+    { label: "House",     key: "type",   value: "HOUSE" },
+    { label: "Lot",       key: "type",   value: "LOT" },
+    { label: "Condo",     key: "type",   value: "CONDO" },
+    { label: "Commercial",key: "type",   value: "COMMERCIAL" },
   ];
 
   const handleQuickFilterToggle = (key: "type" | "status", value: string) => {
@@ -73,25 +100,27 @@ export default function PropertyList() {
 
   // Debounce search
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearchQuery(searchQuery), 500);
-    return () => clearTimeout(handler);
+    const h = setTimeout(() => setDebouncedSearchQuery(searchQuery), 500);
+    return () => clearTimeout(h);
   }, [searchQuery]);
 
-  // Build Prisma-compatible filter object
+  // Build filter + sort params
   const buildFetchFilters = useCallback((): Record<string, any> => {
     const f: Record<string, any> = {};
     if (debouncedSearchQuery) f.searchQuery = debouncedSearchQuery;
-    if (filters.type.length > 0) f.type = filters.type;
-    if (filters.status.length > 0) f.status = filters.status;
-    if (filters.city) f.city = filters.city;
-    if (filters.minPrice > 0) f.minPrice = filters.minPrice;
-    if (filters.maxPrice > 0) f.maxPrice = filters.maxPrice;
-    if (filters.minArea > 0) f.minArea = filters.minArea;
-    if (filters.maxArea > 0) f.maxArea = filters.maxArea;
+    if (filters.type.length > 0)   f.type     = filters.type;
+    if (filters.status.length > 0) f.status   = filters.status;
+    if (filters.city)              f.city     = filters.city;
+    if (filters.minPrice > 0)      f.minPrice = filters.minPrice;
+    if (filters.maxPrice > 0)      f.maxPrice = filters.maxPrice;
+    if (filters.minArea > 0)       f.minArea  = filters.minArea;
+    if (filters.maxArea > 0)       f.maxArea  = filters.maxArea;
+    f.sortBy    = activeSort.field;
+    f.sortOrder = activeSort.order;
     return f;
-  }, [debouncedSearchQuery, filters]);
+  }, [debouncedSearchQuery, filters, activeSortIdx]);
 
-  // ── Initial / filter-change load (page 1) ──────────────────────────────────
+  // ── Load page 1 whenever filters / sort change ─────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
@@ -101,10 +130,31 @@ export default function PropertyList() {
       setCurrentPage(1);
 
       if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
+        // Apply client-side filter + sort on mock data
+        let filtered = mockProperties.filter((p) => {
+          if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
+          if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
+          if (filters.city && !p.location.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
+          if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
+          if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
+          if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
+          if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
+          if (debouncedSearchQuery) {
+            const q = debouncedSearchQuery.toLowerCase();
+            return (
+              p.title.toLowerCase().includes(q) ||
+              p.location.city.toLowerCase().includes(q) ||
+              p.location.barangay.toLowerCase().includes(q)
+            );
+          }
+          return true;
+        });
+        filtered = sortMockProperties(filtered, activeSort.field, activeSort.order);
+        const slice = filtered.slice(0, PAGE_SIZE);
         if (!cancelled) {
-          setProperties(mockProperties);
-          setTotal(mockProperties.length);
-          setTotalPages(1);
+          setProperties(slice);
+          setTotal(filtered.length);
+          setTotalPages(Math.ceil(filtered.length / PAGE_SIZE));
           setLoading(false);
         }
         return;
@@ -122,19 +172,44 @@ export default function PropertyList() {
 
     fetchFirstPage();
     return () => { cancelled = true; };
-  }, [debouncedSearchQuery, filters]);
+  }, [debouncedSearchQuery, filters, activeSortIdx]);
 
   // ── Append next page on scroll-to-end ─────────────────────────────────────
   const loadNextPage = useCallback(async () => {
     if (loadingMore || loading || currentPage >= totalPages) return;
     const nextPage = currentPage + 1;
     setLoadingMore(true);
+
+    if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
+      // slice next page from already-sorted mock
+      let filtered = mockProperties.filter((p) => {
+        if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
+        if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
+        if (filters.city && !p.location.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
+        if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
+        if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
+        if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
+        if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
+        if (debouncedSearchQuery) {
+          const q = debouncedSearchQuery.toLowerCase();
+          return p.title.toLowerCase().includes(q) || p.location.city.toLowerCase().includes(q);
+        }
+        return true;
+      });
+      filtered = sortMockProperties(filtered, activeSort.field, activeSort.order);
+      const slice = filtered.slice((nextPage - 1) * PAGE_SIZE, nextPage * PAGE_SIZE);
+      setProperties(prev => [...prev, ...slice]);
+      setCurrentPage(nextPage);
+      setLoadingMore(false);
+      return;
+    }
+
     const result = await getPropertiesPaginated(buildFetchFilters(), nextPage, PAGE_SIZE);
     setProperties((prev) => [...prev, ...result.data]);
     setCurrentPage(nextPage);
     setTotalPages(result.totalPages);
     setLoadingMore(false);
-  }, [loadingMore, loading, currentPage, totalPages, buildFetchFilters]);
+  }, [loadingMore, loading, currentPage, totalPages, buildFetchFilters, filters, debouncedSearchQuery, activeSortIdx]);
 
   // ── Layout ─────────────────────────────────────────────────────────────────
   const { width } = useWindowDimensions();
@@ -146,15 +221,7 @@ export default function PropertyList() {
     [selectedPropertyId, properties]
   );
 
-  const numColumns = isListView
-    ? 1
-    : width > 1200
-    ? 5
-    : width > 1000
-    ? 4
-    : width > 800
-    ? 3
-    : 2;
+  const numColumns = isListView ? 1 : width > 1200 ? 5 : width > 1000 ? 4 : width > 800 ? 3 : 2;
 
   const renderItem = ({ item }: { item: Property }) =>
     isListView ? (
@@ -166,25 +233,24 @@ export default function PropertyList() {
       <GridViewCardProperty property={item} />
     );
 
-  // Footer: spinner while fetching more, "end of results" when fully loaded
   const renderFooter = () => {
     if (loadingMore) {
       return (
         <View className="py-6 items-center">
           <ActivityIndicator size="small" color="#1d4ed8" />
-          <Text className="text-xs text-gray-400 mt-2">Loading more properties…</Text>
+          <Text className="text-xs text-gray-400 mt-2">Loading more…</Text>
         </View>
       );
     }
     if (!loading && properties.length > 0 && currentPage >= totalPages && totalPages > 0) {
       return (
         <View className="py-4 items-center">
-          <View className="flex-row items-center gap-2">
-            <View className="h-px flex-1 bg-gray-200" />
-            <Text className="text-xs text-gray-400 px-2">
+          <View className="flex-row items-center">
+            <View className="h-px w-16 bg-gray-200" />
+            <Text className="text-xs text-gray-400 px-3">
               {total} propert{total === 1 ? "y" : "ies"} shown
             </Text>
-            <View className="h-px flex-1 bg-gray-200" />
+            <View className="h-px w-16 bg-gray-200" />
           </View>
         </View>
       );
@@ -197,7 +263,8 @@ export default function PropertyList() {
       <View className="flex-1 flex-row px-2 pt-3">
         {/* ── Main list / grid ────────────────────────────────────── */}
         <View className="flex-1">
-          {/* Search + Quick Filters */}
+
+          {/* Search + icon bar */}
           <View className="mb-2">
             <SearchAndFilters
               searchQuery={searchQuery}
@@ -207,35 +274,63 @@ export default function PropertyList() {
               onOpenFilters={() => setIsFilterModalVisible(true)}
               hasActiveFilters={hasActiveFilters}
             />
-            <View className="px-4 py-2 bg-white border-t border-gray-100">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {quickFilters.map((qf) => {
-                  const isActive = filters[qf.key as "type" | "status"].includes(qf.value);
+
+            {/* Sort chips — ScrollView is more reliable than FlatList for horizontal scroll on web */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8 }}>
+              <MaterialIcons name="sort" size={16} color="#6b7280" />
+              <Text style={{ fontSize: 11, fontWeight: '500', color: '#6b7280', marginLeft: 4, marginRight: 8 }}>Sort:</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
+                style={{ flex: 1 }}
+              >
+                {SORT_OPTIONS.map((opt, idx) => {
+                  const isActive = activeSortIdx === idx;
                   return (
                     <Pressable
-                      key={qf.value}
-                      onPress={() =>
-                        handleQuickFilterToggle(qf.key as "type" | "status", qf.value)
-                      }
-                      className={`px-4 py-2 mr-2 rounded-full border ${
-                        isActive
-                          ? "bg-blue-600 border-blue-600"
-                          : "bg-white border-gray-300"
-                      }`}
+                      key={idx}
+                      onPress={() => setActiveSortIdx(idx)}
+                      style={[
+                        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, marginRight: 8, borderRadius: 999, borderWidth: 1 },
+                        isActive ? { backgroundColor: '#4f46e5', borderColor: '#4f46e5' } : { backgroundColor: '#fff', borderColor: '#e5e7eb' },
+                      ]}
                     >
-                      <Text
-                        className={
-                          isActive
-                            ? "text-white font-medium text-sm"
-                            : "text-gray-600 text-sm"
-                        }
-                      >
-                        {qf.label}
+                      <MaterialIcons name={opt.icon} size={12} color={isActive ? '#fff' : '#9ca3af'} />
+                      <Text style={{ fontSize: 11, fontWeight: '500', marginLeft: 4, color: isActive ? '#fff' : '#6b7280' }}>
+                        {opt.label}
                       </Text>
                     </Pressable>
                   );
                 })}
               </ScrollView>
+            </View>
+
+            {/* Quick filter chips */}
+            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8 }}>
+              <FlatList
+                horizontal
+                data={quickFilters}
+                keyExtractor={(qf) => qf.value}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
+                renderItem={({ item: qf }) => {
+                  const isActive = filters[qf.key as "type" | "status"].includes(qf.value);
+                  return (
+                    <Pressable
+                      onPress={() => handleQuickFilterToggle(qf.key as "type" | "status", qf.value)}
+                      style={[
+                        { paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, borderRadius: 999, borderWidth: 1 },
+                        isActive ? { backgroundColor: '#2563eb', borderColor: '#2563eb' } : { backgroundColor: '#fff', borderColor: '#d1d5db' },
+                      ]}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: isActive ? '600' : '400', color: isActive ? '#fff' : '#4b5563' }}>
+                        {qf.label}
+                      </Text>
+                    </Pressable>
+                  );
+                }}
+              />
             </View>
           </View>
 
@@ -246,18 +341,10 @@ export default function PropertyList() {
             </View>
           ) : properties.length === 0 ? (
             <View className="flex-1 justify-center items-center">
-              <Text className="text-lg text-gray-500">
-                No properties found matching your search.
-              </Text>
+              <Text className="text-lg text-gray-500">No properties found matching your search.</Text>
             </View>
           ) : (
-            <View
-              className={
-                isListView
-                  ? "flex-1"
-                  : "flex-1 justify-center items-center w-full"
-              }
-            >
+            <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
               <FlatList
                 key={numColumns + (isListView ? "-list" : "-grid")}
                 data={properties}
@@ -286,9 +373,7 @@ export default function PropertyList() {
                 />
               ) : (
                 <View className="flex-1 justify-center items-center h-full">
-                  <Text className="text-xl text-gray-400">
-                    Select a Property to View Details
-                  </Text>
+                  <Text className="text-xl text-gray-400">Select a Property to View Details</Text>
                 </View>
               )}
             </View>
