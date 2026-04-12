@@ -22,6 +22,8 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   const [containerWidth, setContainerWidth] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const isSold = property?.status?.toUpperCase() === "SOLD";
+
   const propertyAddress = property?.location?.address ? `${property.location.address}, ` : "";
   const propertyBarangay = property?.location?.barangay ? `${property.location.barangay}, ` : "";
   const propertyCity = property?.location?.city ? `${property.location.city}` : "";
@@ -180,22 +182,57 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                       onPress={() => openLightbox(index)}
                       style={{ width: containerWidth > 0 ? containerWidth : undefined }}
                     >
-                      <Image
-                        source={{ uri: media.url }}
-                        style={{ width: containerWidth > 0 ? containerWidth : "100%", height: 288 }}
-                        className="bg-gray-200"
-                        resizeMode="cover"
-                      />
+                      <View>
+                        <Image
+                          source={{ uri: media.url }}
+                          style={[
+                            { width: containerWidth > 0 ? containerWidth : "100%", height: 288 },
+                            isSold ? { opacity: 0.45 } : undefined
+                          ]}
+                          className="bg-gray-200"
+                          resizeMode="cover"
+                        />
+                        {/* Grayscale overlay for sold properties */}
+                        {isSold && (
+                          <View
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              backgroundColor: "rgba(120,120,120,0.45)",
+                            }}
+                          />
+                        )}
+                      </View>
                     </TouchableOpacity>
                   ) : (
                     // Web: click handled by onMouseUp above
-                    <Image
-                      key={media.id || index}
-                      source={{ uri: media.url }}
-                      style={{ width: containerWidth > 0 ? containerWidth : "100%", height: 288 }}
-                      className="bg-gray-200"
-                      resizeMode="cover"
-                    />
+                    <View key={media.id || index} style={{ width: containerWidth > 0 ? containerWidth : "100%" }}>
+                      <Image
+                        source={{ uri: media.url }}
+                        style={[
+                          { width: containerWidth > 0 ? containerWidth : "100%", height: 288 },
+                          isSold ? { opacity: 0.45 } : undefined
+                        ]}
+                        className="bg-gray-200"
+                        resizeMode="cover"
+                      />
+                      {/* Grayscale overlay for sold properties */}
+                      {isSold && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: "rgba(120,120,120,0.45)",
+                          }}
+                        />
+                      )}
+                    </View>
                   )
                 )}
               </ScrollView>
@@ -230,6 +267,20 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                     className={`h-2 rounded-full ${i === activeSlide ? "w-4 bg-white" : "w-2 bg-white/60"}`}
                   />
                 ))}
+              </View>
+            )}
+
+            {/* Sold Banner Overlay */}
+            {isSold && (
+              <View 
+                className="absolute left-0 right-0 items-center justify-center pointer-events-none"
+                style={{ bottom: 40 }}
+              >
+                <View className="bg-red-600/90 px-8 py-2 rounded-lg shadow-lg ">
+                  <Text className="text-white font-black text-3xl tracking-widest uppercase">
+                  SOLD
+                  </Text>
+                </View>
               </View>
             )}
           </View>

@@ -85,6 +85,7 @@ function ItemPillComponent({
 
 export function ListViewCardProperty({ property, onPress }: ListViewCardPropertyProps) {
   const router = useRouter();
+  const isSold = property?.status?.toUpperCase() === "SOLD";
 
   const handlePress = () => {
     if (onPress) {
@@ -107,7 +108,23 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         <Image
           className="w-full h-40 rounded-t-lg mb-1"
           source={{ uri: property.media[0]?.url }}
+          style={isSold ? { opacity: 0.45 } : undefined}
         />
+        {/* Grayscale overlay for sold properties */}
+        {isSold && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 4,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+              backgroundColor: "rgba(120,120,120,0.45)",
+            }}
+          />
+        )}
         {property.media.length > 1 && (
           <View className="absolute bottom-2 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
             <MaterialCommunityIcons name="camera-outline" size={14} color="white" />

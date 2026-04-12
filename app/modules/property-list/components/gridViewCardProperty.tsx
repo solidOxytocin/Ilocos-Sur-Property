@@ -85,6 +85,7 @@ export default function gridViewCardProperty({
   property: property,
 }: gridViewCardPropertyProps) {
   const router = useRouter();
+  const isSold = property?.status?.toUpperCase() === "SOLD";
   return (
     <TouchableOpacity
       className="bg-white shadow-gray-300 flex-col rounded-lg gap-2 m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow"
@@ -99,14 +100,29 @@ export default function gridViewCardProperty({
       <View className="relative">
         <Image
           source={{ uri: property.media[0]?.url }}
-          className="w-full h-40 rounded-t-lg mb-2 "
+          className="w-full h-40 rounded-t-lg mb-2"
+          style={isSold ? { opacity: 0.45 } : undefined}
         />
+        {/* Grayscale overlay for sold properties */}
+        {isSold && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 8,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+              backgroundColor: "rgba(120,120,120,0.45)",
+            }}
+          />
+        )}
         {property.media.length > 1 && (
           <View className="absolute top-3 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
             <MaterialCommunityIcons name="camera-outline" size={14} color="white" />
             <Text className="text-white text-xs font-bold ml-1">+{property.media.length - 1}</Text>
           </View>
-          
         )}
 
          <View className="flex-row absolute bottom-3 left-2">
