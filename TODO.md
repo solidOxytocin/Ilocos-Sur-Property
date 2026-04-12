@@ -38,8 +38,11 @@
 - [x] Fix Filtering (A)
 - [x] Admin UI Enhancement (A)
 - [x] Admin Fix bugs = (not reloading after edit, Fields not populated in edit) 
-- [] Filter Slider to One
-- [] Sorting in The list admin and user 
+- [x] Infinite Scrolling
+- [x] Sorting in The list admin and user 
+- [x] Add Maps in Details
+- [x] Add Maps in Admin 
+- [x] Add Search in Admin
 - [] Slide in Image Carousel (U)
 - [] Add header for WEB (U)
 - [] Add Splash Screen for Mobile Device(U)
@@ -49,4 +52,4 @@
 - [] Dark Mode (U)
 - [] Contacts View (U)
 - [] Settings? (U)
-- [] Coordinate to Map (U)
+- [] Filter Slider to One

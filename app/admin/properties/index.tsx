@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useEffect, useRef } from 'react';
 import { getProperties } from '../../service/property-service';
 import { deleteProperty, deleteManyProperties } from '../../service/admin-service';
 import { Property } from '../../constants/mock/mock-properties';
@@ -9,13 +9,24 @@ import { MaterialIcons } from '@expo/vector-icons';
 type SortField = 'id' | 'title' | 'type' | 'status' | 'price' | 'lotArea' | 'city';
 type SortOrder = 'asc' | 'desc';
 
+// Fields where ↑ (asc state) should actually sort descending (highest first)
+const INVERTED_FIELDS: SortField[] = ['price', 'lotArea'];
+
 export default function AdminPropertiesScreen() {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading]       = useState(true);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [sortField, setSortField]   = useState<SortField>('id');
     const [sortOrder, setSortOrder]   = useState<SortOrder>('asc');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const router = useRouter();
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const fetchProperties = useCallback(async () => {
         setLoading(true);
@@ -28,12 +39,23 @@ export default function AdminPropertiesScreen() {
         useCallback(() => { fetchProperties(); }, [fetchProperties])
     );
 
-   // Fields where ↑ (asc state) should actually sort descending (highest first)
-    const INVERTED_FIELDS: SortField[] = ['price', 'lotArea'];
-
-    // sorting
+    // Filter then sort — debouncedSearch is included in deps
     const sorted = useMemo(() => {
-        return [...properties].sort((a, b) => {
+        let list = [...properties];
+
+        if (debouncedSearch) {
+            const q = debouncedSearch.toLowerCase();
+            list = list.filter(p =>
+                p.title?.toLowerCase().includes(q) ||
+                p.location?.city?.toLowerCase().includes(q) ||
+                p.location?.province?.toLowerCase().includes(q) ||
+                String(p.id).includes(q) ||
+                p.type?.toLowerCase().includes(q) ||
+                p.status?.toLowerCase().includes(q)
+            );
+        }
+
+        return list.sort((a, b) => {
             let av: any;
             let bv: any;
             switch (sortField) {
@@ -46,16 +68,15 @@ export default function AdminPropertiesScreen() {
                 case 'city':    av = a.location?.city;  bv = b.location?.city;  break;
                 default:        av = a.id;              bv = b.id;
             }
-            // For inverted fields: asc state → desc sort (highest first)
             const effectiveOrder = INVERTED_FIELDS.includes(sortField)
                 ? (sortOrder === 'asc' ? 'desc' : 'asc')
                 : sortOrder;
             if (typeof av === 'string') {
-                return effectiveOrder === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+                return effectiveOrder === 'asc' ? av.localeCompare(bv ?? '') : (bv ?? '').localeCompare(av);
             }
-            return effectiveOrder === 'asc' ? av - bv : bv - av;
+            return effectiveOrder === 'asc' ? (av ?? 0) - (bv ?? 0) : (bv ?? 0) - (av ?? 0);
         });
-    }, [properties, sortField, sortOrder]);
+    }, [properties, sortField, sortOrder, debouncedSearch]);
 
     const handleHeaderPress = (field: SortField) => {
         if (sortField === field) {
@@ -106,9 +127,9 @@ export default function AdminPropertiesScreen() {
 
     const handleSelectAll = () => {
         setSelectedIds(
-            selectedIds.size === properties.length
+            selectedIds.size === sorted.length && sorted.length > 0
                 ? new Set()
-                : new Set(properties.map(p => p.id))
+                : new Set(sorted.map(p => p.id))
         );
     };
 
@@ -145,12 +166,41 @@ export default function AdminPropertiesScreen() {
                 <View>
                     <Text className="text-2xl font-bold text-gray-800">Property Listings</Text>
                     <Text className="text-gray-500 text-sm mt-1">
-                        {properties.length} propert{properties.length === 1 ? 'y' : 'ies'} · sorted by{' '}
+                        {sorted.length} of {properties.length} propert{properties.length === 1 ? 'y' : 'ies'} · sorted by{' '}
                         <Text className="text-blue-600 font-medium">{sortField}</Text>{' '}
                         ({sortOrder === 'asc' ? '↑' : '↓'})
                     </Text>
                 </View>
-                <View className="flex-row space-x-3">
+
+                <View className="flex-row items-center" style={{ gap: 12 }}>
+                    {/* Search Bar */}
+                    <View
+                        className="flex-row items-center bg-white border border-gray-200 rounded-lg px-3"
+                        style={{ width: 260, height: 40 }}
+                    >
+                        <MaterialIcons name="search" size={18} color="#9ca3af" />
+                        <TextInput
+                            placeholder="Search properties..."
+                            placeholderTextColor="#9ca3af"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            style={{
+                                flex: 1,
+                                marginLeft: 8,
+                                fontSize: 14,
+                                color: '#1f2937',
+                                height: 40,
+                                outlineStyle: 'none',
+                            } as any}
+                        />
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity onPress={() => { setSearchQuery(''); setDebouncedSearch(''); }}>
+                                <MaterialIcons name="close" size={16} color="#9ca3af" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Delete selected */}
                     {selectedIds.size > 0 && (
                         <TouchableOpacity
                             className="bg-red-50 px-4 py-2 rounded-lg flex-row items-center border border-red-200"
@@ -158,10 +208,12 @@ export default function AdminPropertiesScreen() {
                         >
                             <MaterialIcons name="delete-outline" size={20} color="#dc2626" />
                             <Text className="text-red-600 font-semibold ml-2">
-                                Delete Selected ({selectedIds.size})
+                                Delete ({selectedIds.size})
                             </Text>
                         </TouchableOpacity>
                     )}
+
+                    {/* New Property */}
                     <TouchableOpacity
                         className="bg-blue-600 px-5 py-2.5 rounded-lg flex-row items-center shadow-sm"
                         onPress={() => router.push('/admin/properties/create' as any)}
@@ -183,7 +235,7 @@ export default function AdminPropertiesScreen() {
                                 onPress={handleSelectAll}
                             >
                                 <MaterialIcons
-                                    name={selectedIds.size === properties.length && properties.length > 0
+                                    name={selectedIds.size === sorted.length && sorted.length > 0
                                         ? "check-box" : "check-box-outline-blank"}
                                     size={24} color="#6b7280"
                                 />
@@ -205,8 +257,10 @@ export default function AdminPropertiesScreen() {
                         {/* Table Body */}
                         {sorted.length === 0 ? (
                             <View className="py-12 items-center justify-center">
-                                <MaterialIcons name="inbox" size={48} color="#d1d5db" />
-                                <Text className="mt-4 text-gray-500 font-medium">No properties found.</Text>
+                                <MaterialIcons name="search-off" size={48} color="#d1d5db" />
+                                <Text className="mt-4 text-gray-500 font-medium">
+                                    {debouncedSearch ? `No results for "${debouncedSearch}"` : 'No properties found.'}
+                                </Text>
                             </View>
                         ) : (
                             sorted.map((property, index) => (
@@ -286,7 +340,7 @@ export default function AdminPropertiesScreen() {
                                     </View>
 
                                     {/* Actions */}
-                                    <View className="flex-1 flex-row justify-end items-center pr-2 space-x-2">
+                                    <View className="flex-1 flex-row justify-end items-center pr-2" style={{ gap: 4 }}>
                                         <TouchableOpacity
                                             className="p-2 rounded-full"
                                             onPress={() => router.push(`/admin/properties/edit/${property.id}` as any)}
