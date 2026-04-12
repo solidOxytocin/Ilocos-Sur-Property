@@ -43,10 +43,12 @@
 - [x] Add Maps in Details
 - [x] Add Maps in Admin 
 - [x] Add Search in Admin
-- [] Slide in Image Carousel Issue for Web (U)
-- [] Image Clickable to Full Screen Carousell (U)
+- [x] Slide in Image Carousel Issue for Web (U)
+- [x] Image Clickable to Full Screen Carousell (U)
 - [] Gray Image when Sold (U)
 - [] Sold Banner in Image when Sold (U)
+- [] Fix Mobile Bugs
+- [] Fix Mobile UI Issues
 - [] Generate a Ilocos Sur Property Icon 
 - [] Add header for WEB (U)
 - [] Add Home Section WEB
@@ -54,6 +56,9 @@
 - [] Add Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
+- [] R&D For Image Handling 
+- [] Add Image View for Admin
+- [] Add Image Upload for Admin
 - [] Dark Mode (U)
 - [] Contacts View (U)
 - [] Settings? (U)
