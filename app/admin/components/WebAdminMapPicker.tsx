@@ -182,6 +182,7 @@ export default function WebAdminMapPicker({ initialCoordinates, initialBoundarie
                       strokeColor: 'rgba(37, 99, 235, 1)',
                       strokeOpacity: 1,
                       strokeWeight: 3,
+                      clickable: false,
                   }}
                 />
             )}

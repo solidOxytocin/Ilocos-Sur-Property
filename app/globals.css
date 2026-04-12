@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Fix for Google Maps Autocomplete Dropdown appearing behind or outside React Native Web Modals */
+.pac-container {
+    z-index: 999999 !important;
+}
