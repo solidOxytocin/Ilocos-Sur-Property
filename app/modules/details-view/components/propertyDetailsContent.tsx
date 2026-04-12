@@ -10,6 +10,7 @@ import {
 } from "../../property-list/constants/material-icon-names";
 import { Property } from "../../../constants/mock/mock-properties";
 import { size } from "../../../theme/size";
+import PropertyMapView from "./propertyMapView";
 
 interface PropertyDetailsContentProps {
   property: Property;
@@ -226,6 +227,14 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 ))}
               </View>
              </View>
+          )}
+
+          {property?.location?.coordinates && (
+            <PropertyMapView 
+              coordinates={property.location.coordinates} 
+              boundaries={property.location.boundaries} 
+              address={`${property.location.address}, ${property.location.barangay}, ${property.location.city}`}
+            />
           )}
         </View>
 
