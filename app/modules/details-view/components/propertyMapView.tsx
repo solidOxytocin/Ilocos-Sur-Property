@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Platform, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Coordinate } from '../../../../constants/mock/mock-properties';
+import { Coordinate } from '../../../constants/mock/mock-properties';
 import WebMapView from './webMapView';
 
 // We dynamically try to require react-native-maps for native usage.

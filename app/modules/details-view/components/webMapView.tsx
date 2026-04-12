@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text } from 'react-native';
 import { GoogleMap, useJsApiLoader, PolygonF, MarkerF } from '@react-google-maps/api';
-import { Coordinate } from '../../../../constants/mock/mock-properties';
+import { Coordinate } from '../../../constants/mock/mock-properties';
 
 interface WebMapViewProps {
   coordinates: Coordinate;

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { createProperty, updateProperty } from '../../service/admin-service';
 import { Property, Media, Feature, Amenity } from '../../constants/mock/mock-properties';
+import AdminMapPicker from './AdminMapPicker';
 
 interface PropertyFormProps {
   initialData?: Property;
@@ -14,6 +15,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
     console.log(initialData)
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   
   // Basic Info
   const [title, setTitle] = useState(initialData?.title || '');
@@ -34,6 +36,11 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   const [barangay, setBarangay] = useState(initialData?.location?.barangay || '');
   const [city, setCity] = useState(initialData?.location?.city || '');
   const [province, setProvince] = useState(initialData?.location?.province || '');
+  
+  // Maps & Boundaries
+  const [latitude, setLatitude] = useState(initialData?.location?.coordinates?.lat?.toString() || '');
+  const [longitude, setLongitude] = useState(initialData?.location?.coordinates?.lng?.toString() || '');
+  const [boundariesRaw, setBoundariesRaw] = useState(initialData?.location?.boundaries ? JSON.stringify(initialData.location.boundaries, null, 2) : '');
   
   // Media (URLs only)
   const [media, setMedia] = useState<Partial<Media>[]>(initialData?.media || []);
@@ -91,6 +98,17 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         return;
     }
 
+    let parsedBoundaries = null;
+    if (boundariesRaw.trim()) {
+        try {
+            parsedBoundaries = JSON.parse(boundariesRaw);
+            if (!Array.isArray(parsedBoundaries)) throw new Error("Boundaries must be an array.");
+        } catch (e) {
+            window.alert('Invalid Boundaries JSON format. It must be a valid JSON array of {lat, lng} objects.');
+            return;
+        }
+    }
+
     setLoading(true);
 
     const dataToSave = {
@@ -110,6 +128,8 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             city,
             province,
             country: 'Philippines',
+            coordinates: (latitude && longitude) ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined,
+            boundaries: parsedBoundaries,
         },
         media: media.map((m, i) => ({
             url: m.url,
@@ -233,6 +253,38 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                     <InputField label="Province" value={province} onChangeText={setProvince} required />
                 </View>
             </View>
+            
+            <View className="flex-row items-center justify-between mt-6 mb-4 border-b border-gray-100 pb-2">
+                <Text className="text-lg font-bold text-gray-800">Map Coordinates & Boundaries</Text>
+                <TouchableOpacity 
+                   className="bg-blue-600 px-4 py-2 rounded-lg flex-row items-center shadow-sm"
+                   onPress={() => setIsMapModalOpen(true)}
+                >
+                   <MaterialIcons name="map" size={18} color="white" />
+                   <Text className="text-white font-bold ml-2">Open Map Editor</Text>
+                </TouchableOpacity>
+            </View>
+
+            {latitude && longitude ? (
+                <View className="mb-4">
+                  <Text className="text-gray-700 font-semibold mb-1">Pin (Lat/Lng):</Text>
+                  <Text className="text-gray-600 font-mono bg-gray-50 p-3 rounded-lg border border-gray-200">{latitude}, {longitude}</Text>
+                  
+                  <Text className="text-gray-700 font-semibold mt-3 mb-1">Drawn Boundaries (Polygon Points):</Text>
+                  <Text className="text-gray-600 font-mono bg-gray-50 p-3 rounded-lg border border-gray-200">
+                     {boundariesRaw ? (() => { 
+                         try { 
+                             return JSON.parse(boundariesRaw).length + " Points Configured"; 
+                         } catch(e) { 
+                             return "Invalid/No JSON"; 
+                         }
+                     })() : "No polygon drawn"}
+                  </Text>
+                </View>
+            ) : (
+                <Text className="text-gray-500 italic mb-4">No map location set. Click 'Open Map Editor' above to place the pin.</Text>
+            )}
+
         </View>
 
         <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -321,6 +373,27 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             </View>
             <Text className="text-gray-400 text-xs mt-2 italic">Note: Real image uploads will be implemented in a future update.</Text>
         </View>
+
+        <Modal visible={isMapModalOpen} animationType="fade" transparent={true}>
+            <View className="flex-1 bg-black/60 justify-center items-center p-6">
+                <View className="w-full max-w-5xl h-[85%] bg-white rounded-2xl shadow-xl overflow-hidden p-2">
+                    <AdminMapPicker
+                        initialCoordinates={(latitude && longitude) ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
+                        initialBoundaries={(() => {
+                            try { return boundariesRaw ? JSON.parse(boundariesRaw) : []; }
+                            catch(e) { return []; }
+                        })()}
+                        onSave={(coords, bounds) => {
+                            setLatitude(coords.lat.toString());
+                            setLongitude(coords.lng.toString());
+                            setBoundariesRaw(bounds.length > 0 ? JSON.stringify(bounds, null, 2) : '');
+                            setIsMapModalOpen(false);
+                        }}
+                        onCancel={() => setIsMapModalOpen(false)}
+                    />
+                </View>
+            </View>
+        </Modal>
 
     </ScrollView>
   );
