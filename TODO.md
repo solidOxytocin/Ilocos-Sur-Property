@@ -45,8 +45,8 @@
 - [x] Add Search in Admin
 - [x] Slide in Image Carousel Issue for Web (U)
 - [x] Image Clickable to Full Screen Carousell (U)
-- [] Gray Image when Sold (U)
-- [] Sold Banner in Image when Sold (U)
+- [x] Gray Image when Sold (U)
+- [x] Sold Banner in Image when Sold (U)
 - [] Fix Mobile Bugs
 - [] Fix Mobile UI Issues
 - [] Generate a Ilocos Sur Property Icon 
