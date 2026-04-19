@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, Pressable, ScrollView, Platform, useWindowDimensions, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Modal, Pressable, ScrollView, Platform, useWindowDimensions, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
@@ -32,7 +32,7 @@ const ilocosSurCities = [
   ].sort();
 
 export function FilterModal({ visible, onClose, filters, setFilters }: FilterModalProps) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isWebDesktop = width >= 1024 && Platform.OS === 'web';
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
   const [bounds, setBounds] = useState({ maxPrice: 100000000, maxLotArea: 5000 });
@@ -88,8 +88,18 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
       return `₱${val}`;
   }
 
+  const screenHeight = height;
+  const mobileMaxHeight = screenHeight * 0.85;
+
   const modalContent = (
-    <View className={`bg-white rounded-t-3xl flex-shrink max-h-[85vh] ${isWebDesktop ? 'rounded-3xl w-full max-w-lg mx-auto shadow-lg overflow-hidden' : 'w-full'}`}>
+    <View
+      style={[
+        { backgroundColor: 'white' },
+        isWebDesktop
+          ? { borderRadius: 24, width: '100%', maxWidth: 512, alignSelf: 'center', overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, maxHeight: height * 0.82 }
+          : { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: mobileMaxHeight },
+      ]}
+    >
       <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
         <Text className="text-xl font-bold text-gray-800">Filters</Text>
         <Pressable onPress={onClose} className="p-2 bg-gray-100 rounded-full">
@@ -97,16 +107,16 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1 px-6 py-4" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flexGrow: 1 }} contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 16 }} showsVerticalScrollIndicator={false}>
         
         {/* City Filter via Dropdown */}
         <View className="mb-6">
           <Text className="text-base font-semibold text-gray-700 mb-3">City / Municipality</Text>
-          <View className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+          <View style={{ borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, overflow: 'hidden', backgroundColor: 'white', height: Platform.OS === 'web' ? 44 : 56 }}>
             <Picker
               selectedValue={localFilters.city}
               onValueChange={(itemValue) => setLocalFilters({ ...localFilters, city: itemValue })}
-              style={{ padding: 12, backgroundColor: 'transparent' }}
+              style={{ backgroundColor: 'transparent', height: Platform.OS === 'web' ? 44 : 56, paddingHorizontal: Platform.OS === 'web' ? 12 : 0 }}
             >
               <Picker.Item label="All City" value="" />
               {ilocosSurCities.map((city) => (
@@ -267,14 +277,21 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
       transparent={true}
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <View 
         className={`flex-1 ${isWebDesktop ? 'justify-center items-center p-4' : 'justify-end'}`}
       >
-        <View className="absolute inset-0 bg-black/50" />
-        <Pressable className="absolute inset-0" onPress={onClose} />
-        {modalContent}
-      </KeyboardAvoidingView>
+        {/* Background Overlay */}
+        <Pressable 
+          style={StyleSheet.absoluteFillObject}
+          className="bg-black/50" 
+          onPress={onClose} 
+        />
+        
+        {/* Modal Content container to prevent clicks on content from closing the modal */}
+        <Pressable className={isWebDesktop ? 'w-full max-w-lg' : 'w-full'} onPress={(e) => e.stopPropagation()}>
+          {modalContent}
+        </Pressable>
+      </View>
     </Modal>
   );
 }

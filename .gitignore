@@ -8,6 +8,8 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+app.json
+app.config.js
 
 # Native
 .kotlin/
@@ -45,3 +47,4 @@ app-example
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
+

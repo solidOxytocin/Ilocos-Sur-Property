@@ -35,8 +35,8 @@ const SORT_OPTIONS: SortOption[] = [
   { label: "Oldest",   field: "createdAt", order: "asc",  icon: "history" },
   { label: "Price ↑",  field: "price",     order: "desc",  icon: "trending-up" },
   { label: "Price ↓",  field: "price",     order: "asc", icon: "trending-down" },
-  { label: "Area ↑",   field: "lotArea",   order: "asc",  icon: "expand" },
-  { label: "Area ↓",   field: "lotArea",   order: "desc", icon: "compress" },
+  { label: "Area ↑",   field: "lotArea",   order: "desc",  icon: "expand" },
+  { label: "Area ↓",   field: "lotArea",   order: "asc", icon: "compress" },
   { label: "A → Z",    field: "city",     order: "asc",  icon: "sort-by-alpha" },
   { label: "Z → A",    field: "city",     order: "desc", icon: "sort-by-alpha" },
 ];

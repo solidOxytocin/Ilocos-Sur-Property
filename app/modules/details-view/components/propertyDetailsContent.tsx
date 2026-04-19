@@ -426,7 +426,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 </View>
               </View>
             )}
-
+            {/* MAPS */}
             {property?.location?.coordinates && (
               <PropertyMapView
                 coordinates={property.location.coordinates}

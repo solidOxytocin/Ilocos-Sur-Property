@@ -47,9 +47,15 @@
 - [x] Image Clickable to Full Screen Carousell (U)
 - [x] Gray Image when Sold (U)
 - [x] Sold Banner in Image when Sold (U)
-- [] Fix Mobile Bugs
+- [x] Sort is Reversed
+- [x] Fix Mobile Bugs
+    - [x] Maps not loading = API KEY NOT APPLIED
+
 - [] Fix Mobile UI Issues
+    - [x] Filter Not Opening Properly
+    - [] Status Pills in Grid View inside photo is overlapping
 - [] Generate a Ilocos Sur Property Icon 
+- [] Make Sort Single Chip 
 - [] Add header for WEB (U)
 - [] Add Home Section WEB
 - [] Add Home Section MOBILE
