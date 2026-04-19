@@ -19,7 +19,7 @@
       },
        "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDmg53U8YgsHzMJr_9yspL9Hv1iskturA8"
+          "apiKey": "PUT_GOOGLE_MAPS_API_HERE"
         }
       },
       "predictiveBackGestureEnabled": false,
@@ -51,7 +51,7 @@
     [
       "react-native-maps",
       {
-        "androidGoogleMapsApiKey": "AIzaSyDmg53U8YgsHzMJr_9yspL9Hv1iskturA8"
+        "androidGoogleMapsApiKey": "PUT_GOOGLE_MAPS_API_HERE"
       }
     ]
     ],
