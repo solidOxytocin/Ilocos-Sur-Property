@@ -23,22 +23,11 @@ const PAGE_SIZE = 12;
 type SortField = "createdAt" | "price" | "lotArea" | "city";
 type SortOrder = "asc" | "desc";
 
-interface SortOption {
-  label: string;
-  field: SortField;
-  order: SortOrder;
-  icon: keyof typeof MaterialIcons.glyphMap;
-}
-
-const SORT_OPTIONS: SortOption[] = [
-  { label: "Newest",   field: "createdAt", order: "desc", icon: "schedule" },
-  { label: "Oldest",   field: "createdAt", order: "asc",  icon: "history" },
-  { label: "Price ↑",  field: "price",     order: "desc",  icon: "trending-up" },
-  { label: "Price ↓",  field: "price",     order: "asc", icon: "trending-down" },
-  { label: "Area ↑",   field: "lotArea",   order: "desc",  icon: "expand" },
-  { label: "Area ↓",   field: "lotArea",   order: "asc", icon: "compress" },
-  { label: "A → Z",    field: "city",     order: "asc",  icon: "sort-by-alpha" },
-  { label: "Z → A",    field: "city",     order: "desc", icon: "sort-by-alpha" },
+const SORT_FIELDS: { label: string; field: SortField }[] = [
+  { label: "Newest",  field: "createdAt" },
+  { label: "Price", field: "price" },
+  { label: "Area",  field: "lotArea" },
+  { label: "City",  field: "city" },
 ];
 
 // Client-side sort for mock mode
@@ -64,9 +53,26 @@ export default function PropertyList() {
   const [totalPages, setTotalPages]   = useState(1);
   const [total, setTotal]             = useState(0);
 
-  // Sort state (default: Newest)
-  const [activeSortIdx, setActiveSortIdx] = useState(0);
-  const activeSort = SORT_OPTIONS[activeSortIdx];
+  // Sort state — null means no active sort
+  const [sortField, setSortField] = useState<SortField | null>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  const handleSortChipPress = (field: SortField) => {
+    const defaultOrder = field === "createdAt" ? "desc" : "asc";
+    const toggleOrder = field === "createdAt" ? "asc" : "desc";
+
+    if (sortField !== field) {
+      // Activate this field with its default order
+      setSortField(field);
+      setSortOrder(defaultOrder);
+    } else if (sortOrder === defaultOrder) {
+      // Cycle to the toggled order
+      setSortOrder(toggleOrder);
+    } else {
+      // Was in the toggled order — clear sort
+      setSortField(null);
+    }
+  };
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -115,10 +121,9 @@ export default function PropertyList() {
     if (filters.maxPrice > 0)      f.maxPrice = filters.maxPrice;
     if (filters.minArea > 0)       f.minArea  = filters.minArea;
     if (filters.maxArea > 0)       f.maxArea  = filters.maxArea;
-    f.sortBy    = activeSort.field;
-    f.sortOrder = activeSort.order;
+    if (sortField) { f.sortBy = sortField; f.sortOrder = sortOrder; }
     return f;
-  }, [debouncedSearchQuery, filters, activeSortIdx]);
+  }, [debouncedSearchQuery, filters, sortField, sortOrder]);
 
   // ── Load page 1 whenever filters / sort change ─────────────────────────────
   useEffect(() => {
@@ -149,7 +154,7 @@ export default function PropertyList() {
           }
           return true;
         });
-        filtered = sortMockProperties(filtered, activeSort.field, activeSort.order);
+        if (sortField) filtered = sortMockProperties(filtered, sortField, sortOrder);
         const slice = filtered.slice(0, PAGE_SIZE);
         if (!cancelled) {
           setProperties(slice);
@@ -172,7 +177,7 @@ export default function PropertyList() {
 
     fetchFirstPage();
     return () => { cancelled = true; };
-  }, [debouncedSearchQuery, filters, activeSortIdx]);
+  }, [debouncedSearchQuery, filters, sortField, sortOrder]);
 
   // ── Append next page on scroll-to-end ─────────────────────────────────────
   const loadNextPage = useCallback(async () => {
@@ -196,7 +201,7 @@ export default function PropertyList() {
         }
         return true;
       });
-      filtered = sortMockProperties(filtered, activeSort.field, activeSort.order);
+      if (sortField) filtered = sortMockProperties(filtered, sortField, sortOrder);
       const slice = filtered.slice((nextPage - 1) * PAGE_SIZE, nextPage * PAGE_SIZE);
       setProperties(prev => [...prev, ...slice]);
       setCurrentPage(nextPage);
@@ -209,7 +214,7 @@ export default function PropertyList() {
     setCurrentPage(nextPage);
     setTotalPages(result.totalPages);
     setLoadingMore(false);
-  }, [loadingMore, loading, currentPage, totalPages, buildFetchFilters, filters, debouncedSearchQuery, activeSortIdx]);
+  }, [loadingMore, loading, currentPage, totalPages, buildFetchFilters, filters, debouncedSearchQuery, sortField, sortOrder]);
 
   // ── Layout ─────────────────────────────────────────────────────────────────
   const { width } = useWindowDimensions();
@@ -275,7 +280,7 @@ export default function PropertyList() {
               hasActiveFilters={hasActiveFilters}
             />
 
-            {/* Sort chips — ScrollView is more reliable than FlatList for horizontal scroll on web */}
+            {/* Sort chips — one chip per field, arrow appears only when active */}
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8 }}>
               <MaterialIcons name="sort" size={16} color="#6b7280" />
               <Text style={{ fontSize: 11, fontWeight: '500', color: '#6b7280', marginLeft: 4, marginRight: 8 }}>Sort:</Text>
@@ -285,20 +290,24 @@ export default function PropertyList() {
                 contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
                 style={{ flex: 1 }}
               >
-                {SORT_OPTIONS.map((opt, idx) => {
-                  const isActive = activeSortIdx === idx;
+                {SORT_FIELDS.map(({ label, field }) => {
+                  const isActive = sortField === field;
+                  // For the date field, swap the label to be semantically descriptive
+                  const activeLabel =
+                    field === 'createdAt' && isActive
+                      ? (sortOrder === 'asc' ? 'Oldest' : 'Newest')
+                      : label;
                   return (
                     <Pressable
-                      key={idx}
-                      onPress={() => setActiveSortIdx(idx)}
+                      key={field}
+                      onPress={() => handleSortChipPress(field)}
                       style={[
                         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, marginRight: 8, borderRadius: 999, borderWidth: 1 },
                         isActive ? { backgroundColor: '#4f46e5', borderColor: '#4f46e5' } : { backgroundColor: '#fff', borderColor: '#e5e7eb' },
                       ]}
                     >
-                      <MaterialIcons name={opt.icon} size={12} color={isActive ? '#fff' : '#9ca3af'} />
-                      <Text style={{ fontSize: 11, fontWeight: '500', marginLeft: 4, color: isActive ? '#fff' : '#6b7280' }}>
-                        {opt.label}
+                      <Text style={{ fontSize: 11, fontWeight: '500', color: isActive ? '#fff' : '#6b7280' }}>
+                        {activeLabel}
                       </Text>
                     </Pressable>
                   );

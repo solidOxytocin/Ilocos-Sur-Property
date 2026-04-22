@@ -4,11 +4,11 @@
 // is embedded into AndroidManifest.xml — NOT the literal string "process.env...".
 
 export default {
-  name: "ilocos_sur_property",
+  name: "",
   slug: "ilocos_sur_property",
   version: "1.0.1",
   orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./assets/images/ilocos-sur-icon.png",
   scheme: "ilocossurproperty",
   userInterfaceStyle: "automatic",
   ios: {
@@ -22,9 +22,9 @@ export default {
       },
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/android-icon-monochrome.png",
+      foregroundImage: "./assets/images/ilocos-sur-icon.png",
+      backgroundImage: "./assets/images/ilocos-sur-icon.png",
+      monochromeImage: "./assets/images/ilocos-sur-icon.png",
     },
     predictiveBackGestureEnabled: false,
     package: "com.anonymous.ilocos_sur_property",
@@ -32,7 +32,7 @@ export default {
   },
   web: {
     output: "static",
-    favicon: "./assets/images/favicon.png",
+    favicon: "./assets/images/ilocos-sur-icon.png",
     bundler: "metro",
   },
   plugins: [
@@ -40,7 +40,7 @@ export default {
     [
       "expo-splash-screen",
       {
-        image: "./assets/images/splash-icon.png",
+        image: "./assets/images/ilocos-sur-splash.png",
         imageWidth: 200,
         resizeMode: "contain",
         backgroundColor: "#ffffff",

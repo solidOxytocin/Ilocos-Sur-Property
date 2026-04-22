@@ -51,11 +51,16 @@
 - [x] Fix Mobile Bugs
     - [x] Maps not loading = API KEY NOT APPLIED
 
-- [] Fix Mobile UI Issues
+- [X] Fix Mobile UI Issues
     - [x] Filter Not Opening Properly
-    - [] Status Pills in Grid View inside photo is overlapping
-- [] Generate a Ilocos Sur Property Icon 
-- [] Make Sort Single Chip 
+    - [X] Status Pills in Grid View inside photo is overlapping
+
+- [x] Image Carousel not working on Web = It will just slide when i click the previous button not the next button
+- [x] Sold Banner width to full in details
+
+    
+- [x] Generate a Ilocos Sur Property Icon 
+- [x] Make Sort Single Chip 
 - [] Add header for WEB (U)
 - [] Add Home Section WEB
 - [] Add Home Section MOBILE
@@ -66,6 +71,19 @@
 - [] Add Image View for Admin
 - [] Add Image Upload for Admin
 - [] Dark Mode (U)
+- [] Improve Error Handling
+    - [ ] Show specific error messages
+    - [ ] Add retry options for failed requests
+    - [ ] Handle offline scenarios gracefully
+    - [ ] No Internet
+    - [ ] No Data from Fetch
+
 - [] Contacts View (U)
 - [] Settings? (U)
 - [] Filter Slider to One
+- [] Learn To Deploy
+    -[] Create prod Build
+    -[] Create an enviroment variables for prod and local   
+    -[] Learn to Deploy Backend(PostGress)
+    -[] Learn to Deploy Frontend
+    
