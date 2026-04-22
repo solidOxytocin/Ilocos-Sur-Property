@@ -125,20 +125,22 @@ export default function gridViewCardProperty({
           </View>
         )}
 
-         <View className="flex-row absolute bottom-3 left-2">
+         <View className="flex-row absolute bottom-3 left-1">
            <Pill 
                 text={property?.type?.toUpperCase() || "PROPERTY"} 
                 icon="home-city" 
-                iconSize={14} 
+                iconSize={11} 
                 textSize="text-xs" 
-                backGroundColor="bg-purple-600" 
+                backGroundColor="bg-purple-600"
+                compact
           />
               <Pill 
                   text={property?.status?.toUpperCase() || "AVAILABLE"} 
                   icon="check-circle" 
-                  iconSize={14} 
+                  iconSize={11} 
                   textSize="text-xs" 
-                  backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-yellow-600" : "bg-teal-600"} 
+                  backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-yellow-600" : "bg-teal-600"}
+                  compact
               />
           </View>
       </View>

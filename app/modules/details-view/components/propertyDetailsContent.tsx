@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, Text, TouchableOpacity, View, ScrollView, Modal, Linking, Platform } from "react-native";
+import { Image, Text, TouchableOpacity, View, ScrollView, Modal, Linking, Platform, useWindowDimensions } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DetailsHeader from "./detailsHeader";
 import Pill from "../../generics/components/pill";
@@ -21,6 +21,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   const [activeSlide, setActiveSlide] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const { width: screenWidth } = useWindowDimensions();
 
   const isSold = property?.status?.toUpperCase() === "SOLD";
 
@@ -58,15 +59,30 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   // ─── Lightbox ─────────────────────────────────────────────────────────
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const lightboxScrollRef = React.useRef<ScrollView>(null);
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxVisible(true);
+    // Scroll to the correct image after the modal renders
+    setTimeout(() => {
+      lightboxScrollRef.current?.scrollTo({ x: index * screenWidth, animated: false });
+    }, 80);
   };
 
   const mediaCount = property?.media?.length ?? 0;
-  const lightboxPrev = () => setLightboxIndex((i) => (i - 1 + mediaCount) % mediaCount);
-  const lightboxNext = () => setLightboxIndex((i) => (i + 1) % mediaCount);
+  const lightboxPrev = () => {
+    const next = (lightboxIndex - 1 + mediaCount) % mediaCount;
+    setLightboxIndex(next);
+    if (Platform.OS === 'web') return;
+    lightboxScrollRef.current?.scrollTo({ x: next * screenWidth, animated: true });
+  };
+  const lightboxNext = () => {
+    const next = (lightboxIndex + 1) % mediaCount;
+    setLightboxIndex(next);
+    if (Platform.OS === 'web') return;
+    lightboxScrollRef.current?.scrollTo({ x: next * screenWidth, animated: true });
+  };
 
   // ─── Web mouse-drag carousel ──────────────────────────────────────────
   const carouselScrollRef = React.useRef<ScrollView>(null);
@@ -163,8 +179,8 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
                 scrollEventThrottle={16}
-                // On web, let mouse events control scrolling; disable native touch-scroll
-                scrollEnabled={Platform.OS !== "web"}
+                // On web, let mouse events control scrolling; on native use touch swipe
+                scrollEnabled={Platform.OS === "web" ? false : true}
                 onScroll={(e) => {
                   currentScrollX.current = e.nativeEvent.contentOffset.x;
                   if (containerWidth > 0) {
@@ -272,15 +288,13 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
             {/* Sold Banner Overlay */}
             {isSold && (
-              <View 
-                className="absolute left-0 right-0 items-center justify-center pointer-events-none"
+              <View
+                className="absolute left-0 right-0 bg-red-600/90 py-2 items-center justify-center pointer-events-none shadow-lg"
                 style={{ bottom: 40 }}
               >
-                <View className="bg-red-600/90 px-8 py-2 rounded-lg shadow-lg ">
-                  <Text className="text-white font-black text-3xl tracking-widest uppercase">
+                <Text className="text-white font-black text-3xl tracking-widest uppercase">
                   SOLD
-                  </Text>
-                </View>
+                </Text>
               </View>
             )}
           </View>
@@ -339,7 +353,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 {property?.lotArea != null ? (
                   <>
                     {property.lotArea}
-                    <Text className="text-[10px] text-gray-500 font-semibold ml-1">SQM</Text>
+                    <Text className="text-[10px] text-gray-500 font-semibold ml-1"> m²</Text>
                   </>
                 ) : (
                   "—"
@@ -353,7 +367,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 {property?.floorArea != null ? (
                   <>
                     {property.floorArea}
-                    <Text className="text-[10px] text-gray-500 font-semibold ml-1">SQM</Text>
+                    <Text className="text-[10px] text-gray-500 font-semibold ml-1"> m²</Text>
                   </>
                 ) : (
                   "—"
@@ -458,7 +472,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
         onRequestClose={() => setLightboxVisible(false)}
       >
         <View
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.93)", justifyContent: "center", alignItems: "center" }}
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.93)", width: '100%' }}
         >
           {/* Close */}
           <TouchableOpacity
@@ -483,12 +497,43 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
             </Text>
           </View>
 
-          {/* Full-size image */}
-          <Image
-            source={{ uri: property?.media?.[lightboxIndex]?.url }}
-            style={{ width: "100%", height: "80%", maxWidth: 900 } as any}
-            resizeMode="contain"
-          />
+          {/* Full-size image — swipeable ScrollView on native, single image on web */}
+          {Platform.OS !== 'web' ? (
+            <ScrollView
+              ref={lightboxScrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              style={{ width: screenWidth, flex: 1 }}
+              onMomentumScrollEnd={(e) => {
+                const offsetX = e.nativeEvent.contentOffset.x;
+                if (screenWidth > 0) {
+                  const idx = Math.round(offsetX / screenWidth);
+                  setLightboxIndex(idx);
+                }
+              }}
+            >
+              {property?.media?.map((media, i) => (
+                <View
+                  key={media.id || i}
+                  style={{ width: screenWidth, flex: 1, justifyContent: 'center', alignItems: 'center' }}
+                >
+                  <Image
+                    source={{ uri: media.url }}
+                    style={{ width: screenWidth, height: '80%' } as any}
+                    resizeMode="contain"
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          ) : (
+            <Image
+              source={{ uri: property?.media?.[lightboxIndex]?.url }}
+              style={{ width: "100%", height: "80%", maxWidth: 900 } as any}
+              resizeMode="contain"
+            />
+          )}
 
           {/* Prev / Next arrows */}
           {mediaCount > 1 && (
@@ -498,9 +543,11 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 style={{
                   position: "absolute",
                   left: 16,
+                  top: '50%',
                   backgroundColor: "rgba(255,255,255,0.15)",
                   borderRadius: 100,
                   padding: 12,
+                  zIndex: 10,
                 }}
               >
                 <MaterialCommunityIcons name="chevron-left" size={30} color="white" />
@@ -510,9 +557,11 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 style={{
                   position: "absolute",
                   right: 16,
+                  top: '50%',
                   backgroundColor: "rgba(255,255,255,0.15)",
                   borderRadius: 100,
                   padding: 12,
+                  zIndex: 10,
                 }}
               >
                 <MaterialCommunityIcons name="chevron-right" size={30} color="white" />
@@ -521,7 +570,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
           )}
 
           {/* Dot indicators */}
-          <View style={{ flexDirection: "row", gap: 8, position: "absolute", bottom: 30 }}>
+          <View style={{ flexDirection: "row", gap: 8, position: "absolute", bottom: 30, alignSelf: 'center', left: 0, right: 0, justifyContent: 'center' }}>
             {property?.media?.map((_, i) => (
               <TouchableOpacity key={i} onPress={() => setLightboxIndex(i)}>
                 <View
