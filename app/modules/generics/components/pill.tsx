@@ -12,6 +12,7 @@ interface PillProps {
   textSize?: string;
   weight?: string;
   backGroundColor?: string;
+  compact?: boolean;
 }
 
 export default function Pill({
@@ -23,12 +24,13 @@ export default function Pill({
   textSize = "text-xs",
   weight = "font-semibold",
   backGroundColor,
+  compact = false,
 }: PillProps) {
 
 
   return (
     <View
-      className={`flex-row items-center px-3 gap-1 py-1.5 ${backGroundColor || "bg-blue-700"} rounded-full ml-2 mr-1`}
+      className={`flex-row items-center gap-1 ${compact ? 'px-2 py-0.5 ml-1 mr-0.5' : 'px-3 py-1.5 ml-2 mr-1'} ${backGroundColor || "bg-blue-700"} rounded-full`}
     >
       <MaterialCommunityIcons name={icon} size={iconSize} color={iconColor} />
       <Text
