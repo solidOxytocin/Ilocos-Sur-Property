@@ -139,7 +139,7 @@ export default function PropertyList() {
         let filtered = mockProperties.filter((p) => {
           if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
           if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
-          if (filters.city && !p.location.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
+          if (filters.city && !p.location?.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
           if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
           if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
           if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
@@ -147,9 +147,9 @@ export default function PropertyList() {
           if (debouncedSearchQuery) {
             const q = debouncedSearchQuery.toLowerCase();
             return (
-              p.title.toLowerCase().includes(q) ||
-              p.location.city.toLowerCase().includes(q) ||
-              p.location.barangay.toLowerCase().includes(q)
+              p.title?.toLowerCase().includes(q) ||
+              p.location?.city?.toLowerCase().includes(q) ||
+              p.location?.barangay?.toLowerCase().includes(q)
             );
           }
           return true;
@@ -190,14 +190,14 @@ export default function PropertyList() {
       let filtered = mockProperties.filter((p) => {
         if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
         if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
-        if (filters.city && !p.location.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
+        if (filters.city && !p.location?.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
         if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
         if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
         if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
         if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
         if (debouncedSearchQuery) {
           const q = debouncedSearchQuery.toLowerCase();
-          return p.title.toLowerCase().includes(q) || p.location.city.toLowerCase().includes(q);
+          return p.title?.toLowerCase().includes(q) || p.location?.city?.toLowerCase().includes(q) || p.location?.barangay?.toLowerCase().includes(q);
         }
         return true;
       });

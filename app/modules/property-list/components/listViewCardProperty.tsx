@@ -107,7 +107,7 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
       <View className="relative">
         <Image
           className="w-full h-40 rounded-t-lg mb-1"
-          source={{ uri: property.media[0]?.url }}
+          source={{ uri: property?.media?.[0]?.url }}
           style={isSold ? { opacity: 0.45 } : undefined}
         />
         {/* Grayscale overlay for sold properties */}
@@ -125,10 +125,10 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
             }}
           />
         )}
-        {property.media.length > 1 && (
+        {(property?.media?.length ?? 0) > 1 && (
           <View className="absolute bottom-2 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
             <MaterialCommunityIcons name="camera-outline" size={14} color="white" />
-            <Text className="text-white text-xs font-bold ml-1">+{property.media.length - 1}</Text>
+            <Text className="text-white text-xs font-bold ml-1">+{(property?.media?.length ?? 1) - 1}</Text>
           </View>
         )}
 
@@ -149,19 +149,19 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
             />
         </View>
       </View>
-      <View className="flex-col   justify-center items-center gap-1">
-        <Text className="font-medium text-lg">
-          {property.location.city}
+      <View className="flex-col justify-center items-center gap-1 px-2 mt-2 min-h-[52px]">
+        <Text className="font-medium text-lg text-center" numberOfLines={1}>
+          {property?.location?.city || "Unknown Location"}
         </Text>
-        <Text className="font-normal text-base">
-          {property.location.barangay}
+        <Text className="font-normal text-base text-gray-500 text-center" numberOfLines={1}>
+          {property?.location?.barangay || " "}
         </Text>
       </View>
-      <View className="flex-row m-2">
+      <View className="flex-row flex-wrap justify-center content-start gap-1 mx-2 min-h-[60px] my-2">
         {(() => {
           const combined = [
-            ...(property.features ?? []).map((f) => ({ ...f, isAmenity: false })),
-            ...(property.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
+            ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
+            ...(property?.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
           ];
           return combined.slice(0, 4).map((item, index) => (
             <ItemPillComponent
@@ -178,9 +178,9 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
       <View className=" flex-row justify-evenly mb-3">
         <Text className="font-bold text-lg text-orange-400">
           {" "}
-          {property.lotArea} SQM
+          {property?.lotArea ? `${property.lotArea} SQM` : "N/A"}
         </Text>
-        <Text className="font-bold text-lg text-blue-600"> ₱{property.price}</Text>
+        <Text className="font-bold text-lg text-blue-600"> ₱{property?.price ?? "0"}</Text>
       </View>
     </TouchableOpacity>
   );

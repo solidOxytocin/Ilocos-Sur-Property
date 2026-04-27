@@ -9,6 +9,17 @@ export interface PaginatedPropertiesResponse {
   totalPages: number;
 }
 
+/** Ensures all nested arrays/objects are never null/undefined. */
+function normalizeProperty(p: any): Property {
+  return {
+    ...p,
+    media: Array.isArray(p?.media) ? p.media : [],
+    features: Array.isArray(p?.features) ? p.features : [],
+    amenities: Array.isArray(p?.amenities) ? p.amenities : [],
+    location: p?.location ?? { city: "", barangay: "", province: "", coordinates: null },
+  } as Property;
+}
+
 function buildQueryString(filters?: Record<string, any>): string {
   if (!filters) return "";
   const queryParams = new URLSearchParams();
@@ -41,9 +52,10 @@ export async function getPropertiesPaginated(
     const json = await response.json();
     // Support both old array response and new paginated envelope
     if (Array.isArray(json)) {
-      return { data: json, total: json.length, page: 1, totalPages: 1 };
+      return { data: json.map(normalizeProperty), total: json.length, page: 1, totalPages: 1 };
     }
-    return json as PaginatedPropertiesResponse;
+    const envelope = json as PaginatedPropertiesResponse;
+    return { ...envelope, data: (envelope.data ?? []).map(normalizeProperty) };
   } catch (e) {
     console.log("Error Fetching Properties (paginated):", e);
     return empty;
