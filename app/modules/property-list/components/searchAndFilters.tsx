@@ -21,45 +21,53 @@ export function SearchAndFilters({
   hasActiveFilters,
 }: SearchAndFiltersProps) {
   const { width } = useWindowDimensions();
-  const isWebGrid = Platform.OS === "web" && !isListView;
-  const showFullTitle = width >= 768; // Show full title on tablet/desktop
-
+  const isGrid = !isListView;
+  const isWeb = Platform.OS === "web";
+  const isWebGrid = isWeb && isGrid;
+  
   return (
-    <View className={`flex-row bg-white px-4 py-3 items-center ${isWebGrid ? 'border-b border-gray-100 shadow-sm' : ''}`}>
-      {isWebGrid && (
-        <View className="flex-row items-center mr-4">
-          <Image
-            source={require("../../../../assets/images/ilocos-sur-icon.png")}
-            style={{ width: 80, height: 80 }}
-            resizeMode="contain"
-          />
-          {showFullTitle && (
-            <Text className="ml-2 font-bold text-lg text-gray-700">
-              {width >= 1024 ? "Ilocos Sur \n Property" : "ISP"}
-            </Text>
-          )}
-        </View>
-      )}
-
-      <TextInput
-        className="flex-1 border border-gray-200 bg-gray-50 px-4 py-2 mr-3 rounded-lg"
-        placeholder="Search properties..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-      <Pressable onPress={onOpenFilters} className="h-10 w-10 items-center justify-center rounded-full bg-gray-100 mr-2 relative">
-        <Feather name="filter" color="#4b5563" size={18} />
-        {hasActiveFilters && (
-            <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+    <View className="bg-blue-700 shadow-lg px-4 py-4">
+      <View className={`flex-row items-center w-full ${isWebGrid ? 'justify-center max-w-6xl mx-auto' : ''}`}>
+        
+        {isWebGrid && (
+          <View className="flex-row items-center mr-4">
+            <Image
+              source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
+              style={{ width: 100, height: 100 }}
+              resizeMode="contain"
+              
+            />
+            <Text className="text-white text-2xl font-bold ml-4">Ilocos Sur {"\n"} Property</Text>
+          </View>
         )}
-      </Pressable>
 
-      <Pressable
-        className="h-10 w-10 items-center justify-center rounded-full bg-gray-100"
-        onPress={() => setListView(!isListView)}
-      >
-        <Feather name={!isListView ? "list" : "grid"} color="#4b5563" size={18} />
-      </Pressable>
+        <TextInput
+          className={`px-4 py-3 mr-3 rounded-xl flex-1 border border-white bg-white text-gray-900 ${isWebGrid ? 'max-w-2xl mx-4' : ''}`}
+          placeholder="Search properties..."
+          placeholderTextColor="#9ca3af"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+
+        <Pressable 
+          onPress={onOpenFilters} 
+          className="h-12 w-12 items-center justify-center rounded-xl mr-2 relative bg-white/20"
+          style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+        >
+          <Feather name="filter" color="#fff" size={20} />
+          {hasActiveFilters && (
+              <View className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-blue-700" />
+          )}
+        </Pressable>
+
+        <Pressable
+          className="h-12 w-12 items-center justify-center rounded-xl bg-white/20"
+          style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+          onPress={() => setListView(!isListView)}
+        >
+          <Feather name={!isListView ? "list" : "grid"} color="#fff" size={20} />
+        </Pressable>
+      </View>
     </View>
   );
 }

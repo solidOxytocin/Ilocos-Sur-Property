@@ -43,6 +43,16 @@ export async function getPropertiesPaginated(
   limit = 12
 ): Promise<PaginatedPropertiesResponse> {
   const empty: PaginatedPropertiesResponse = { data: [], total: 0, page, totalPages: 0 };
+  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
+    const start = (page - 1) * limit;
+    const paginated = mockProperties.slice(start, start + limit);
+    return {
+      data: paginated.map(normalizeProperty),
+      total: mockProperties.length,
+      page,
+      totalPages: Math.ceil(mockProperties.length / limit)
+    };
+  }
   try {
     const params = { ...filters, page, limit };
     const url = PROPERTY.getProperties + buildQueryString(params);
@@ -64,6 +74,9 @@ export async function getPropertiesPaginated(
 
 /** Kept for backward compatibility (admin view fetches all at once). */
 export async function getProperties(filters?: Record<string, any>): Promise<Property[]> {
+  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
+    return mockProperties.map(normalizeProperty);
+  }
   try {
     const url = PROPERTY.getProperties + buildQueryString({ ...filters, limit: 1000 });
     console.log("getProperties URL:", url);

@@ -172,10 +172,13 @@ export default function gridViewCardProperty({
           })()}
         </View>
       </View>
-      <View className="flex-row justify-evenly mb-2 ">
-        <Text className="font-bold text-lg text-orange-400">
-          {property?.lotArea ? `${property.lotArea} SQM` : ""}
-        </Text>
+      <View className="flex-row justify-evenly mb-2 items-center">
+        <View className="flex-row items-center">
+          <MaterialCommunityIcons name="vector-square" size={16} color="#fb923c" />
+          <Text className="font-bold text-lg text-orange-400 ml-1">
+            {property?.lotArea ? `${property.lotArea} SQM` : ""}
+          </Text>
+        </View>
         <Text className="font-bold text-lg text-blue-600">
           {(() => {
             if (!property?.price) return "";

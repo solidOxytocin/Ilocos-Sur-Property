@@ -265,12 +265,11 @@ export default function PropertyList() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
-      <View className="flex-1 flex-row px-2 pt-3">
-        {/* ── Main list / grid ────────────────────────────────────── */}
+      <View className="flex-1 flex-row">
+        {/* ── LEFT COLUMN (Header + List) ────────────────────────── */}
         <View className="flex-1">
-
-          {/* Search + icon bar */}
-          <View className="mb-2">
+          {/* Header spanning full width of left column */}
+          <View className="bg-white z-10">
             <SearchAndFilters
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -316,7 +315,7 @@ export default function PropertyList() {
             </View>
 
             {/* Quick filter chips */}
-            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8 }}>
+            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8, paddingBottom: 12 }}>
               <FlatList
                 horizontal
                 data={quickFilters}
@@ -344,37 +343,39 @@ export default function PropertyList() {
           </View>
 
           {/* List Body */}
-          {loading ? (
-            <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#1d4ed8" />
-            </View>
-          ) : properties.length === 0 ? (
-            <View className="flex-1 justify-center items-center">
-              <Text className="text-lg text-gray-500">No properties found matching your search.</Text>
-            </View>
-          ) : (
-            <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
-              <FlatList
-                key={numColumns + (isListView ? "-list" : "-grid")}
-                data={properties}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => `${item.id}-${index}`}
-                numColumns={numColumns}
-                showsVerticalScrollIndicator={false}
-                className={isListView ? "w-full" : ""}
-                onEndReached={loadNextPage}
-                onEndReachedThreshold={0.4}
-                ListFooterComponent={renderFooter}
-              />
-            </View>
-          )}
+          <View className="flex-1 px-2 pt-3">
+            {loading ? (
+              <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#1d4ed8" />
+              </View>
+            ) : properties.length === 0 ? (
+              <View className="flex-1 justify-center items-center">
+                <Text className="text-lg text-gray-500">No properties found matching your search.</Text>
+              </View>
+            ) : (
+              <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
+                <FlatList
+                  key={numColumns + (isListView ? "-list" : "-grid")}
+                  data={properties}
+                  renderItem={renderItem}
+                  keyExtractor={(item, index) => `${item.id}-${index}`}
+                  numColumns={numColumns}
+                  showsVerticalScrollIndicator={false}
+                  className={isListView ? "w-full" : ""}
+                  onEndReached={loadNextPage}
+                  onEndReachedThreshold={0.4}
+                  ListFooterComponent={renderFooter}
+                />
+              </View>
+            )}
+          </View>
         </View>
 
         {/* ── Web split-view details panel ────────────────────────── */}
         {isWebDesktop && isListView && (
           <>
-            <View className="w-[1px] bg-gray-300 mx-2" />
-            <View className="w-2/3 bg-white rounded-lg shadow-sm shadow-gray-200 overflow-hidden mb-2">
+            <View className="w-[1px] bg-gray-300 mx-2 my-3" />
+            <View className="w-2/3 bg-white rounded-lg shadow-sm shadow-gray-200 overflow-hidden mt-3 mr-2 mb-2">
               {selectedProperty ? (
                 <PropertyDetailsContent
                   property={selectedProperty}

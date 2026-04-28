@@ -10,4 +10,4 @@ const ENV = {
   production: { useMock: false, apiUrl: "https://api.myapp.com" }
 };
 
-export default ENV.development as EnvConfig; // switch env here
+export default ENV.mock as EnvConfig; // switch env here
