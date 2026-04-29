@@ -63,11 +63,17 @@
 - [x] Make Sort Single Chip 
 - [x] Add headers (U)
 - [x] Add Landing Page WEB (U)
+    -[] Add "Have a property to sell" Section
 - [x] Image Full Screen issue on web
 - [x] Fix Cards
 - [x] Filtering "santa" gets Santa lucia ,etc
-- [] Add Home Section MOBILE
-- [] Add Splash Screen for MOBILE(U)
+- [x] Add Home Section MOBILE
+    -[] Remove Bell(notif icon)
+    -[] Search Button would work ()
+    -[] Clicking Featured Property Would go to actual Details
+    -[] Clicking Category would filter the properties
+    -[] "Have a property to sell" Would go show contact agent just like in details inquire now button.
+- [] Beautify Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [] R&D For Image Handling 
