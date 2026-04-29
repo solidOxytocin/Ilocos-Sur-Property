@@ -115,4 +115,39 @@ export async function getPropertyBounds(): Promise<{ maxPrice: number; maxLotAre
   } catch (e) {
     return { maxPrice: 50000000, maxLotArea: 1000 };
   }
-}
+}
+
+/** Returns a map of { cityName: count } for all cities that have at least one property. */
+export async function getCityPropertyCounts(): Promise<Record<string, number>> {
+  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
+    // Compute counts from mock data client-side
+    const counts: Record<string, number> = {};
+    for (const p of mockProperties) {
+      const city = p.location?.city;
+      if (city) counts[city] = (counts[city] ?? 0) + 1;
+    }
+    return counts;
+  }
+  try {
+    const res = await fetch(PROPERTY.getCityCounts);
+    if (!res.ok) return {};
+    // Expected API shape: [{ city: string; count: number }] or { [city]: count }
+    const json = await res.json();
+    if (Array.isArray(json)) {
+      // Convert array shape → record
+      const map: Record<string, number> = {};
+      for (const item of json) {
+        if (item.city && typeof item.count === "number") {
+          map[item.city] = item.count;
+        }
+      }
+      return map;
+    }
+    // Already a record shape
+    return json as Record<string, number>;
+  } catch (e) {
+    console.log("Error fetching city property counts:", e);
+    return {};
+  }
+}
+

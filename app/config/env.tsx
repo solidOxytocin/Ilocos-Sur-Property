@@ -5,7 +5,7 @@ interface EnvConfig {
 }
 
 const ENV = {
-  mock: { useMock: true, apiUrl: null },
+  mock: { useMock: false, apiUrl: null },
   development: { useMock: false, apiUrl: "http://192.168.1.15:5000" },
   production: { useMock: false, apiUrl: "https://api.myapp.com" }
 };

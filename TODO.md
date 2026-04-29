@@ -61,8 +61,10 @@
     
 - [x] Generate a Ilocos Sur Property Icon 
 - [x] Make Sort Single Chip 
-- [] Add header for WEB (U)
-- [] Add Home Section WEB
+- [x] Add headers (U)
+- [x] Add Landing Page WEB (U)
+- [] Image Full Screen issue on web
+- [] Filtering "santa" gets Santa lucia ,etc
 - [] Add Home Section MOBILE
 - [] Add Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)

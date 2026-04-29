@@ -1,5 +1,6 @@
 import { size } from "@/app/theme/size";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Pressable, TextInput, View, Image, Platform, Text, useWindowDimensions } from "react-native";
 
@@ -30,15 +31,17 @@ export function SearchAndFilters({
       <View className={`flex-row items-center w-full ${isWebGrid ? 'justify-center max-w-6xl mx-auto' : ''}`}>
         
         {isWebGrid && (
-          <View className="flex-row items-center mr-4">
-            <Image
-              source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
-              style={{ width: 100, height: 100 }}
-              resizeMode="contain"
+          <Pressable onPress={() => router.push("/")}>
+            <View className="flex-row items-center mr-4">
+              <Image
+                source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
+                style={{ width: 100, height: 100 }}
+                resizeMode="contain"
               
             />
             <Text className="text-white text-2xl font-bold ml-4">Ilocos Sur {"\n"} Property</Text>
           </View>
+          </Pressable>
         )}
 
         <TextInput

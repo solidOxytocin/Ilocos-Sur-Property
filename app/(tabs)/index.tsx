@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   ScrollView,
   Text,
   useWindowDimensions,
@@ -17,6 +18,7 @@ import { getPropertiesPaginated } from "../service/property-service";
 import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
 import { FilterModal, FilterState } from "../modules/property-list/components/filterModal";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 
 const PAGE_SIZE = 12;
 
@@ -42,6 +44,9 @@ function sortMockProperties(list: Property[], field: SortField, order: SortOrder
 }
 
 export default function PropertyList() {
+  const { id: preselectedId, city: preselectedCity, type: preselectedType, status: preselectedStatus } =
+    useLocalSearchParams<{ id?: string; city?: string; type?: string; status?: string }>();
+
   const [isListView, setIsListView]   = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -133,7 +138,7 @@ export default function PropertyList() {
       setLoading(true);
       setProperties([]);
       setCurrentPage(1);
-
+     
       if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
         // Apply client-side filter + sort on mock data
         let filtered = mockProperties.filter((p) => {
@@ -220,6 +225,32 @@ export default function PropertyList() {
   const { width } = useWindowDimensions();
   const isWebDesktop = width >= 1024;
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
+
+  // ── Auto-select property from URL param (e.g. /properties?id=3) ────────────
+  useEffect(() => {
+    if (Platform.OS !== "web" || !preselectedId) return;
+    const numId = Number(preselectedId);
+    if (!numId) return;
+    // Switch to list view so the split-panel is visible
+    setIsListView(true);
+    setSelectedPropertyId(numId);
+  }, [preselectedId]);
+
+  // ── Pre-apply city filter from URL param (e.g. /properties?city=Vigan+City) ──
+  useEffect(() => {
+    if (Platform.OS !== "web" || !preselectedCity) return;
+    setFilters((prev) => ({ ...prev, city: preselectedCity }));
+  }, [preselectedCity]);
+
+  // ── Pre-apply type / status filters from URL params ──────────────────────────
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    setFilters((prev) => ({
+      ...prev,
+      ...(preselectedType   ? { type:   [preselectedType]   } : {}),
+      ...(preselectedStatus ? { status: [preselectedStatus] } : {}),
+    }));
+  }, [preselectedType, preselectedStatus]);
 
   const selectedProperty = useMemo(
     () => (selectedPropertyId ? properties.find((p) => p.id === selectedPropertyId) ?? null : null),

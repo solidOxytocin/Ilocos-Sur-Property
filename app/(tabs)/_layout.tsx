@@ -1,10 +1,16 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 import "../globals.css";
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: Platform.OS === "web" ? { display: "none" } : {},
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
