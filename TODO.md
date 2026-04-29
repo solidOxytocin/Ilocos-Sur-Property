@@ -64,8 +64,8 @@
 - [x] Add headers (U)
 - [x] Add Landing Page WEB (U)
 - [x] Image Full Screen issue on web
-- [] Fix Cards
-- [] Filtering "santa" gets Santa lucia ,etc
+- [x] Fix Cards
+- [x] Filtering "santa" gets Santa lucia ,etc
 - [] Add Home Section MOBILE
 - [] Add Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)
