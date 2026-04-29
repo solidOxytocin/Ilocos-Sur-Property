@@ -528,11 +528,13 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
               ))}
             </ScrollView>
           ) : (
-            <Image
-              source={{ uri: property?.media?.[lightboxIndex]?.url }}
-              style={{ width: "100%", height: "80%", maxWidth: 900 } as any}
-              resizeMode="contain"
-            />
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+              <Image
+                source={{ uri: property?.media?.[lightboxIndex]?.url }}
+                style={{ width: "100%", height: "90%", maxWidth: 1200 } as any}
+                resizeMode="contain"
+              />
+            </View>
           )}
 
           {/* Prev / Next arrows */}
