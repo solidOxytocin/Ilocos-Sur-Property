@@ -29,17 +29,17 @@ function ItemPillComponent({
   length,
   isAmenity = false,
 }: ItemPillComponentProps) {
-  const MAX_FEATURE = size.gridMaxFeatures;
+  const MAX_FEATURE = 3;
 
   //Color
-  const ICON_COLOR = isAmenity ? "#16A34A" : "#3B82F6";
-  const BACKGROUND_COLOR = isAmenity ? "bg-green-50 border border-green-100" : "bg-blue-50 border border-blue-100";
+  const ICON_COLOR = isAmenity ? "#059669" : "#2563eb";
+  const BACKGROUND_COLOR = isAmenity ? "bg-emerald-50 border border-emerald-100" : "bg-blue-50 border border-blue-100";
   const TEXT_COLOR = "text-gray-700";
 
   //Size
-  const ICON_SIZE = size.pillIconSize;
-  const TEXT_SIZE = "text-xs";
-  const TEXT_WEIGHT = "font-semibold";
+  const ICON_SIZE = 12;
+  const TEXT_SIZE = "text-[10px]";
+  const TEXT_WEIGHT = "font-medium";
 
   if (index > MAX_FEATURE) {
     return null;
@@ -54,30 +54,36 @@ function ItemPillComponent({
       ? (AMENITY_ICONS[MORE_ICON_KEY] ?? AMENITY_ICONS[EMPTY_ICON_KEY])
       : (FEATURE_ICONS[MORE_ICON_KEY] ?? FEATURE_ICONS[EMPTY_ICON_KEY]);
     return (
-      <Pill
-        text={length - MAX_FEATURE + "+"}
-        icon={iconName}
-        iconSize={ICON_SIZE}
-        iconColor={ICON_COLOR}
-        backGroundColor={BACKGROUND_COLOR}
-        textColor={TEXT_COLOR}
-        textSize={TEXT_SIZE}
-        weight={TEXT_WEIGHT}
-      />
+      <View className="mb-1">
+        <Pill
+          text={length - MAX_FEATURE + "+"}
+          icon={iconName}
+          iconSize={ICON_SIZE}
+          iconColor={ICON_COLOR}
+          backGroundColor={BACKGROUND_COLOR}
+          textColor={TEXT_COLOR}
+          textSize={TEXT_SIZE}
+          weight={TEXT_WEIGHT}
+          compact
+        />
+      </View>
     );
   } else {
     return (
-      <Pill 
-      text={item.name} 
-      icon={iconName} 
-      iconSize={ICON_SIZE}
-        iconColor={ICON_COLOR}
-        backGroundColor={BACKGROUND_COLOR}
-        textColor={TEXT_COLOR}
-        textSize={TEXT_SIZE}
-        weight={TEXT_WEIGHT} />
+      <View className="mb-1">
+        <Pill 
+          text={item.name} 
+          icon={iconName} 
+          iconSize={ICON_SIZE}
+          iconColor={ICON_COLOR}
+          backGroundColor={BACKGROUND_COLOR}
+          textColor={TEXT_COLOR}
+          textSize={TEXT_SIZE}
+          weight={TEXT_WEIGHT} 
+          compact
+        />
+      </View>
     )
-
   }
 }
 
@@ -86,9 +92,10 @@ export default function gridViewCardProperty({
 }: gridViewCardPropertyProps) {
   const router = useRouter();
   const isSold = property?.status?.toUpperCase() === "SOLD";
+  
   return (
     <TouchableOpacity
-      className="bg-white shadow-gray-300 flex-col rounded-lg gap-2 m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow"
+      className="bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow"
       activeOpacity={0.8}
       onPress={() => {
         router.push({
@@ -97,98 +104,106 @@ export default function gridViewCardProperty({
         });
       }}
     >
-      <View className="relative">
+      {/* Image Preview */}
+      <View className="relative w-full h-36">
         <Image
           source={{ uri: property?.media?.[0]?.url }}
-          className="w-full h-40 rounded-t-lg mb-2"
-          style={isSold ? { opacity: 0.45 } : undefined}
+          className="w-full h-full"
+          style={isSold ? { opacity: 0.5 } : undefined}
+          resizeMode="cover"
         />
         {/* Grayscale overlay for sold properties */}
         {isSold && (
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 8,
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              backgroundColor: "rgba(120,120,120,0.45)",
-            }}
-          />
+          <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/30" />
         )}
+        
+        {/* Media count] */}
         {(property?.media?.length ?? 0) > 1 && (
-          <View className="absolute top-3 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
-            <MaterialCommunityIcons name="camera-outline" size={14} color="white" />
-            <Text className="text-white text-xs font-bold ml-1">+{(property?.media?.length ?? 1) - 1}</Text>
+          <View className="absolute bottom-2 right-2 bg-black/60 rounded-full flex-row items-center px-2 py-1">
+            <MaterialCommunityIcons name="camera-outline" size={12} color="white" />
+            <Text className="text-white text-[10px] font-bold ml-1">+{(property?.media?.length ?? 1) - 1}</Text>
           </View>
         )}
 
-         <View className="flex-row absolute bottom-3 left-1">
+        {/* Status at top Left */}
+        <View className="absolute top-2 left-1">
+          <Pill 
+              text={property?.status?.toUpperCase() || "AVAILABLE"} 
+              icon="check-circle" 
+              iconSize={10} 
+              textSize="text-[10px]" 
+              backGroundColor={isSold ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-orange-500" : "bg-emerald-500"}
+              compact
+          />
+        </View>
+
+        {/* Property type at bottom left */}
+        <View className="absolute bottom-2 left-1">
            <Pill 
                 text={property?.type?.toUpperCase() || "PROPERTY"} 
                 icon="home-city" 
-                iconSize={11} 
-                textSize="text-xs" 
-                backGroundColor="bg-purple-600"
+                iconSize={10} 
+                textSize="text-[10px]" 
+                backGroundColor="bg-blue-600"
                 compact
           />
-              <Pill 
-                  text={property?.status?.toUpperCase() || "AVAILABLE"} 
-                  icon="check-circle" 
-                  iconSize={11} 
-                  textSize="text-xs" 
-                  backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-yellow-600" : "bg-teal-600"}
-                  compact
-              />
-          </View>
+        </View>
       </View>
 
-      <View className="flex-col mb-1">
-        <View className=" flex-col justify-center items-center mb-2 px-2 min-h-[52px]">
-          <Text className="font-medium text-lg text-center" numberOfLines={1}>
-            {property?.location?.city || "Unknown Location"}
-          </Text>
-          <Text className="font-normal text-base text-gray-500 text-center" numberOfLines={1}>
-            {property?.location?.barangay || " "}
-          </Text>
+      {/* Content */}
+      <View className="flex-col p-3 flex-1 justify-between min-h-[140px]">
+        
+        {/* Header */}
+        <View>
+          <View className="flex-1 flex-row items-center justify-center">
+             <Text className="font-bold text-[15px] text-gray-800" numberOfLines={1}>
+              {property?.location?.city || "Unknown Location"}
+            </Text>
+          </View>
+          <View className="flex-1 flex-row items-center justify-center">  
+              <Text className="font-normal text-xs text-gray-500 mb-2" numberOfLines={1}>
+                {property?.location?.barangay || " "}
+              </Text>
+          </View>
+        
+          
+          <View className="flex-row flex-wrap min-h-[44px]">
+            {(() => {
+              const combined = [
+                ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
+                ...(property?.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
+              ];
+              return combined.slice(0, 4).map((item, index) => (
+                <ItemPillComponent
+                  key={index}
+                  item={item}
+                  index={index + 1}
+                  length={combined.length}
+                  isAmenity={item.isAmenity}
+                />
+              ));
+            })()}
+          </View>
         </View>
-        <View className="flex-row flex-wrap justify-center content-start gap-1 mx-2 min-h-[60px]">
-          {(() => {
-            const combined = [
-              ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
-              ...(property?.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
-            ];
-            return combined.slice(0, 4).map((item, index) => (
-              <ItemPillComponent
-                key={index}
-                item={item}
-                index={index + 1}
-                length={combined.length}
-                isAmenity={item.isAmenity}
-              />
-            ));
-          })()}
+
+        <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-gray-100">
+           <View className="flex-row items-center">
+             <MaterialCommunityIcons name="vector-square" size={21} color="#fb923c" />
+             <Text className="font-bold text-[14px] text-orange-600 ml-1">
+               {property?.lotArea ? `${property.lotArea} SQM` : "N/A"}
+             </Text>
+           </View>
+           <Text className="font-extrabold text-base text-blue-600">
+             {(() => {
+               if (!property?.price) return "";
+               const p = Number(property.price);
+               if (p < 1000) return `₱${p}`;
+               if (p < 1000000) return `₱${(p / 1000).toFixed(0)}K`;
+               if (p < 1000000000) return `₱${(p / 1000000).toFixed(0)}M`;
+               return `₱${(p / 1000000000).toFixed(0)}B`;
+             })()}
+           </Text>
         </View>
-      </View>
-      <View className="flex-row justify-evenly mb-2 items-center">
-        <View className="flex-row items-center">
-          <MaterialCommunityIcons name="vector-square" size={16} color="#fb923c" />
-          <Text className="font-bold text-lg text-orange-400 ml-1">
-            {property?.lotArea ? `${property.lotArea} SQM` : ""}
-          </Text>
-        </View>
-        <Text className="font-bold text-lg text-blue-600">
-          {(() => {
-            if (!property?.price) return "";
-            const p = Number(property.price);
-            if (p < 1000) return `₱${p}`;
-            if (p < 1000000) return `₱${(p / 1000).toFixed(0)}K`;
-            if (p < 1000000000) return `₱${(p / 1000000).toFixed(0)}M`;
-            return `₱${(p / 1000000000).toFixed(0)}B`;
-          })()}
-        </Text>
       </View>
     </TouchableOpacity>
   );
