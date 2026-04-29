@@ -1,433 +1,206 @@
-import GridViewCardProperty from "@/app/modules/property-list/components/gridViewCardProperty";
-import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
-import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Platform,
-  ScrollView,
-  Text,
-  useWindowDimensions,
   View,
-  Pressable,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+  useWindowDimensions,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { mockProperties, Property } from "../constants/mock/mock-properties";
-import { getPropertiesPaginated } from "../service/property-service";
-import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
-import { FilterModal, FilterState } from "../modules/property-list/components/filterModal";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { mockProperties } from "../constants/mock/mock-properties";
+import GridViewCardProperty from "../modules/property-list/components/gridViewCardProperty";
 
-const PAGE_SIZE = 12;
+import Hero1 from "../../assets/images/hero_1.png";
+import Hero2 from "../../assets/images/hero_2.png";
+import Hero3 from "../../assets/images/hero_3.png";
 
-type SortField = "createdAt" | "price" | "lotArea" | "city";
-type SortOrder = "asc" | "desc";
+const HERO_IMAGES = [Hero1, Hero2, Hero3];
 
-const SORT_FIELDS: { label: string; field: SortField }[] = [
-  { label: "Newest",  field: "createdAt" },
-  { label: "Price", field: "price" },
-  { label: "Area",  field: "lotArea" },
-  { label: "City",  field: "city" },
-];
+export default function HomeScreen() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const [activeSlide, setActiveSlide] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-// Client-side sort for mock mode
-function sortMockProperties(list: Property[], field: SortField, order: SortOrder): Property[] {
-  return [...list].sort((a, b) => {
-    let av: any = a[field as keyof Property] ?? "";
-    let bv: any = b[field as keyof Property] ?? "";
-    if (field === "createdAt") { av = new Date(av).getTime(); bv = new Date(bv).getTime(); }
-    if (typeof av === "string") return order === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
-    return order === "asc" ? av - bv : bv - av;
-  });
-}
+  // Auto-slide effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => {
+        const next = (prev + 1) % HERO_IMAGES.length;
+        scrollViewRef.current?.scrollTo({ x: next * (width - 32), animated: true });
+        return next;
+      });
+    }, 4000); // 4 seconds
+    return () => clearInterval(interval);
+  }, [width]);
 
-export default function PropertyList() {
-  const { id: preselectedId, city: preselectedCity, type: preselectedType, status: preselectedStatus } =
-    useLocalSearchParams<{ id?: string; city?: string; type?: string; status?: string }>();
-
-  const [isListView, setIsListView]   = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages]   = useState(1);
-  const [total, setTotal]             = useState(0);
-
-  // Sort state — null means no active sort
-  const [sortField, setSortField] = useState<SortField | null>("createdAt");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-
-  const handleSortChipPress = (field: SortField) => {
-    const defaultOrder = field === "createdAt" ? "desc" : "asc";
-    const toggleOrder = field === "createdAt" ? "asc" : "desc";
-
-    if (sortField !== field) {
-      // Activate this field with its default order
-      setSortField(field);
-      setSortOrder(defaultOrder);
-    } else if (sortOrder === defaultOrder) {
-      // Cycle to the toggled order
-      setSortOrder(toggleOrder);
-    } else {
-      // Was in the toggled order — clear sort
-      setSortField(null);
+  const onScroll = (event: any) => {
+    const slide = Math.ceil(
+      event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width
+    );
+    if (slide !== activeSlide && slide >= 0 && slide < HERO_IMAGES.length) {
+      setActiveSlide(slide);
     }
   };
 
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    type: [], status: [], minPrice: 0, maxPrice: 0, city: "", minArea: 0, maxArea: 0,
-  });
+  const handleSearch = (text: string) => {
+    // We can pass search text as params, or just navigate to browse
+    router.push("/(tabs)/properties");
+  };
 
-  const hasActiveFilters = useMemo(
-    () =>
-      filters.type.length > 0 || filters.status.length > 0 || filters.city !== "" ||
-      filters.minPrice > 0 || (filters.maxPrice > 0 && filters.maxPrice < 50000000) ||
-      filters.minArea > 0 || (filters.maxArea > 0 && filters.maxArea < 10000),
-    [filters]
-  );
+  const navigateToCategory = (type: string) => {
+    router.push({ pathname: "/(tabs)/properties", params: { type } });
+  };
 
-  const quickFilters = [
-    { label: "Available", key: "status", value: "AVAILABLE" },
-    { label: "House",     key: "type",   value: "HOUSE" },
-    { label: "Lot",       key: "type",   value: "LOT" },
-    { label: "Condo",     key: "type",   value: "CONDO" },
-    { label: "Commercial",key: "type",   value: "COMMERCIAL" },
+  const quickActions = [
+    { label: "House", icon: "home-outline", type: "HOUSE", color: "#3b82f6", bg: "#eff6ff" },
+    { label: "Lot Only", icon: "map-outline", type: "LOT", color: "#10b981", bg: "#ecfdf5" },
+    { label: "Condo", icon: "domain", type: "CONDO", color: "#f59e0b", bg: "#fffbeb" },
+    { label: "Commercial", icon: "storefront-outline", type: "COMMERCIAL", color: "#8b5cf6", bg: "#f5f3ff" },
   ];
 
-  const handleQuickFilterToggle = (key: "type" | "status", value: string) => {
-    setFilters((prev) => {
-      const arr = prev[key];
-      return arr.includes(value)
-        ? { ...prev, [key]: arr.filter((i) => i !== value) }
-        : { ...prev, [key]: [...arr, value] };
-    });
-  };
-
-  // Debounce search
-  useEffect(() => {
-    const h = setTimeout(() => setDebouncedSearchQuery(searchQuery), 500);
-    return () => clearTimeout(h);
-  }, [searchQuery]);
-
-  // Build filter + sort params
-  const buildFetchFilters = useCallback((): Record<string, any> => {
-    const f: Record<string, any> = {};
-    if (debouncedSearchQuery) f.searchQuery = debouncedSearchQuery;
-    if (filters.type.length > 0)   f.type     = filters.type;
-    if (filters.status.length > 0) f.status   = filters.status;
-    if (filters.city)              f.city     = filters.city;
-    if (filters.minPrice > 0)      f.minPrice = filters.minPrice;
-    if (filters.maxPrice > 0)      f.maxPrice = filters.maxPrice;
-    if (filters.minArea > 0)       f.minArea  = filters.minArea;
-    if (filters.maxArea > 0)       f.maxArea  = filters.maxArea;
-    if (sortField) { f.sortBy = sortField; f.sortOrder = sortOrder; }
-    return f;
-  }, [debouncedSearchQuery, filters, sortField, sortOrder]);
-
-  // ── Load page 1 whenever filters / sort change ─────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchFirstPage() {
-      setLoading(true);
-      setProperties([]);
-      setCurrentPage(1);
-     
-      if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
-        // Apply client-side filter + sort on mock data
-        let filtered = mockProperties.filter((p) => {
-          if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
-          if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
-          if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
-          if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
-          if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
-          if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
-          if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
-          if (debouncedSearchQuery) {
-            const q = debouncedSearchQuery.toLowerCase();
-            return (
-              p.title?.toLowerCase().includes(q) ||
-              p.location?.city?.toLowerCase().includes(q) ||
-              p.location?.barangay?.toLowerCase().includes(q)
-            );
-          }
-          return true;
-        });
-        if (sortField) filtered = sortMockProperties(filtered, sortField, sortOrder);
-        const slice = filtered.slice(0, PAGE_SIZE);
-        if (!cancelled) {
-          setProperties(slice);
-          setTotal(filtered.length);
-          setTotalPages(Math.ceil(filtered.length / PAGE_SIZE));
-          setLoading(false);
-        }
-        return;
-      }
-
-      const result = await getPropertiesPaginated(buildFetchFilters(), 1, PAGE_SIZE);
-      if (!cancelled) {
-        setProperties(result.data);
-        setTotal(result.total);
-        setTotalPages(result.totalPages);
-        setCurrentPage(1);
-        setLoading(false);
-      }
-    }
-
-    fetchFirstPage();
-    return () => { cancelled = true; };
-  }, [debouncedSearchQuery, filters, sortField, sortOrder]);
-
-  // ── Append next page on scroll-to-end ─────────────────────────────────────
-  const loadNextPage = useCallback(async () => {
-    if (loadingMore || loading || currentPage >= totalPages) return;
-    const nextPage = currentPage + 1;
-    setLoadingMore(true);
-
-    if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
-      // slice next page from already-sorted mock
-      let filtered = mockProperties.filter((p) => {
-        if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
-        if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
-        if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
-        if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
-        if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
-        if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
-        if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
-        if (debouncedSearchQuery) {
-          const q = debouncedSearchQuery.toLowerCase();
-          return p.title?.toLowerCase().includes(q) || p.location?.city?.toLowerCase().includes(q) || p.location?.barangay?.toLowerCase().includes(q);
-        }
-        return true;
-      });
-      if (sortField) filtered = sortMockProperties(filtered, sortField, sortOrder);
-      const slice = filtered.slice((nextPage - 1) * PAGE_SIZE, nextPage * PAGE_SIZE);
-      setProperties(prev => [...prev, ...slice]);
-      setCurrentPage(nextPage);
-      setLoadingMore(false);
-      return;
-    }
-
-    const result = await getPropertiesPaginated(buildFetchFilters(), nextPage, PAGE_SIZE);
-    setProperties((prev) => [...prev, ...result.data]);
-    setCurrentPage(nextPage);
-    setTotalPages(result.totalPages);
-    setLoadingMore(false);
-  }, [loadingMore, loading, currentPage, totalPages, buildFetchFilters, filters, debouncedSearchQuery, sortField, sortOrder]);
-
-  // ── Layout ─────────────────────────────────────────────────────────────────
-  const { width } = useWindowDimensions();
-  const isWebDesktop = width >= 1024;
-  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
-
-  // ── Auto-select property from URL param (e.g. /properties?id=3) ────────────
-  useEffect(() => {
-    if (Platform.OS !== "web" || !preselectedId) return;
-    const numId = Number(preselectedId);
-    if (!numId) return;
-    // Switch to list view so the split-panel is visible
-    setIsListView(true);
-    setSelectedPropertyId(numId);
-  }, [preselectedId]);
-
-  // ── Pre-apply city filter from URL param (e.g. /properties?city=Vigan+City) ──
-  useEffect(() => {
-    if (Platform.OS !== "web" || !preselectedCity) return;
-    setFilters((prev) => ({ ...prev, city: preselectedCity }));
-  }, [preselectedCity]);
-
-  // ── Pre-apply type / status filters from URL params ──────────────────────────
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    setFilters((prev) => ({
-      ...prev,
-      ...(preselectedType   ? { type:   [preselectedType]   } : {}),
-      ...(preselectedStatus ? { status: [preselectedStatus] } : {}),
-    }));
-  }, [preselectedType, preselectedStatus]);
-
-  const selectedProperty = useMemo(
-    () => (selectedPropertyId ? properties.find((p) => p.id === selectedPropertyId) ?? null : null),
-    [selectedPropertyId, properties]
-  );
-
-  const numColumns = isListView ? 1 : width > 1200 ? 5 : width > 1000 ? 4 : width > 800 ? 3 : 2;
-
-  const renderItem = ({ item }: { item: Property }) =>
-    isListView ? (
-      <ListViewCardProperty
-        property={item}
-        onPress={isWebDesktop ? () => setSelectedPropertyId(item.id) : undefined}
-      />
-    ) : (
-      <GridViewCardProperty property={item} />
-    );
-
-  const renderFooter = () => {
-    if (loadingMore) {
-      return (
-        <View className="py-6 items-center">
-          <ActivityIndicator size="small" color="#1d4ed8" />
-          <Text className="text-xs text-gray-400 mt-2">Loading more…</Text>
-        </View>
-      );
-    }
-    if (!loading && properties.length > 0 && currentPage >= totalPages && totalPages > 0) {
-      return (
-        <View className="py-4 items-center">
-          <View className="flex-row items-center">
-            <View className="h-px w-16 bg-gray-200" />
-            <Text className="text-xs text-gray-400 px-3">
-              {total} propert{total === 1 ? "y" : "ies"} shown
-            </Text>
-            <View className="h-px w-16 bg-gray-200" />
-          </View>
-        </View>
-      );
-    }
-    return null;
-  };
+  // Get 5 featured properties (for example, newest or randomly picked from mock)
+  const featuredProperties = mockProperties.slice(0, 5);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <View className="flex-1 flex-row">
-        {/* ── LEFT COLUMN (Header + List) ────────────────────────── */}
-        <View className="flex-1">
-          {/* Header spanning full width of left column */}
-          <View className="bg-white z-10">
-            <SearchAndFilters
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              isListView={isListView}
-              setListView={setIsListView}
-              onOpenFilters={() => setIsFilterModalVisible(true)}
-              hasActiveFilters={hasActiveFilters}
-            />
-
-            {/* Sort chips — one chip per field, arrow appears only when active */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8 }}>
-              <MaterialIcons name="sort" size={16} color="#6b7280" />
-              <Text style={{ fontSize: 11, fontWeight: '500', color: '#6b7280', marginLeft: 4, marginRight: 8 }}>Sort:</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
-                style={{ flex: 1 }}
-              >
-                {SORT_FIELDS.map(({ label, field }) => {
-                  const isActive = sortField === field;
-                  // For the date field, swap the label to be semantically descriptive
-                  const activeLabel =
-                    field === 'createdAt' && isActive
-                      ? (sortOrder === 'asc' ? 'Oldest' : 'Newest')
-                      : label;
-                  return (
-                    <Pressable
-                      key={field}
-                      onPress={() => handleSortChipPress(field)}
-                      style={[
-                        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, marginRight: 8, borderRadius: 999, borderWidth: 1 },
-                        isActive ? { backgroundColor: '#4f46e5', borderColor: '#4f46e5' } : { backgroundColor: '#fff', borderColor: '#e5e7eb' },
-                      ]}
-                    >
-                      <Text style={{ fontSize: 11, fontWeight: '500', color: isActive ? '#fff' : '#6b7280' }}>
-                        {activeLabel}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+        
+        {/* Top Section: Greeting & Search */}
+        <View className="px-4 pt-6 pb-4 bg-white rounded-b-3xl shadow-sm shadow-gray-200 mb-4">
+          <View className="flex-row justify-between items-center mb-6">
+            <View>
+              <Text className="text-gray-500 text-sm font-medium">Welcome to Ilocos Sur</Text>
+              <Text className="text-2xl font-bold text-gray-800">Find your next home 🏡</Text>
             </View>
-
-            {/* Quick filter chips */}
-            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8, paddingBottom: 12 }}>
-              <FlatList
-                horizontal
-                data={quickFilters}
-                keyExtractor={(qf) => qf.value}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
-                renderItem={({ item: qf }) => {
-                  const isActive = filters[qf.key as "type" | "status"].includes(qf.value);
-                  return (
-                    <Pressable
-                      onPress={() => handleQuickFilterToggle(qf.key as "type" | "status", qf.value)}
-                      style={[
-                        { paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, borderRadius: 999, borderWidth: 1 },
-                        isActive ? { backgroundColor: '#2563eb', borderColor: '#2563eb' } : { backgroundColor: '#fff', borderColor: '#d1d5db' },
-                      ]}
-                    >
-                      <Text style={{ fontSize: 13, fontWeight: isActive ? '600' : '400', color: isActive ? '#fff' : '#4b5563' }}>
-                        {qf.label}
-                      </Text>
-                    </Pressable>
-                  );
-                }}
-              />
+            <View className="bg-blue-100 p-2 rounded-full">
+              <MaterialCommunityIcons name="bell-outline" size={24} color="#2563eb" />
             </View>
           </View>
 
-          {/* List Body */}
-          <View className="flex-1 px-2 pt-3">
-            {loading ? (
-              <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#1d4ed8" />
-              </View>
-            ) : properties.length === 0 ? (
-              <View className="flex-1 justify-center items-center">
-                <Text className="text-lg text-gray-500">No properties found matching your search.</Text>
-              </View>
-            ) : (
-              <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
-                <FlatList
-                  key={numColumns + (isListView ? "-list" : "-grid")}
-                  data={properties}
-                  renderItem={renderItem}
-                  keyExtractor={(item, index) => `${item.id}-${index}`}
-                  numColumns={numColumns}
-                  showsVerticalScrollIndicator={false}
-                  className={isListView ? "w-full" : ""}
-                  onEndReached={loadNextPage}
-                  onEndReachedThreshold={0.4}
-                  ListFooterComponent={renderFooter}
+          {/* Search Bar */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push("/(tabs)/properties")}
+            className="flex-row items-center bg-gray-100 rounded-full px-4 py-3 border border-gray-200"
+          >
+            <Ionicons name="search" size={20} color="#6b7280" />
+            <Text className="ml-2 text-gray-500 flex-1">Search by city, barangay, or title...</Text>
+            <View className="bg-blue-600 p-2 rounded-full">
+              <Ionicons name="options-outline" size={16} color="white" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Hero Section: Automatic Slide Show */}
+        <View className="px-4 mb-6">
+          <Text className="text-lg font-bold text-gray-800 mb-3">Explore Ilocos Sur</Text>
+          <View className="rounded-2xl overflow-hidden shadow-sm shadow-gray-300 bg-white">
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+            >
+              {HERO_IMAGES.map((img, index) => (
+                <View key={index} style={{ width: width - 32 }} className="h-48 relative">
+                  <Image source={img} className="w-full h-full" resizeMode="cover" />
+                  <View className="absolute inset-0 bg-black/30" />
+                  <View className="absolute bottom-4 left-4 right-4">
+                    <Text className="text-white text-xl font-bold mb-1 shadow-sm">
+                      {index === 0 ? "Heritage & Modernity" : index === 1 ? "Vibrant Sunsets" : "Coastal Luxury"}
+                    </Text>
+                    <Text className="text-gray-200 text-sm">
+                      {index === 0 ? "Discover unique homes in Vigan." : index === 1 ? "Experience the charm of Calle Crisologo." : "Find your dream beachfront villa."}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            
+            {/* Pagination Dots */}
+            <View className="absolute bottom-3 right-4 flex-row space-x-1">
+              {HERO_IMAGES.map((_, i) => (
+                <View
+                  key={i}
+                  className={`h-2 rounded-full transition-all ${i === activeSlide ? "w-4 bg-blue-600" : "w-2 bg-white/70"}`}
                 />
-              </View>
-            )}
+              ))}
+            </View>
           </View>
         </View>
 
-        {/* ── Web split-view details panel ────────────────────────── */}
-        {isWebDesktop && isListView && (
-          <>
-            <View className="w-[1px] bg-gray-300 mx-2 my-3" />
-            <View className="w-2/3 bg-white rounded-lg shadow-sm shadow-gray-200 overflow-hidden mt-3 mr-2 mb-2">
-              {selectedProperty ? (
-                <PropertyDetailsContent
-                  property={selectedProperty}
-                  onClose={() => setSelectedPropertyId(null)}
-                />
-              ) : (
-                <View className="flex-1 justify-center items-center h-full">
-                  <Text className="text-xl text-gray-400">Select a Property to View Details</Text>
+        {/* Quick Actions */}
+        <View className="px-4 mb-6">
+          <Text className="text-lg font-bold text-gray-800 mb-3">Categories</Text>
+          <View className="flex-row justify-between">
+            {quickActions.map((action, idx) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => navigateToCategory(action.type)}
+                className="items-center"
+              >
+                <View
+                  style={{ backgroundColor: action.bg }}
+                  className="w-14 h-14 rounded-full justify-center items-center mb-2 shadow-sm shadow-gray-200"
+                >
+                  <MaterialCommunityIcons name={action.icon as any} size={26} color={action.color} />
                 </View>
-              )}
-            </View>
-          </>
-        )}
-      </View>
+                <Text className="text-xs font-medium text-gray-700">{action.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-      <FilterModal
-        visible={isFilterModalVisible}
-        onClose={() => setIsFilterModalVisible(false)}
-        filters={filters}
-        setFilters={setFilters}
-      />
+        {/* Featured Properties */}
+        <View className="mb-6">
+          <View className="px-4 flex-row justify-between items-center mb-3">
+            <Text className="text-lg font-bold text-gray-800">Featured Properties</Text>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/properties")}>
+              <Text className="text-blue-600 text-sm font-semibold">See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 12 }}
+          >
+            {featuredProperties.map((property, idx) => (
+              <View key={idx} className="mr-1">
+                <GridViewCardProperty property={property} />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* CTA Section */}
+        <View className="px-4 mb-8">
+          <View className="bg-blue-600 rounded-2xl p-6 relative overflow-hidden shadow-md shadow-blue-300">
+            {/* Decorative background circle */}
+            <View className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full" />
+            <View className="absolute -bottom-10 -left-10 w-24 h-24 bg-white/10 rounded-full" />
+            
+            <Text className="text-white text-xl font-bold mb-2">Have a property to sell?</Text>
+            <Text className="text-blue-100 text-sm mb-4">
+              List your property with us and reach thousands of potential buyers in Ilocos Sur.
+            </Text>
+            <TouchableOpacity className="bg-white py-3 px-6 rounded-full self-start flex-row items-center">
+              <Text className="text-blue-600 font-bold mr-2">Post your property</Text>
+              <MaterialCommunityIcons name="arrow-right" size={16} color="#2563eb" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }

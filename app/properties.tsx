@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { useRouter } from "expo-router";
-import PropertyList from "./(tabs)/index";
+import PropertyList from "./(tabs)/properties";
 
 /**
  * Web: renders the full property list at the clean URL /properties.

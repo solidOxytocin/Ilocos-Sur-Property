@@ -14,11 +14,23 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Properties",
-
+          title: "Home",
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
-              name="home-outline"
+              name="home-variant-outline"
+              size={24}
+              color={focused ? "blue" : "gray"}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="properties"
+        options={{
+          title: "Browse",
+          tabBarIcon: ({ focused }) => (
+            <MaterialCommunityIcons
+              name="magnify"
               size={24}
               color={focused ? "blue" : "gray"}
             />
