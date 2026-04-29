@@ -24,7 +24,11 @@ export default function DetailsHeader({ properties, onClose }: HeaderProps) {
         <TouchableOpacity
           className="mr-4"
           onPress={() => {
-            router.back();
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/properties");
+            }
           }}
         >
           <MaterialCommunityIcons name="arrow-left" size={size.headerIcon} color="black" />
