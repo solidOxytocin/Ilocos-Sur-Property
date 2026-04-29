@@ -39,8 +39,8 @@ export default function PropertyDetails() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100 items-center w-full">
-      <View className="flex-1 w-full max-w-5xl mx-auto shadow-sm shadow-gray-200">
+    <SafeAreaView className="flex-1 bg-white items-center w-full">
+      <View className="flex-1 w-full mx-auto">
         <PropertyDetailsContent property={properties} />
       </View>
     </SafeAreaView>

@@ -24,6 +24,8 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   const { width: screenWidth } = useWindowDimensions();
 
   const isSold = property?.status?.toUpperCase() === "SOLD";
+  const isDesktopLayout = Platform.OS === "web" && screenWidth >= 1024;
+  const heroImageHeight = isDesktopLayout ? (onClose ? 420 : 500) : 288;
 
   const propertyAddress = property?.location?.address ? `${property.location.address}, ` : "";
   const propertyBarangay = property?.location?.barangay ? `${property.location.barangay}, ` : "";
@@ -163,10 +165,12 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        <DetailsHeader properties={property} onClose={onClose} />
+        <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto" : ""}>
+          <DetailsHeader properties={property} onClose={onClose} />
+        </View>
 
         {/* Image Carousel */}
-        <View className="px-5 mt-5">
+        <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mt-6" : "px-5 mt-5"}>
           <View
             className="shadow-lg shadow-gray-300 rounded-[2rem] bg-gray-100 overflow-hidden relative"
             onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
@@ -202,7 +206,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                         <Image
                           source={{ uri: media.url }}
                           style={[
-                            { width: containerWidth > 0 ? containerWidth : "100%", height: 288 },
+                            { width: containerWidth > 0 ? containerWidth : "100%", height: heroImageHeight },
                             isSold ? { opacity: 0.45 } : undefined
                           ]}
                           className="bg-gray-200"
@@ -229,7 +233,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                       <Image
                         source={{ uri: media.url }}
                         style={[
-                          { width: containerWidth > 0 ? containerWidth : "100%", height: 288 },
+                          { width: containerWidth > 0 ? containerWidth : "100%", height: heroImageHeight },
                           isSold ? { opacity: 0.45 } : undefined
                         ]}
                         className="bg-gray-200"
@@ -300,50 +304,55 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
           </View>
         </View>
 
-        <View className="px-5 mt-6 mb-8 gap-6">
-          {/* Title & Price */}
-          <View className="flex-row justify-between items-start flex-wrap gap-4">
-            <View className="flex-1 min-w-[200px]">
-              {!onClose ? (
-                <View className="flex-row gap-2 mb-2">
-                  <Pill
-                    text={property?.type?.toUpperCase() || "PROPERTY"}
-                    icon="home-city"
-                    iconSize={14}
-                    textSize="text-xs"
-                    backGroundColor="bg-purple-600"
-                  />
-                  <Pill
-                    text={property?.status?.toUpperCase() || "AVAILABLE"}
-                    icon="check-circle"
-                    iconSize={14}
-                    textSize="text-xs"
-                    backGroundColor={
-                      property?.status?.toUpperCase() === "SOLD"
-                        ? "bg-red-600"
-                        : property?.status?.toUpperCase() === "RESERVED"
-                        ? "bg-yellow-600"
-                        : "bg-teal-600"
-                    }
-                  />
-                </View>
-              ) : (
-                <View />
-              )}
+        <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mt-8 mb-12 flex-row gap-8 items-start" : "px-5 mt-6 mb-8 gap-6"}>
+          {/* Left Column for Full Screen Web / Only Column for others */}
+          <View className={isDesktopLayout ? "flex-[0.65] gap-6" : "gap-6 w-full"}>
+            
+            {/* Title & Price */}
+            <View className="flex-row justify-between items-start flex-wrap gap-4">
+              <View className="flex-1 min-w-[200px]">
+                {!onClose ? (
+                  <View className="flex-row gap-2 mb-2">
+                    <Pill
+                      text={property?.type?.toUpperCase() || "PROPERTY"}
+                      icon="home-city"
+                      iconSize={14}
+                      textSize="text-xs"
+                      backGroundColor="bg-purple-600"
+                    />
+                    <Pill
+                      text={property?.status?.toUpperCase() || "AVAILABLE"}
+                      icon="check-circle"
+                      iconSize={14}
+                      textSize="text-xs"
+                      backGroundColor={
+                        property?.status?.toUpperCase() === "SOLD"
+                          ? "bg-red-600"
+                          : property?.status?.toUpperCase() === "RESERVED"
+                          ? "bg-yellow-600"
+                          : "bg-teal-600"
+                      }
+                    />
+                  </View>
+                ) : (
+                  <View />
+                )}
 
-              <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
-                {property?.location.address}
-              </Text>
-              <Text className="text-base text-gray-500 mt-1 font-medium">
-                {property?.location.barangay}, {property?.location.city}
-              </Text>
+                <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
+                  {property?.location.address}
+                </Text>
+                <Text className="text-base text-gray-500 mt-1 font-medium">
+                  {property?.location.barangay}, {property?.location.city}
+                </Text>
+              </View>
+              {!isDesktopLayout && (
+                <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+                  <Text className="text-xl font-bold text-blue-700">
+                    &#x20B1;{property?.price.toLocaleString()}
+                  </Text>
+                </View>
+              )}
             </View>
-            <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-              <Text className="text-xl font-bold text-blue-700">
-                &#x20B1;{property?.price.toLocaleString()}
-              </Text>
-            </View>
-          </View>
 
           {/* Core Metrics */}
           <View className="flex-row justify-between w-full bg-white border border-gray-100 shadow-sm shadow-gray-200 rounded-[24px] py-5 px-6 my-2">
@@ -440,29 +449,67 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 </View>
               </View>
             )}
-            {/* MAPS */}
-            {property?.location?.coordinates && (
-              <PropertyMapView
-                coordinates={property.location.coordinates}
-                boundaries={property.location.boundaries}
-                address={`${property.location.address}, ${property.location.barangay}, ${property.location.city}`}
-              />
-            )}
+            </View>
           </View>
+
+          {/* Right Column (Sticky Sidebar) for Full Screen Web */}
+          {isDesktopLayout && (
+            <View className="flex-[0.35] w-full">
+              <View
+                className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-gray-200"
+                style={{ position: 'sticky' as any, top: 32 }}
+              >
+                <Text className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Price</Text>
+                <Text className="text-4xl font-extrabold text-blue-700 mb-6">
+                  &#x20B1;{property?.price.toLocaleString()}
+                </Text>
+                
+                <TouchableOpacity
+                  className="bg-blue-600 rounded-[20px] py-4 shadow-md shadow-blue-200 flex-row justify-center items-center gap-2 hover:bg-blue-700 transition-colors mb-6"
+                  activeOpacity={0.8}
+                  onPress={() => setModalVisible(true)}
+                >
+                  <MaterialCommunityIcons name="email-fast" size={24} color="white" />
+                  <Text className="text-lg font-bold text-white text-center tracking-wide">Inquire Now</Text>
+                </TouchableOpacity>
+
+                <View className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                  <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Contact Agent</Text>
+                  <Text className="text-base font-extrabold text-gray-800 mb-1">Clark Adam Arconado</Text>
+                  <Text className="text-sm text-gray-600 mb-1 font-medium">Email: clarkadamarconado@gmail.com</Text>
+                  <Text className="text-sm text-gray-600 font-medium">Mobile: 09261849580</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
         </View>
+
+        {/* MAPS - Full Width */}
+        {property?.location?.coordinates && (
+          <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mb-12" : "px-5 mb-8"}>
+            <PropertyMapView
+              coordinates={property.location.coordinates}
+              boundaries={property.location.boundaries}
+              address={`${property.location.address}, ${property.location.barangay}, ${property.location.city}`}
+            />
+          </View>
+        )}
       </ScrollView>
 
-      {/* Sticky Inquire Button */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        <TouchableOpacity
-          className="bg-blue-600 rounded-xl py-3.5 shadow-md shadow-blue-200 flex-row justify-center items-center gap-2 hover:bg-blue-700 transition-colors"
-          activeOpacity={0.8}
-          onPress={() => setModalVisible(true)}
-        >
-          <MaterialCommunityIcons name="email-fast" size={20} color="white" />
-          <Text className="text-base font-bold text-white text-center tracking-wide">Inquire Now</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Sticky Inquire Button (Hidden on Full Screen Web) */}
+      {!isDesktopLayout && (
+        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          <TouchableOpacity
+            className="bg-blue-600 rounded-xl py-3.5 shadow-md shadow-blue-200 flex-row justify-center items-center gap-2 hover:bg-blue-700 transition-colors"
+            activeOpacity={0.8}
+            onPress={() => setModalVisible(true)}
+          >
+            <MaterialCommunityIcons name="email-fast" size={20} color="white" />
+            <Text className="text-base font-bold text-white text-center tracking-wide">Inquire Now</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* ── Lightbox Modal ──────────────────────────────────────────────── */}
       <Modal
