@@ -63,7 +63,7 @@
 - [x] Make Sort Single Chip 
 - [x] Add headers (U)
 - [x] Add Landing Page WEB (U)
-    -[] Add "Have a property to sell" Section
+    -[x] Add "Have a property to sell" Section
 - [x] Image Full Screen issue on web
 - [x] Fix Cards
 - [x] Filtering "santa" gets Santa lucia ,etc
@@ -76,7 +76,6 @@
     -[x] Add City Count and Total Listing Count
 
 - [x] Grid View Card bug when loading new Property
-- [] Beautify Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [] R&D For Image Handling 
@@ -93,9 +92,15 @@
 - [] Contacts View (U)
 - [] Settings? (U)
 - [] Filter Slider to One
+- [] Beautify Splash Screen for MOBILE(U)
 - [] Learn To Deploy
     -[] Create prod Build
     -[] Create an enviroment variables for prod and local   
     -[] Learn to Deploy Backend(PostGress)
     -[] Learn to Deploy Frontend
     
+# Changes After Deployment
+- [] Admin Dashboard (Statitstics)
+- [] User Login
+    -[] Can Add Favourite listing
+    -[] Favourites Listing (like add to cart)
