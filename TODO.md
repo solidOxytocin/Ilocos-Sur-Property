@@ -73,8 +73,9 @@
     -[x] Clicking Featured Property Would go to actual Details
     -[x] Clicking Category would filter the properties
     -[x] "Have a property to sell" Would go show contact agent just like in details inquire now button.
+    -[x] Add City Count and Total Listing Count
 
-- [] Grid View Card bug when loading
+- [x] Grid View Card bug when loading new Property
 - [] Beautify Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)

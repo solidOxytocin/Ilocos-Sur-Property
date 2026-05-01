@@ -10,12 +10,13 @@ import {
   useWindowDimensions,
   Modal,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { mockProperties } from "../constants/mock/mock-properties";
-import GridViewCardProperty from "../modules/property-list/components/gridViewCardProperty";
+import { getPropertiesPaginated, getCityPropertyCounts } from "../service/property-service";
+import type { Property } from "../constants/mock/mock-properties";
 
 // Hero banner images – provincial Ilocos Sur scenery
 const HERO_IMAGES = [
@@ -93,8 +94,46 @@ export default function HomeScreen() {
     { label: "Commercial", icon: "storefront-outline", type: "COMMERCIAL", color: "#8b5cf6", bg: "#f5f3ff" },
   ];
 
-  // Get 5 featured properties
-  const featuredProperties = mockProperties.slice(0, 5);
+  // Fetch city counts → derive totalListings & totalTowns
+  const [totalListings, setTotalListings] = useState<number | null>(null);
+  const [totalTowns, setTotalTowns] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const counts = await getCityPropertyCounts();
+        if (cancelled) return;
+        const listings = Object.values(counts).reduce((sum, n) => sum + n, 0);
+        const towns = Object.keys(counts).length;
+        setTotalListings(listings);
+        setTotalTowns(towns);
+      } catch {
+        // keep null — shows dashes
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch 5 featured properties from the real data source
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setFeaturedLoading(true);
+      try {
+        const result = await getPropertiesPaginated({}, 1, 5);
+        if (!cancelled) setFeaturedProperties(result.data);
+      } catch {
+        // silently keep empty
+      } finally {
+        if (!cancelled) setFeaturedLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -133,6 +172,55 @@ export default function HomeScreen() {
             >
               <Ionicons name="search" size={16} color="white" />
             </TouchableOpacity>
+          </View>
+
+          {/* Stats Strip */}
+          <View style={{
+            flexDirection: "row",
+            marginTop: 16,
+            backgroundColor: "#eff6ff",
+            borderRadius: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 8,
+          }}>
+            {[
+              {
+                icon: "home-city-outline" as const,
+                color: "#1d4ed8",
+                value: totalListings !== null ? String(totalListings) : "—",
+                label: "Total Listings",
+              },
+              {
+                icon: "map-marker-multiple-outline" as const,
+                color: "#059669",
+                value: totalTowns !== null ? String(totalTowns) : "—",
+                label: "Cities Covered",
+              },
+              {
+                icon: "check-decagram-outline" as const,
+                color: "#7c3aed",
+                value: "100%",
+                label: "Verified",
+              },
+            ].map((stat, i, arr) => (
+              <View
+                key={stat.label}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  borderRightWidth: i < arr.length - 1 ? 1 : 0,
+                  borderRightColor: "#bfdbfe",
+                }}
+              >
+                <MaterialCommunityIcons name={stat.icon} size={20} color={stat.color} />
+                <Text style={{ fontSize: 18, fontWeight: "800", color: "#0f172a", marginTop: 4 }}>
+                  {stat.value}
+                </Text>
+                <Text style={{ fontSize: 10, fontWeight: "500", color: "#64748b", marginTop: 1 }}>
+                  {stat.label}
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -207,17 +295,96 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 12 }}
-          >
-            {featuredProperties.map((property, idx) => (
-              <View key={idx} className="mr-1">
-                <GridViewCardProperty property={property} />
-              </View>
-            ))}
-          </ScrollView>
+          {featuredLoading ? (
+            <View style={{ height: 200, justifyContent: "center", alignItems: "center" }}>
+              <ActivityIndicator size="large" color="#1d4ed8" />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 12, gap: 12 }}
+            >
+              {featuredProperties.map((property) => {
+                const firstImage = property.media?.[0]?.url ?? null;
+                const typeColor =
+                  property.type === "house" ? "#1d4ed8"
+                  : property.type === "lot" ? "#059669"
+                  : property.type === "condo" ? "#7c3aed"
+                  : "#d97706";
+                const isSold = property.status?.toUpperCase() === "SOLD";
+                const formatPrice = (p: number) =>
+                  p >= 1_000_000 ? `₱${(p / 1_000_000).toFixed(1)}M`
+                  : p >= 1_000 ? `₱${(p / 1_000).toFixed(0)}K`
+                  : `₱${p}`;
+                return (
+                  <TouchableOpacity
+                    key={property.id}
+                    activeOpacity={0.85}
+                    onPress={() => router.push({ pathname: "/details", params: { id: property.id } })}
+                    style={{
+                      width: 200,
+                      backgroundColor: "#fff",
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 8,
+                      elevation: 3,
+                    }}
+                  >
+                    {/* Image */}
+                    <View style={{ height: 120, backgroundColor: "#e2e8f0", position: "relative" }}>
+                      {firstImage ? (
+                        <Image
+                          source={{ uri: firstImage }}
+                          style={{ width: "100%", height: "100%", opacity: isSold ? 0.5 : 1 }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                          <Text style={{ fontSize: 32 }}>🏠</Text>
+                        </View>
+                      )}
+                      <View style={{
+                        position: "absolute", top: 8, left: 8,
+                        backgroundColor: typeColor,
+                        paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+                      }}>
+                        <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700" }}>
+                          {property.type?.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{
+                        position: "absolute", top: 8, right: 8,
+                        width: 8, height: 8, borderRadius: 4,
+                        backgroundColor: isSold ? "#ef4444" : property.status === "reserved" ? "#f59e0b" : "#22c55e",
+                        borderWidth: 1.5, borderColor: "#fff",
+                      }} />
+                    </View>
+                    {/* Info */}
+                    <View style={{ padding: 12 }}>
+                      <Text style={{ fontSize: 15, fontWeight: "800", color: "#1d4ed8", marginBottom: 2 }}>
+                        {formatPrice(property.price)}
+                      </Text>
+                      <Text style={{ fontSize: 12, fontWeight: "600", color: "#1e293b", marginBottom: 4 }} numberOfLines={1}>
+                        {property.title}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: "#64748b" }} numberOfLines={1}>
+                        📍 {property.location?.barangay}, {property.location?.city}
+                      </Text>
+                      {property.lotArea ? (
+                        <Text style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                          📐 {property.lotArea} sqm
+                        </Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
 
         {/* CTA Section */}
