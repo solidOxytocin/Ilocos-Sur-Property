@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,34 @@ import {
   Image,
   Pressable,
   useWindowDimensions,
+  Modal,
+  Platform,
+  Linking,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function LandingFooter() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width < 700;
+  const [contactModalVisible, setContactModalVisible] = useState(false);
+
+  // Contact agent helpers
+  const openMobile = () => {
+    const separator = Platform.OS === "ios" ? "&" : "?";
+    Linking.openURL(`sms:09261849580${separator}body=${encodeURIComponent("Hi, I have a property I'd like to list. Please get in touch with me.")}`)
+  };
+  const openGmail = () => {
+    if (Platform.OS === "web") {
+      Linking.openURL(`https://mail.google.com/mail/?view=cm&fs=1&to=clarkadamarconado@gmail.com&su=${encodeURIComponent("Property Listing Inquiry")}&body=${encodeURIComponent("Hi, I have a property I'd like to list with Ilocos Sur Property. Please get in touch with me.")}`);
+    } else {
+      Linking.openURL(`mailto:clarkadamarconado@gmail.com?subject=${encodeURIComponent("Property Listing Inquiry")}&body=${encodeURIComponent("Hi, I have a property I'd like to list with Ilocos Sur Property. Please get in touch with me.")}`);
+    }
+  };
+  const openFB = () => Linking.openURL("https://www.facebook.com/clark.arconado.1/");
+  const openInstagram = () => Linking.openURL("https://www.instagram.com/clarkadam69/");
 
   return (
     <View style={styles.footer}>
@@ -21,17 +42,18 @@ export default function LandingFooter() {
         <View style={[styles.ctaBandInner, { flexDirection: isMobile ? "column" : "row" }]}>
           <View style={styles.ctaBandText}>
             <Text style={styles.ctaBandTitle}>
-              Ready to find your perfect property?
+              Have a property to sell?
             </Text>
             <Text style={styles.ctaBandSub}>
-              Browse hundreds of verified listings in Ilocos Sur today.
+              List your property with us and reach thousands of potential buyers in Ilocos Sur.
             </Text>
           </View>
           <Pressable
-            style={[styles.ctaBandBtn, { marginTop: isMobile ? 20 : 0 }]}
-            onPress={() => router.push("/properties")}
+            style={[styles.ctaBandBtn, { marginTop: isMobile ? 20 : 0, flexDirection: 'row', alignItems: 'center' }]}
+            onPress={() => setContactModalVisible(true)}
           >
-            <Text style={styles.ctaBandBtnText}>Browse Properties →</Text>
+            <Text style={[styles.ctaBandBtnText, { marginRight: 8 }]}>Contact Agent</Text>
+            <MaterialCommunityIcons name="arrow-right" size={18} color="#1d4ed8" />
           </Pressable>
         </View>
       </View>
@@ -43,7 +65,7 @@ export default function LandingFooter() {
           <View style={[styles.brandCol, { marginBottom: isMobile ? 32 : 0 }]}>
             <View style={styles.logoRow}>
               <Image
-                source={require("../../../../assets/images/ilocos-sur-48x.jpg")}
+                source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
                 style={styles.logoImg}
                 resizeMode="contain"
               />
@@ -100,6 +122,86 @@ export default function LandingFooter() {
           </Text>
         </View>
       </View>
+
+      {/* ── Contact Agent Modal ─────────────────────────────────────── */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={contactModalVisible}
+        onRequestClose={() => setContactModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <View style={{ backgroundColor: "white", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 20, maxWidth: 600, width: "100%", alignSelf: "center" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <Text style={{ fontSize: 20, fontWeight: "800", color: "#1f2937" }}>Contact Agent</Text>
+              <TouchableOpacity
+                onPress={() => setContactModalVisible(false)}
+                style={{ backgroundColor: "#f3f4f6", padding: 8, borderRadius: 100 }}
+              >
+                <MaterialCommunityIcons name="close" size={20} color="#4b5563" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ backgroundColor: "#eff6ff", padding: 16, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: "#bfdbfe" }}>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: "#1e40af", marginBottom: 4 }}>Clark Adam Arconado</Text>
+              <Text style={{ fontSize: 12, color: "#2563eb", marginBottom: 2 }}>Email: clarkadamarconado@gmail.com</Text>
+              <Text style={{ fontSize: 12, color: "#2563eb" }}>Mobile: 09261849580</Text>
+            </View>
+
+            <Text style={{ fontSize: 12, fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+              Send a message via
+            </Text>
+
+            <View style={{ gap: 10, marginBottom: 24 }}>
+              {Platform.OS !== "web" && (
+                <TouchableOpacity
+                  onPress={openMobile}
+                  style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#f9fafb", padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#e5e7eb" }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ backgroundColor: "#dcfce7", padding: 10, borderRadius: 100, marginRight: 16 }}>
+                    <MaterialCommunityIcons name="message-text" size={22} color="#16a34a" />
+                  </View>
+                  <Text style={{ fontSize: 15, fontWeight: "600", color: "#1f2937" }}>SMS / Messaging App</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                onPress={openGmail}
+                style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#f9fafb", padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#e5e7eb" }}
+                activeOpacity={0.7}
+              >
+                <View style={{ backgroundColor: "#fee2e2", padding: 10, borderRadius: 100, marginRight: 16 }}>
+                  <MaterialCommunityIcons name="gmail" size={22} color="#ea4335" />
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: "#1f2937" }}>Gmail</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={openFB}
+                style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#f9fafb", padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#e5e7eb" }}
+                activeOpacity={0.7}
+              >
+                <View style={{ backgroundColor: "#dbeafe", padding: 10, borderRadius: 100, marginRight: 16 }}>
+                  <MaterialCommunityIcons name="facebook" size={22} color="#1877f2" />
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: "#1f2937" }}>Facebook</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={openInstagram}
+                style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#f9fafb", padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#e5e7eb" }}
+                activeOpacity={0.7}
+              >
+                <View style={{ backgroundColor: "#fce7f3", padding: 10, borderRadius: 100, marginRight: 16 }}>
+                  <MaterialCommunityIcons name="instagram" size={22} color="#e1306c" />
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: "#1f2937" }}>Instagram</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -34,7 +34,7 @@ export function SearchAndFilters({
           <Pressable onPress={() => router.push("/")}>
             <View className="flex-row items-center mr-4">
               <Image
-                source={require("../../../../assets/images/ilocos-sur-48x.jpg")}
+                source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
                 style={{ width: 60, height: 60 }}
                 resizeMode="contain"
               />

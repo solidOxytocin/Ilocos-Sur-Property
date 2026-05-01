@@ -143,7 +143,7 @@ export default function HomeScreen() {
         <View className="px-4 pt-6 pb-4 bg-white rounded-b-3xl shadow-sm shadow-gray-200 mb-4">
           <View className="flex-row items-center mb-6">
             <Image
-              source={require("../../assets/images/ilocos-sur-48x.jpg")}
+              source={require("../../assets/images/ilocos-sur-icon.png")}
               style={{ width: 48, height: 48, borderRadius: 12, marginRight: 12 }}
               resizeMode="contain"
             />
