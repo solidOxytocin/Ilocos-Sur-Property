@@ -34,11 +34,10 @@ export function SearchAndFilters({
           <Pressable onPress={() => router.push("/")}>
             <View className="flex-row items-center mr-4">
               <Image
-                source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
-                style={{ width: 100, height: 100 }}
+                source={require("../../../../assets/images/ilocos-sur-48x.jpg")}
+                style={{ width: 60, height: 60 }}
                 resizeMode="contain"
-              
-            />
+              />
             <Text className="text-white text-2xl font-bold ml-4">Ilocos Sur {"\n"} Property</Text>
           </View>
           </Pressable>

@@ -96,6 +96,7 @@ export default function gridViewCardProperty({
   return (
     <TouchableOpacity
       className="bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow"
+      style={{ minHeight: 290 }}
       activeOpacity={0.8}
       onPress={() => {
         router.push({
@@ -105,7 +106,7 @@ export default function gridViewCardProperty({
       }}
     >
       {/* Image Preview */}
-      <View className="relative w-full h-36">
+      <View className="relative w-full h-36" style={{ backgroundColor: '#e5e7eb' }}>
         <Image
           source={{ uri: property?.media?.[0]?.url }}
           className="w-full h-full"
@@ -151,7 +152,7 @@ export default function gridViewCardProperty({
       </View>
 
       {/* Content */}
-      <View className="flex-col p-3 flex-1 justify-between min-h-[140px]">
+      <View className="flex-col p-3 justify-between" style={{ minHeight: 150 }}>
         
         {/* Header */}
         <View>

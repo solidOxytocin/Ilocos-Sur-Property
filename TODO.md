@@ -68,11 +68,13 @@
 - [x] Fix Cards
 - [x] Filtering "santa" gets Santa lucia ,etc
 - [x] Add Home Section MOBILE
-    -[] Remove Bell(notif icon)
-    -[] Search Button would work ()
-    -[] Clicking Featured Property Would go to actual Details
-    -[] Clicking Category would filter the properties
-    -[] "Have a property to sell" Would go show contact agent just like in details inquire now button.
+    -[x] Remove Bell(notif icon)
+    -[x] Search Button would work ()
+    -[x] Clicking Featured Property Would go to actual Details
+    -[x] Clicking Category would filter the properties
+    -[x] "Have a property to sell" Would go show contact agent just like in details inquire now button.
+
+- [] Grid View Card bug when loading
 - [] Beautify Splash Screen for MOBILE(U)
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)

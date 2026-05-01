@@ -1220,3 +1220,6 @@ export const mockProperties: Property[] = [
       "A meticulously restored 19th-century Bahay na Bato in Vigan's UNESCO World Heritage zone. Original hardwood floors, capiz shell windows, and antique furnishings. The crown jewel of Ilocos Sur real estate.",
   },
 ];
+
+// Dummy export to prevent Expo Router from complaining about missing default export
+export default function MockPropertiesIgnored() { return null; }

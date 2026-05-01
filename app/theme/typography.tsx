@@ -52,3 +52,6 @@ export const typography = {
   }
   
 };
+
+// Dummy export to prevent Expo Router from complaining about missing default export
+export default function TypographyIgnored() { return null; }

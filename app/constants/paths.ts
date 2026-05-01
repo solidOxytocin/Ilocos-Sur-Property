@@ -13,3 +13,6 @@ export const ADMIN = {
   deleteProperty: (id: string | number) => `${BASE_URL}/admin/property/${id}`,
   deleteManyProperties: `${BASE_URL}/admin/property/delete-many`,
 };
+
+// Dummy export to prevent Expo Router from complaining about missing default export
+export default function PathsIgnored() { return null; }

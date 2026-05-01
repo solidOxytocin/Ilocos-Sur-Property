@@ -43,7 +43,7 @@ export default function LandingFooter() {
           <View style={[styles.brandCol, { marginBottom: isMobile ? 32 : 0 }]}>
             <View style={styles.logoRow}>
               <Image
-                source={require("../../../../assets/images/ilocos-sur-icon-white.png")}
+                source={require("../../../../assets/images/ilocos-sur-48x.jpg")}
                 style={styles.logoImg}
                 resizeMode="contain"
               />

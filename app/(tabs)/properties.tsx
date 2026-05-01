@@ -44,8 +44,8 @@ function sortMockProperties(list: Property[], field: SortField, order: SortOrder
 }
 
 export default function PropertyList() {
-  const { id: preselectedId, city: preselectedCity, type: preselectedType, status: preselectedStatus } =
-    useLocalSearchParams<{ id?: string; city?: string; type?: string; status?: string }>();
+  const { id: preselectedId, city: preselectedCity, type: preselectedType, status: preselectedStatus, search: preselectedSearch } =
+    useLocalSearchParams<{ id?: string; city?: string; type?: string; status?: string; search?: string }>();
 
   const [isListView, setIsListView]   = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -236,15 +236,20 @@ export default function PropertyList() {
     setSelectedPropertyId(numId);
   }, [preselectedId]);
 
+  // ── Pre-apply search query from URL param ────────────────────────────────────
+  useEffect(() => {
+    if (!preselectedSearch) return;
+    setSearchQuery(preselectedSearch);
+  }, [preselectedSearch]);
+
   // ── Pre-apply city filter from URL param (e.g. /properties?city=Vigan+City) ──
   useEffect(() => {
-    if (Platform.OS !== "web" || !preselectedCity) return;
+    if (!preselectedCity) return;
     setFilters((prev) => ({ ...prev, city: preselectedCity }));
   }, [preselectedCity]);
 
   // ── Pre-apply type / status filters from URL params ──────────────────────────
   useEffect(() => {
-    if (Platform.OS !== "web") return;
     setFilters((prev) => ({
       ...prev,
       ...(preselectedType   ? { type:   [preselectedType]   } : {}),
