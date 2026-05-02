@@ -81,7 +81,10 @@
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [] R&D For Image Handling 
+    - [] Setup Image CDN
     - [] Apply new Image CDN for images 
+    - [] Re populate The Mock Data and postgress Data with the new Images url
+
 - [] Add Image View for Admin
 - [] Add Image Upload for Admin
 - [] Dark Mode (U)
