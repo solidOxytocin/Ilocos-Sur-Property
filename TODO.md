@@ -78,6 +78,7 @@
 - [x] Grid View Card bug when loading new Property
 - [x] Beautify List View Card
 - [x] Beautify Details View
+- [x] Remove Contact Agent Info in Details View and Home View for the public
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [] R&D For Image Handling 
