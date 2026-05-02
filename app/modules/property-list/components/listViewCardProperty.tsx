@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { size } from "@/app/theme/size";
@@ -91,6 +91,8 @@ function ItemPillComponent({
 
 export function ListViewCardProperty({ property, onPress }: ListViewCardPropertyProps) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isHorizontal = width >= 768; // Use horizontal layout on tablet and desktop
   const isSold = property?.status?.toUpperCase() === "SOLD";
 
   const handlePress = () => {
@@ -106,13 +108,15 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
 
   return (
     <TouchableOpacity
-      className="flex-col bg-white rounded-2xl m-2 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-blue-900/10 hover:border-blue-200 transition-all duration-300 overflow-hidden"
+      className={`bg-white rounded-2xl m-2 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-blue-900/10 hover:border-blue-200 transition-all duration-300 overflow-hidden ${
+        isHorizontal ? "flex-row h-52" : "flex-col"
+      }`}
       activeOpacity={0.9}
       onPress={handlePress}
     >
-      <View className="relative">
+      <View className={`relative ${isHorizontal ? "w-[45%] h-full" : "w-full h-52"}`}>
         <Image
-          className="w-full h-52 bg-gray-100"
+          className="w-full h-full bg-gray-100"
           source={{ uri: property?.media?.[0]?.url }}
           style={isSold ? { opacity: 0.6 } : undefined}
           resizeMode="cover"
@@ -157,11 +161,11 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         )}
       </View>
 
-      <View className="p-4">
+      <View className={`p-4 ${isHorizontal ? "flex-1 justify-center" : ""}`}>
         {/* Header Row */}
         <View className="flex-row justify-between items-start">
           <View className="flex-1 pr-4">
-            <Text className="font-extrabold text-xl text-gray-900 mb-1" numberOfLines={1}>
+            <Text className={`${isHorizontal ? "text-xl" : "text-xl"} font-extrabold text-gray-900 mb-1`} numberOfLines={1}>
               {property?.location?.city || "Unknown Location"}
             </Text>
             <View className="flex-row items-center">
@@ -173,7 +177,7 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
           </View>
           
           <View className="items-end">
-            <Text className="font-black text-xl text-blue-600">
+            <Text className={`${isHorizontal ? "text-xl" : "text-xl"} font-black text-blue-600`}>
               ₱{Number(property?.price ?? 0).toLocaleString()}
             </Text>
             {property?.lotArea && (
@@ -197,7 +201,8 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
               ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
               ...(property?.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
             ];
-            return combined.slice(0, 4).map((item, index) => (
+            // If horizontal, maybe show fewer features so it fits
+            return combined.slice(0, isHorizontal ? 3 : 4).map((item, index) => (
               <ItemPillComponent
                 key={index}
                 item={item}

@@ -17,7 +17,7 @@ import { mockProperties, Property } from "../constants/mock/mock-properties";
 import { getPropertiesPaginated } from "../service/property-service";
 import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
 import { FilterModal, FilterState } from "../modules/property-list/components/filterModal";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 
 const PAGE_SIZE = 12;
@@ -410,16 +410,22 @@ export default function PropertyList() {
         {/* ── Web split-view details panel ────────────────────────── */}
         {isWebDesktop && isListView && (
           <>
-            <View className="w-[1px] bg-gray-300 mx-2 my-3" />
-            <View className="w-2/3 bg-white rounded-lg shadow-sm shadow-gray-200 overflow-hidden mt-3 mr-2 mb-2">
+            <View className="w-[1px] bg-gray-200 mx-2 my-4" />
+            <View className="w-[60%] bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden mt-4 mr-4 mb-4 border border-gray-100 flex-1">
               {selectedProperty ? (
                 <PropertyDetailsContent
                   property={selectedProperty}
                   onClose={() => setSelectedPropertyId(null)}
                 />
               ) : (
-                <View className="flex-1 justify-center items-center h-full">
-                  <Text className="text-xl text-gray-400">Select a Property to View Details</Text>
+                <View className="flex-1 justify-center items-center h-full bg-slate-50/50 m-6 rounded-3xl border-2 border-dashed border-slate-200">
+                  <View className="bg-white p-6 rounded-full shadow-md shadow-slate-200/50 mb-6">
+                    <MaterialCommunityIcons name="home-search-outline" size={64} color="#94a3b8" />
+                  </View>
+                  <Text className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Explore Properties</Text>
+                  <Text className="text-base font-medium text-slate-500 mt-2 text-center max-w-md leading-relaxed">
+                    Select a property from the list to view its full details, high-quality images, and location map.
+                  </Text>
                 </View>
               )}
             </View>

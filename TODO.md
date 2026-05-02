@@ -76,9 +76,12 @@
     -[x] Add City Count and Total Listing Count
 
 - [x] Grid View Card bug when loading new Property
+- [x] Beautify List View Card
+- [x] Beautify Details View
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [] R&D For Image Handling 
+    - [] Apply new Image CDN for images 
 - [] Add Image View for Admin
 - [] Add Image Upload for Admin
 - [] Dark Mode (U)

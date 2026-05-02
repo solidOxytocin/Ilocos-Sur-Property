@@ -25,7 +25,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
   const isSold = property?.status?.toUpperCase() === "SOLD";
   const isDesktopLayout = Platform.OS === "web" && screenWidth >= 1024;
-  const heroImageHeight = isDesktopLayout ? (onClose ? 420 : 500) : 288;
+  const heroImageHeight = isDesktopLayout ? (onClose ? 300 : 400) : 288;
 
   const propertyAddress = property?.location?.address ? `${property.location.address}, ` : "";
   const propertyBarangay = property?.location?.barangay ? `${property.location.barangay}, ` : "";
@@ -460,7 +460,11 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 style={{ position: 'sticky' as any, top: 32 }}
               >
                 <Text className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Price</Text>
-                <Text className="text-4xl font-extrabold text-blue-700 mb-6">
+                <Text 
+                  className="text-3xl font-extrabold text-blue-700 mb-6"
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
                   &#x20B1;{property?.price.toLocaleString()}
                 </Text>
                 
