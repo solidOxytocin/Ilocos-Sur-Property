@@ -27,13 +27,13 @@ export default function LandingFooter() {
   };
   const openGmail = () => {
     if (Platform.OS === "web") {
-      Linking.openURL(`https://mail.google.com/mail/?view=cm&fs=1&to=clarkadamarconado@gmail.com&su=${encodeURIComponent("Property Listing Inquiry")}&body=${encodeURIComponent("Hi, I have a property I'd like to list with Ilocos Sur Property. Please get in touch with me.")}`);
+      Linking.openURL(`https://mail.google.com/mail/?view=cm&fs=1&to=ilocossurproperty@gmail.com&su=${encodeURIComponent("Property Listing Inquiry")}&body=${encodeURIComponent("Hi, I have a property I'd like to list with Ilocos Sur Property. Please get in touch with me.")}`);
     } else {
-      Linking.openURL(`mailto:clarkadamarconado@gmail.com?subject=${encodeURIComponent("Property Listing Inquiry")}&body=${encodeURIComponent("Hi, I have a property I'd like to list with Ilocos Sur Property. Please get in touch with me.")}`);
+      Linking.openURL(`mailto:ilocossurproperty@gmail.com?subject=${encodeURIComponent("Property Listing Inquiry")}&body=${encodeURIComponent("Hi, I have a property I'd like to list with Ilocos Sur Property. Please get in touch with me.")}`);
     }
   };
-  const openFB = () => Linking.openURL("https://www.facebook.com/clark.arconado.1/");
-  const openInstagram = () => Linking.openURL("https://www.instagram.com/clarkadam69/");
+  const openFB = () => Linking.openURL("https://www.facebook.com/people/Ilocos-Sur-Property/61589026535906/");
+  const openInstagram = () => Linking.openURL("https://www.instagram.com/ilocossurproperty/");
 
   return (
     <View style={styles.footer}>
@@ -143,9 +143,9 @@ export default function LandingFooter() {
             </View>
 
             <View style={{ backgroundColor: "#eff6ff", padding: 16, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: "#bfdbfe" }}>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#1e40af", marginBottom: 4 }}>Clark Adam Arconado</Text>
-              <Text style={{ fontSize: 12, color: "#2563eb", marginBottom: 2 }}>Email: clarkadamarconado@gmail.com</Text>
-              <Text style={{ fontSize: 12, color: "#2563eb" }}>Mobile: 09261849580</Text>
+              {/* <Text style={{ fontSize: 14, fontWeight: "700", color: "#1e40af", marginBottom: 4 }}>Clark Adam Arconado</Text> */}
+              <Text style={{ fontSize: 12, color: "#2563eb", marginBottom: 2 }}>Email: ilocossurproperty@gmail.com</Text>
+              {/* <Text style={{ fontSize: 12, color: "#2563eb" }}>Mobile: 09261849580</Text> */}
             </View>
 
             <Text style={{ fontSize: 12, fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>

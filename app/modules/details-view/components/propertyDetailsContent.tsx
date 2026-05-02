@@ -44,17 +44,17 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   const openGmail = () => {
     if (Platform.OS === "web") {
       Linking.openURL(
-        `https://mail.google.com/mail/?view=cm&fs=1&to=clarkadamarconado@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
+        `https://mail.google.com/mail/?view=cm&fs=1&to=ilocossurproperty@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
       );
     } else {
       Linking.openURL(
-        `mailto:clarkadamarconado@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
+        `mailto:ilocossurproperty@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
       );
     }
   };
 
-  const openFB = () => Linking.openURL("https://www.facebook.com/clark.arconado.1/");
-  const openInstagram = () => Linking.openURL("https://www.instagram.com/clarkadam69/");
+  const openFB = () => Linking.openURL("https://www.facebook.com/people/Ilocos-Sur-Property/61589026535906/");
+  const openInstagram = () => Linking.openURL("https://www.instagram.com/ilocossurproperty/");
 
   const ICON_SIZE = size.pillDetailsIcon;
 
@@ -479,9 +479,9 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
                 <View className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                   <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Contact Agent</Text>
-                  <Text className="text-base font-extrabold text-gray-800 mb-1">Clark Adam Arconado</Text>
-                  <Text className="text-sm text-gray-600 mb-1 font-medium">Email: clarkadamarconado@gmail.com</Text>
-                  <Text className="text-sm text-gray-600 font-medium">Mobile: 09261849580</Text>
+                  {/* <Text className="text-base font-extrabold text-gray-800 mb-1">Clark Adam Arconado</Text> */}
+                  <Text className="text-sm text-gray-600 mb-1 font-medium">Email: ilocossurproperty@gmail.com</Text>
+                  {/* <Text className="text-sm text-gray-600 font-medium">Mobile: 09261849580</Text> */}
                 </View>
               </View>
             </View>
@@ -658,7 +658,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
             <View className="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
               <Text className="text-sm font-bold text-blue-800 mb-1">Clark Adam Arconado</Text>
-              <Text className="text-xs text-blue-600 mb-1">Email: clarkadamarconado@gmail.com</Text>
+              <Text className="text-xs text-blue-600 mb-1">Email: ilocossurproperty@gmail.com</Text>
               <Text className="text-xs text-blue-600">Mobile: 09261849580</Text>
             </View>
 
