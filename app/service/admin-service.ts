@@ -1,5 +1,42 @@
+import { Platform } from "react-native";
 import { ADMIN } from "../constants/paths";
 import { Property } from "../constants/mock/mock-properties";
+
+export type UploadedMediaItem = { url: string; cloudinaryPublicId: string };
+
+/** Uploads one or more images to the API (Cloudinary). Each file max 10MB (enforced server-side). */
+export async function uploadPropertyImages(
+  assets: { uri: string; name?: string | null; mimeType?: string | null }[]
+): Promise<UploadedMediaItem[] | null> {
+  if (!assets.length) return [];
+  try {
+    const formData = new FormData();
+    for (const a of assets) {
+      const name = a.name || "image.jpg";
+      const type = a.mimeType || "image/jpeg";
+      if (Platform.OS === "web") {
+        const blob = await fetch(a.uri).then((r) => r.blob());
+        formData.append("images", blob, name);
+      } else {
+        formData.append("images", { uri: a.uri, name, type } as any);
+      }
+    }
+    const response = await fetch(ADMIN.uploadMedia, {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      console.error("uploadPropertyImages failed:", err);
+      return null;
+    }
+    const json = (await response.json()) as { items?: UploadedMediaItem[] };
+    return json.items ?? null;
+  } catch (e) {
+    console.error("uploadPropertyImages error:", e);
+    return null;
+  }
+}
 
 export async function createProperty(data: Partial<Property>): Promise<Property | null> {
   try {

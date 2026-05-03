@@ -12,6 +12,7 @@ export const ADMIN = {
   updateProperty: (id: string | number) => `${BASE_URL}/admin/property/${id}`,
   deleteProperty: (id: string | number) => `${BASE_URL}/admin/property/${id}`,
   deleteManyProperties: `${BASE_URL}/admin/property/delete-many`,
+  uploadMedia: `${BASE_URL}/admin/media/upload`,
 };
 
 // Dummy export to prevent Expo Router from complaining about missing default export

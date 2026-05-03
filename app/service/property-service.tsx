@@ -11,9 +11,13 @@ export interface PaginatedPropertiesResponse {
 
 /** Ensures all nested arrays/objects are never null/undefined. */
 function normalizeProperty(p: any): Property {
+  const rawMedia = Array.isArray(p?.media) ? p.media : [];
   return {
     ...p,
-    media: Array.isArray(p?.media) ? p.media : [],
+    media: rawMedia.map((m: any) => ({
+      ...m,
+      type: m?.type ? (String(m.type).toLowerCase() as "image" | "video") : "image",
+    })),
     features: Array.isArray(p?.features) ? p.features : [],
     amenities: Array.isArray(p?.amenities) ? p.amenities : [],
     location: p?.location ?? { city: "", barangay: "", province: "", coordinates: null },

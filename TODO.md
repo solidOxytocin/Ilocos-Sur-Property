@@ -79,15 +79,24 @@
 - [x] Beautify List View Card
 - [x] Beautify Details View
 - [x] Remove Contact Agent Info in Details View and Home View for the public
+- [] Fix admin 
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
-- [] R&D For Image Handling 
-    - [] Setup Image CDN
-    - [] Apply new Image CDN for images 
+- [x] R&D For Image Handling 
+    - [x] Setup Image CDN
+    - [x] Apply Cloudinary in API
+    - [x] Admin View Add Image uploading
+        -[] Add Dragging
+        -[x] Gallery like
+        -[x] Primary ( Cover Selection)
     - [] Re populate The Mock Data and postgress Data with the new Images url
 
 - [] Add Image View for Admin
 - [] Add Image Upload for Admin
+- [] Improve Admie
+    -[] Table
+    -[] Add/Edit Form
+
 - [] Dark Mode (U)
 - [] Improve Error Handling
     - [ ] Show specific error messages

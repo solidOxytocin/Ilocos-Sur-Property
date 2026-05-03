@@ -46,6 +46,12 @@
       ],
       "expo-font",
       "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to add property listing images."
+        }
+      ],
       "expo-web-browser",
       "expo-web-browser",
     [

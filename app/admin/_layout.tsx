@@ -22,6 +22,10 @@ export default function AdminLayout() {
       isAuthenticated = true;
       setAuthed(true);
       setError('');
+      // Default admin URL is `/admin`, which has no stack screen without a redirect — land on listings.
+      if (pathname === '/admin' || pathname === '/admin/') {
+        router.replace('/admin/properties' as any);
+      }
     } else {
       setError('Invalid password. Try admin123');
     }
@@ -65,7 +69,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-gray-100" style={{ flex: 1 }}>
       <View className="flex-row items-center justify-between bg-white px-6 py-4 shadow-sm z-10 border-b border-gray-200">
         <Text className="text-xl font-bold text-gray-800">IS Properties Admin</Text>
         <View className="flex-row space-x-4">
@@ -77,8 +81,14 @@ export default function AdminLayout() {
             </TouchableOpacity>
         </View>
       </View>
-      <View className="flex-1 p-6 max-w-7xl mx-auto w-full">
-         <Stack screenOptions={{ headerShown: false }} />
+      <View
+        className="flex-1 p-6 max-w-7xl mx-auto w-full"
+        style={{ flex: 1, minHeight: 0, width: '100%' }}
+      >
+        <Stack
+          screenOptions={{ headerShown: false }}
+          style={{ flex: 1, minHeight: 0 }}
+        />
       </View>
     </SafeAreaView>
   );

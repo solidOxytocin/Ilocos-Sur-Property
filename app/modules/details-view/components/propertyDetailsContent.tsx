@@ -657,9 +657,9 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
             </View>
 
             <View className="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
-              <Text className="text-sm font-bold text-blue-800 mb-1">Clark Adam Arconado</Text>
+              {/* <Text className="text-sm font-bold text-blue-800 mb-1">Clark Adam Arconado</Text> */}
               <Text className="text-xs text-blue-600 mb-1">Email: ilocossurproperty@gmail.com</Text>
-              <Text className="text-xs text-blue-600">Mobile: 09261849580</Text>
+              {/* <Text className="text-xs text-blue-600">Mobile: 09261849580</Text> */}
             </View>
 
             <Text className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">

@@ -29,6 +29,7 @@ export interface Media {
   type: "image" | "video";
   url: string;
   isPrimary?: boolean;
+  cloudinaryPublicId?: string | null;
 }
 export type Property = {
   id: number;
