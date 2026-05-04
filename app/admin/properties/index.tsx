@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Pressable, type ViewStyle } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useState, useMemo, useEffect, useRef } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { getProperties } from '../../service/property-service';
 import { deleteProperty, deleteManyProperties } from '../../service/admin-service';
 import { Property } from '../../constants/mock/mock-properties';
@@ -101,10 +101,10 @@ export default function AdminPropertiesScreen() {
         );
     };
 
-    const ColHeader = ({ label, field, width }: { label: string; field: SortField; width: number }) => (
+    const ColHeader = ({ label, field, style }: { label: string; field: SortField; style?: ViewStyle }) => (
         <TouchableOpacity
             onPress={() => handleHeaderPress(field)}
-            style={{ width, flexDirection: 'row', alignItems: 'center' }}
+            style={[{ flexDirection: 'row', alignItems: 'center' }, style]}
             className="py-1"
         >
             <Text
@@ -159,206 +159,263 @@ export default function AdminPropertiesScreen() {
         );
     }
 
+    /** Fixed / flex column styles — row is `width: '100%'` so the table fits the container (no horizontal scroll). */
+    const col = {
+        check: { width: 48 } as ViewStyle,
+        id: { width: 52 } as ViewStyle,
+        title: { flex: 2, minWidth: 140, flexShrink: 1, paddingRight: 8 } as ViewStyle,
+        type: { width: 92, flexShrink: 0 } as ViewStyle,
+        status: { width: 104, flexShrink: 0 } as ViewStyle,
+        price: { width: 118, flexShrink: 0 } as ViewStyle,
+        lot: { width: 84, flexShrink: 0 } as ViewStyle,
+        location: { flex: 1.25, minWidth: 120, flexShrink: 1, paddingRight: 8 } as ViewStyle,
+        actions: { width: 168, flexShrink: 0 } as ViewStyle,
+    };
+
     return (
-        <View className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <View
+            className="flex-1 bg-white rounded-2xl overflow-hidden border border-slate-200/80 w-full"
+            style={{
+                shadowColor: '#0f172a',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.06,
+                shadowRadius: 16,
+                elevation: 3,
+            }}
+        >
             {/* Header bar */}
-            <View className="flex-row justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
-                <View>
-                    <Text className="text-2xl font-bold text-gray-800">Property Listings</Text>
-                    <Text className="text-gray-500 text-sm mt-1">
-                        {sorted.length} of {properties.length} propert{properties.length === 1 ? 'y' : 'ies'} · sorted by{' '}
-                        <Text className="text-blue-600 font-medium">{sortField}</Text>{' '}
-                        ({sortOrder === 'asc' ? '↑' : '↓'})
-                    </Text>
+            <View className="flex-row flex-wrap justify-between items-start gap-4 p-6 border-b border-slate-100 bg-slate-50">
+                <View className="flex-row items-start" style={{ gap: 14 }}>
+                    <View className="w-11 h-11 rounded-xl bg-blue-600/10 items-center justify-center border border-blue-100">
+                        <MaterialIcons name="table-chart" size={22} color="#2563eb" />
+                    </View>
+                    <View>
+                        <Text className="text-2xl font-bold text-slate-900 tracking-tight">Property listings</Text>
+                        <Text className="text-slate-500 text-sm mt-1 leading-5">
+                            Showing <Text className="text-slate-800 font-semibold">{sorted.length}</Text> of{' '}
+                            <Text className="text-slate-800 font-semibold">{properties.length}</Text>
+                        </Text>
+                    </View>
                 </View>
 
-                <View className="flex-row items-center" style={{ gap: 12 }}>
-                    {/* Search Bar */}
+                <View className="flex-row flex-wrap items-center justify-end" style={{ gap: 10 }}>
                     <View
-                        className="flex-row items-center bg-white border border-gray-200 rounded-lg px-3"
-                        style={{ width: 260, height: 40 }}
+                        className="flex-row items-center bg-white border border-slate-200 rounded-xl px-3.5"
+                        style={{ minWidth: 220, maxWidth: 320, height: 42 }}
                     >
-                        <MaterialIcons name="search" size={18} color="#9ca3af" />
+                        <MaterialIcons name="search" size={20} color="#94a3b8" />
                         <TextInput
-                            placeholder="Search properties..."
-                            placeholderTextColor="#9ca3af"
+                            placeholder="Search title, city, ID…"
+                            placeholderTextColor="#94a3b8"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             style={{
                                 flex: 1,
-                                marginLeft: 8,
+                                marginLeft: 10,
                                 fontSize: 14,
-                                color: '#1f2937',
-                                height: 40,
+                                color: '#0f172a',
+                                height: 42,
                                 outlineStyle: 'none',
                             } as any}
                         />
                         {searchQuery.length > 0 && (
-                            <TouchableOpacity onPress={() => { setSearchQuery(''); setDebouncedSearch(''); }}>
-                                <MaterialIcons name="close" size={16} color="#9ca3af" />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setSearchQuery('');
+                                    setDebouncedSearch('');
+                                }}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                <MaterialIcons name="close" size={18} color="#94a3b8" />
                             </TouchableOpacity>
                         )}
                     </View>
 
-                    {/* Delete selected */}
                     {selectedIds.size > 0 && (
                         <TouchableOpacity
-                            className="bg-red-50 px-4 py-2 rounded-lg flex-row items-center border border-red-200"
+                            className="bg-red-50 px-4 py-2.5 rounded-xl flex-row items-center border border-red-200/80"
                             onPress={handleDeleteSelected}
                         >
                             <MaterialIcons name="delete-outline" size={20} color="#dc2626" />
-                            <Text className="text-red-600 font-semibold ml-2">
-                                Delete ({selectedIds.size})
-                            </Text>
+                            <Text className="text-red-700 font-semibold ml-2">Delete ({selectedIds.size})</Text>
                         </TouchableOpacity>
                     )}
 
-                    {/* New Property */}
                     <TouchableOpacity
-                        className="bg-blue-600 px-5 py-2.5 rounded-lg flex-row items-center shadow-sm"
+                        className="bg-blue-600 px-5 py-2.5 rounded-xl flex-row items-center"
+                        style={{
+                            shadowColor: '#2563eb',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 6,
+                            elevation: 4,
+                        }}
                         onPress={() => router.push('/admin/properties/create' as any)}
                     >
-                        <MaterialIcons name="add" size={20} color="white" />
-                        <Text className="text-white font-bold ml-1">New Property</Text>
+                        <MaterialIcons name="add" size={22} color="white" />
+                        <Text className="text-white font-bold ml-1.5">New property</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            <ScrollView horizontal className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
-                <ScrollView className="flex-1">
-                    <View className="flex-1 min-w-full">
+            <ScrollView
+                className="flex-1 w-full"
+                style={{ minHeight: 0 }}
+                stickyHeaderIndices={[0]}
+                contentContainerStyle={{ flexGrow: 1, width: '100%' }}
+            >
+                    {/* Sticky table header (index 0) */}
+                    <View
+                        className="flex-row bg-slate-100 border-b border-slate-200 py-3.5 px-3 sm:px-4 items-center w-full"
+                        style={{ width: '100%' }}
+                    >
+                        <TouchableOpacity
+                            style={col.check}
+                            className="items-center justify-center"
+                            onPress={handleSelectAll}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                            <MaterialIcons
+                                name={
+                                    selectedIds.size === sorted.length && sorted.length > 0
+                                        ? 'check-box'
+                                        : 'check-box-outline-blank'
+                                }
+                                size={22}
+                                color="#64748b"
+                            />
+                        </TouchableOpacity>
 
-                        {/* Table Header */}
-                        <View className="flex-row bg-gray-50 border-b border-gray-200 py-3 px-4 items-center">
-                            <TouchableOpacity
-                                className="w-12 items-center justify-center"
-                                onPress={handleSelectAll}
-                            >
-                                <MaterialIcons
-                                    name={selectedIds.size === sorted.length && sorted.length > 0
-                                        ? "check-box" : "check-box-outline-blank"}
-                                    size={24} color="#6b7280"
-                                />
-                            </TouchableOpacity>
+                        <ColHeader label="ID" field="id" style={col.id} />
+                        <ColHeader label="Title" field="title" style={col.title} />
+                        <ColHeader label="Type" field="type" style={col.type} />
+                        <ColHeader label="Status" field="status" style={col.status} />
+                        <ColHeader label="Price" field="price" style={col.price} />
+                        <ColHeader label="Lot" field="lotArea" style={col.lot} />
+                        <ColHeader label="Location" field="city" style={col.location} />
 
-                            <ColHeader label="ID"       field="id"      width={64} />
-                            <ColHeader label="Title"    field="title"   width={256} />
-                            <ColHeader label="Type"     field="type"    width={128} />
-                            <ColHeader label="Status"   field="status"  width={128} />
-                            <ColHeader label="Price"    field="price"   width={128} />
-                            <ColHeader label="Lot Area" field="lotArea" width={110} />
-                            <ColHeader label="Location" field="city"    width={192} />
+                        <View style={col.actions} className="items-center">
+                            <Text className="font-bold text-slate-500 text-xs uppercase tracking-wider">Actions</Text>
+                        </View>
+                    </View>
 
-                            <Text className="flex-1 font-bold text-gray-500 text-xs uppercase tracking-wider text-right pr-2">
-                                Actions
+                    {sorted.length === 0 ? (
+                        <View className="py-16 items-center justify-center px-6 w-full">
+                            <View className="w-16 h-16 rounded-2xl bg-slate-100 items-center justify-center mb-4">
+                                <MaterialIcons name="search-off" size={36} color="#cbd5e1" />
+                            </View>
+                            <Text className="text-slate-600 font-semibold text-base text-center">
+                                {debouncedSearch ? `No matches for "${debouncedSearch}"` : 'No properties yet'}
+                            </Text>
+                            <Text className="text-slate-400 text-sm mt-2 text-center max-w-md">
+                                {debouncedSearch
+                                    ? 'Try a different keyword or clear the search filter.'
+                                    : 'Create a listing with the New property button above.'}
                             </Text>
                         </View>
-
-                        {/* Table Body */}
-                        {sorted.length === 0 ? (
-                            <View className="py-12 items-center justify-center">
-                                <MaterialIcons name="search-off" size={48} color="#d1d5db" />
-                                <Text className="mt-4 text-gray-500 font-medium">
-                                    {debouncedSearch ? `No results for "${debouncedSearch}"` : 'No properties found.'}
-                                </Text>
-                            </View>
-                        ) : (
-                            sorted.map((property, index) => (
-                                <View
-                                    key={property.id}
-                                    className={`flex-row border-b border-gray-100 py-4 px-4 items-center ${
-                                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
-                                    }`}
+                    ) : (
+                        sorted.map((property, index) => (
+                            <Pressable
+                                key={property.id}
+                                style={({ hovered }) => ({
+                                    width: '100%',
+                                    backgroundColor: hovered ? '#f8fafc' : index % 2 === 0 ? '#ffffff' : '#fafafa',
+                                })}
+                                className="flex-row border-b border-slate-100 py-3.5 px-3 sm:px-4 items-center"
+                            >
+                                <TouchableOpacity
+                                    style={col.check}
+                                    className="items-center justify-center"
+                                    onPress={() => handleSelect(property.id)}
                                 >
-                                    {/* Checkbox */}
-                                    <TouchableOpacity
-                                        className="w-12 items-center justify-center"
-                                        onPress={() => handleSelect(property.id)}
-                                    >
-                                        <MaterialIcons
-                                            name={selectedIds.has(property.id) ? "check-box" : "check-box-outline-blank"}
-                                            size={24}
-                                            color={selectedIds.has(property.id) ? "#2563eb" : "#d1d5db"}
-                                        />
-                                    </TouchableOpacity>
+                                    <MaterialIcons
+                                        name={selectedIds.has(property.id) ? 'check-box' : 'check-box-outline-blank'}
+                                        size={22}
+                                        color={selectedIds.has(property.id) ? '#2563eb' : '#cbd5e1'}
+                                    />
+                                </TouchableOpacity>
 
-                                    {/* ID */}
-                                    <View style={{ width: 64 }}>
-                                        <Text className="text-gray-400 text-sm">#{property.id}</Text>
-                                    </View>
+                                <View style={col.id}>
+                                    <Text className="text-slate-400 text-xs font-medium uppercase tracking-wide">
+                                        #{property.id}
+                                    </Text>
+                                </View>
 
-                                    {/* Title */}
-                                    <View style={{ width: 256 }} className="pr-4">
-                                        <Text className="text-gray-800 font-semibold" numberOfLines={1}>
-                                            {property.title}
+                                <View style={col.title}>
+                                    <Text className="text-slate-900 font-semibold text-[15px]" numberOfLines={1}>
+                                        {property.title}
+                                    </Text>
+                                </View>
+
+                                <View style={col.type}>
+                                    <View className="bg-sky-50 self-start px-2.5 py-1 rounded-lg border border-sky-100">
+                                        <Text className="text-sky-800 text-xs font-bold capitalize tracking-wide">
+                                            {property.type?.toLowerCase()}
                                         </Text>
-                                    </View>
-
-                                    {/* Type */}
-                                    <View style={{ width: 128 }}>
-                                        <View className="bg-blue-50 self-start px-2.5 py-1 rounded-md">
-                                            <Text className="text-blue-700 text-xs font-semibold capitalize">
-                                                {property.type?.toLowerCase()}
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    {/* Status */}
-                                    <View style={{ width: 128 }}>
-                                        <View className={`self-start px-2.5 py-1 rounded-md ${
-                                            property.status?.toLowerCase() === 'available' ? 'bg-green-50' :
-                                            property.status?.toLowerCase() === 'sold'      ? 'bg-red-50' : 'bg-orange-50'
-                                        }`}>
-                                            <Text className={`text-xs font-semibold capitalize ${
-                                                property.status?.toLowerCase() === 'available' ? 'text-green-700' :
-                                                property.status?.toLowerCase() === 'sold'      ? 'text-red-700' : 'text-orange-700'
-                                            }`}>
-                                                {property.status?.toLowerCase()}
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    {/* Price */}
-                                    <View style={{ width: 128 }}>
-                                        <Text className="text-gray-700 font-medium font-mono text-sm">
-                                            ₱{property.price?.toLocaleString()}
-                                        </Text>
-                                    </View>
-
-                                    {/* Lot Area */}
-                                    <View style={{ width: 110 }}>
-                                        <Text className="text-gray-500 text-sm font-mono">
-                                            {property.lotArea != null ? `${property.lotArea.toLocaleString()} m²` : '—'}
-                                        </Text>
-                                    </View>
-
-                                    {/* Location */}
-                                    <View style={{ width: 192 }} className="pr-4">
-                                        <Text className="text-gray-500 text-sm" numberOfLines={1}>
-                                            {property.location?.city}, {property.location?.province}
-                                        </Text>
-                                    </View>
-
-                                    {/* Actions */}
-                                    <View className="flex-1 flex-row justify-end items-center pr-2" style={{ gap: 4 }}>
-                                        <TouchableOpacity
-                                            className="p-2 rounded-full"
-                                            onPress={() => router.push(`/admin/properties/edit/${property.id}` as any)}
-                                        >
-                                            <MaterialIcons name="edit" size={20} color="#4b5563" />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            className="p-2 rounded-full"
-                                            onPress={() => handleDeleteSingle(property.id)}
-                                        >
-                                            <MaterialIcons name="delete" size={20} color="#ef4444" />
-                                        </TouchableOpacity>
                                     </View>
                                 </View>
-                            ))
-                        )}
-                    </View>
-                </ScrollView>
+
+                                <View style={col.status}>
+                                    <View
+                                        className={`self-start px-2.5 py-1 rounded-lg border ${
+                                            property.status?.toLowerCase() === 'available'
+                                                ? 'bg-emerald-50 border-emerald-100'
+                                                : property.status?.toLowerCase() === 'sold'
+                                                  ? 'bg-rose-50 border-rose-100'
+                                                  : 'bg-amber-50 border-amber-100'
+                                        }`}
+                                    >
+                                        <Text
+                                            className={`text-xs font-bold capitalize ${
+                                                property.status?.toLowerCase() === 'available'
+                                                    ? 'text-emerald-800'
+                                                    : property.status?.toLowerCase() === 'sold'
+                                                      ? 'text-rose-800'
+                                                      : 'text-amber-900'
+                                            }`}
+                                        >
+                                            {property.status?.toLowerCase()}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                <View style={col.price}>
+                                    <Text className="text-slate-800 font-semibold font-mono text-sm">
+                                        ₱{property.price?.toLocaleString()}
+                                    </Text>
+                                </View>
+
+                                <View style={col.lot}>
+                                    <Text className="text-slate-500 text-sm font-mono">
+                                        {property.lotArea != null ? `${property.lotArea.toLocaleString()} m²` : '—'}
+                                    </Text>
+                                </View>
+
+                                <View style={col.location}>
+                                    <Text className="text-slate-500 text-sm" numberOfLines={1}>
+                                        {property.location?.city}, {property.location?.province}
+                                    </Text>
+                                </View>
+
+                                <View className="flex-row justify-center items-center" style={{ ...col.actions, gap: 6 }}>
+                                    <TouchableOpacity
+                                        className="flex-row items-center bg-slate-100 border border-slate-200/80 px-3 py-2 rounded-lg"
+                                        onPress={() => router.push(`/admin/properties/edit/${property.id}` as any)}
+                                    >
+                                        <MaterialIcons name="edit" size={18} color="#334155" />
+                                        <Text className="text-slate-700 font-semibold text-sm ml-1.5">Edit</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        className="flex-row items-center bg-rose-50 border border-rose-100 px-3 py-2 rounded-lg"
+                                        onPress={() => handleDeleteSingle(property.id)}
+                                    >
+                                        <MaterialIcons name="delete-outline" size={18} color="#e11d48" />
+                                        <Text className="text-rose-700 font-semibold text-sm ml-1">Delete</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </Pressable>
+                        ))
+                    )}
             </ScrollView>
         </View>
     );

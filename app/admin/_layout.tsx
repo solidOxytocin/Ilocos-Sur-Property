@@ -1,6 +1,7 @@
 import { Stack, useRouter, usePathname } from 'expo-router';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Pressable } from 'react-native';
 import { useState, useEffect } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 
 // A simple mock authentication state
 let isAuthenticated = false;
@@ -68,22 +69,59 @@ export default function AdminLayout() {
     );
   }
 
+  const onProperties =
+    pathname === '/admin/properties' ||
+    pathname === '/admin/properties/' ||
+    (pathname?.startsWith('/admin/properties') ?? false);
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-100" style={{ flex: 1 }}>
-      <View className="flex-row items-center justify-between bg-white px-6 py-4 shadow-sm z-10 border-b border-gray-200">
-        <Text className="text-xl font-bold text-gray-800">IS Properties Admin</Text>
-        <View className="flex-row space-x-4">
-            <TouchableOpacity onPress={() => router.push('/admin/properties' as any)} className="px-4 py-2">
-                <Text className="text-gray-600 font-semibold hover:text-blue-600">Properties</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleLogout} className="px-4 py-2 bg-red-50 rounded-lg">
-               <Text className="text-red-600 font-semibold">Logout</Text>
-            </TouchableOpacity>
+    <SafeAreaView className="flex-1 bg-slate-100" style={{ flex: 1 }}>
+      <View
+        className="flex-row items-center justify-between bg-white px-5 py-3.5 z-10 border-b border-slate-200/80"
+        style={{
+          shadowColor: '#0f172a',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 2,
+        }}
+      >
+        <View className="flex-row items-center" style={{ gap: 12 }}>
+          <View
+            className="w-10 h-10 rounded-xl bg-blue-600 items-center justify-center"
+            style={{ shadowColor: '#2563eb', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 }}
+          >
+            <MaterialIcons name="admin-panel-settings" size={22} color="#fff" />
+          </View>
+          <View>
+            <Text className="text-lg font-bold text-slate-900 tracking-tight">Ilocos Sur Properties</Text>
+            <Text className="text-xs text-slate-500 font-medium">Admin console</Text>
+          </View>
+        </View>
+
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Pressable
+            onPress={() => router.push('/admin/properties' as any)}
+            className={`flex-row items-center px-4 py-2.5 rounded-lg border ${onProperties ? 'bg-blue-50 border-blue-200' : 'border-transparent'}`}
+            style={({ hovered }) => (hovered && !onProperties ? { backgroundColor: '#f1f5f9' } : undefined)}
+          >
+            <MaterialIcons name="home-work" size={20} color={onProperties ? '#2563eb' : '#64748b'} />
+            <Text className={`ml-2 font-semibold ${onProperties ? 'text-blue-700' : 'text-slate-600'}`}>Listings</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleLogout}
+            className="flex-row items-center px-4 py-2.5 rounded-lg bg-red-50 border border-red-100"
+            style={({ hovered }) => (hovered ? { backgroundColor: '#fee2e2' } : undefined)}
+          >
+            <MaterialIcons name="logout" size={18} color="#b91c1c" />
+            <Text className="text-red-700 font-semibold ml-1.5">Log out</Text>
+          </Pressable>
         </View>
       </View>
       <View
-        className="flex-1 p-6 max-w-7xl mx-auto w-full"
-        style={{ flex: 1, minHeight: 0, width: '100%' }}
+        className="flex-1 p-4 sm:p-6 w-full"
+        style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: '100%' }}
       >
         <Stack
           screenOptions={{ headerShown: false }}

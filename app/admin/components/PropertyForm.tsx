@@ -49,11 +49,32 @@ interface PropertyFormProps {
   isEdit?: boolean;
 }
 
+type FormTab = 'basic' | 'location' | 'map' | 'dimensions' | 'features' | 'photos';
+
+type FieldErrors = {
+  title?: string;
+  price?: string;
+  city?: string;
+  province?: string;
+  boundaries?: string;
+};
+
+const FORM_TABS: { id: FormTab; label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
+  { id: 'basic', label: 'Basics', icon: 'description' },
+  { id: 'location', label: 'Location', icon: 'place' },
+  { id: 'map', label: 'Map & bounds', icon: 'map' },
+  { id: 'dimensions', label: 'Size & rooms', icon: 'straighten' },
+  { id: 'features', label: 'Features', icon: 'star-outline' },
+  { id: 'photos', label: 'Photos', icon: 'photo-library' },
+];
+
 export default function PropertyForm({ initialData, isEdit = false }: PropertyFormProps) {
   const router = useRouter();
   const { width: windowWidth } = useWindowDimensions();
   const [loading, setLoading] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<FormTab>('basic');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   
   // Basic Info
   const [title, setTitle] = useState(initialData?.title || '');
@@ -181,6 +202,67 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
     });
   };
 
+  const clearFieldError = (key: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const tabHasError = (tab: FormTab) => {
+    if (tab === 'basic') return !!(fieldErrors.title || fieldErrors.price);
+    if (tab === 'location') return !!(fieldErrors.city || fieldErrors.province);
+    if (tab === 'map') return !!fieldErrors.boundaries;
+    return false;
+  };
+
+  const validateForm = (): { ok: boolean; firstTab: FormTab | null } => {
+    const errors: FieldErrors = {};
+    let firstTab: FormTab | null = null;
+    const mark = (tab: FormTab) => {
+      if (!firstTab) firstTab = tab;
+    };
+
+    if (!title.trim()) {
+      errors.title = 'Title is required.';
+      mark('basic');
+    }
+
+    const trimmedPrice = price.trim();
+    const priceNum = parseFloat(trimmedPrice.replace(/,/g, ''));
+    if (!trimmedPrice || Number.isNaN(priceNum) || priceNum <= 0) {
+      errors.price = 'Enter a valid price greater than zero.';
+      mark('basic');
+    }
+
+    if (!city.trim()) {
+      errors.city = 'City or municipality is required.';
+      mark('location');
+    }
+    if (!province.trim()) {
+      errors.province = 'Province is required.';
+      mark('location');
+    }
+
+    if (boundariesRaw.trim()) {
+      try {
+        const parsed = JSON.parse(boundariesRaw);
+        if (!Array.isArray(parsed)) {
+          errors.boundaries = 'Boundaries must be a JSON array of points.';
+          mark('map');
+        }
+      } catch {
+        errors.boundaries = 'Invalid JSON. Expected an array of { lat, lng } objects.';
+        mark('map');
+      }
+    }
+
+    setFieldErrors(errors);
+    return { ok: Object.keys(errors).length === 0, firstTab };
+  };
+
   const pickImages = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -205,20 +287,16 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   }, [genPhotoId]);
 
   const handleSave = async () => {
-    if (!title || !price || !city || !province) {
-        window.alert('Please fill out required fields: Title, Price, City, Province');
-        return;
+    const { ok, firstTab } = validateForm();
+    if (!ok) {
+      if (firstTab) setActiveTab(firstTab);
+      Alert.alert('Check your entries', 'Some required fields are missing or invalid. Review the highlighted fields.');
+      return;
     }
 
     let parsedBoundaries = null;
     if (boundariesRaw.trim()) {
-        try {
-            parsedBoundaries = JSON.parse(boundariesRaw);
-            if (!Array.isArray(parsedBoundaries)) throw new Error("Boundaries must be an array.");
-        } catch (e) {
-            window.alert('Invalid Boundaries JSON format. It must be a valid JSON array of {lat, lng} objects.');
-            return;
-        }
+      parsedBoundaries = JSON.parse(boundariesRaw);
     }
 
     setLoading(true);
@@ -278,7 +356,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         title,
         type,
         status,
-        price: parseFloat(price),
+        price: parseFloat(price.trim().replace(/,/g, '')),
         details,
         lotArea: lotArea ? parseFloat(lotArea) : null,
         floorArea: floorArea ? parseFloat(floorArea) : null,
@@ -316,64 +394,140 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
     setLoading(false);
 
     if (result) {
-        window.alert(isEdit ? 'Property updated successfully!' : 'Property created successfully!');
-        router.back();
+      Alert.alert('Success', isEdit ? 'Property updated successfully.' : 'Property created successfully.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
     } else {
-        window.alert('Operation failed. Check logs.');
+      Alert.alert('Save failed', 'The operation could not complete. Check your connection and try again.');
     }
   };
 
-  // Reusable input component
-  const InputField = ({ label, value, onChangeText, keyboardType = 'default', multiline = false, required = false }: any) => (
-      <View className="mb-4">
-          <Text className="text-gray-700 font-semibold mb-2">
-            {label} {required && <Text className="text-red-500">*</Text>}
-          </Text>
-          <TextInput
-              className={`bg-white border border-gray-200 rounded-lg p-3 text-gray-800 ${multiline ? 'h-32 text-left' : ''}`}
-              value={value}
-              onChangeText={onChangeText}
-              keyboardType={keyboardType}
-              multiline={multiline}
-              style={multiline ? { textAlignVertical: 'top' } : {}}
-              placeholder={`Enter ${label.toLowerCase()}`}
-          />
-      </View>
+  const InputField = ({
+    label,
+    value,
+    onChangeText,
+    keyboardType = 'default' as const,
+    multiline = false,
+    required = false,
+    error,
+  }: {
+    label: string;
+    value: string;
+    onChangeText: (t: string) => void;
+    keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
+    multiline?: boolean;
+    required?: boolean;
+    error?: string;
+  }) => (
+    <View className="mb-4">
+      <Text className="text-gray-700 font-semibold mb-2">
+        {label} {required ? <Text className="text-red-500">*</Text> : null}
+      </Text>
+      <TextInput
+        className={`bg-white border rounded-lg p-3 text-gray-800 ${multiline ? 'min-h-[80px] text-left' : ''} ${
+          error ? 'border-red-400 bg-red-50/40' : 'border-gray-200'
+        }`}
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+        multiline={multiline}
+        style={multiline ? { textAlignVertical: 'top' } : undefined}
+        placeholder={`Enter ${label.toLowerCase()}`}
+        accessibilityLabel={label}
+      />
+      {error ? <Text className="text-red-600 text-sm mt-1.5">{error}</Text> : null}
+    </View>
   );
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 p-6 max-w-4xl mx-auto w-full">
-        <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold text-gray-800">
-                {isEdit ? 'Edit Property' : 'Create New Property'}
-            </Text>
-            <View className="flex-row space-x-3">
-                <TouchableOpacity 
-                    className="px-4 py-3 rounded-lg flex-row items-center bg-gray-200"
-                    onPress={() => router.back()}
-                    disabled={loading}
-                >
-                    <Text className="text-gray-700 font-bold">Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    className={`px-6 py-3 rounded-lg flex-row items-center ${loading ? 'bg-blue-400' : 'bg-blue-600'}`}
-                    onPress={handleSave}
-                    disabled={loading}
-                >
-                    {loading ? <ActivityIndicator color="white" /> : <MaterialIcons name="save" size={20} color="white" />}
-                    <Text className="text-white font-bold ml-2">Save Property</Text>
-                </TouchableOpacity>
+    <View className="flex-1 bg-slate-50 w-full" style={{ minHeight: 0 }}>
+        <View className="flex-1 flex-row min-h-0 bg-slate-100" style={{ minHeight: 0 }}>
+          <View
+            className="shrink-0 bg-white border-r border-slate-200"
+            style={{ width: 220, alignSelf: 'stretch', flexDirection: 'column' }}
+          >
+            <View className="flex-1 py-3 px-2" style={{ minHeight: 0 }}>
+              <Text className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Sections</Text>
+              {FORM_TABS.map((tab) => {
+                const active = activeTab === tab.id;
+                const errDot = tabHasError(tab.id);
+                return (
+                  <Pressable
+                    key={tab.id}
+                    onPress={() => setActiveTab(tab.id)}
+                    className={`flex-row items-center py-3 rounded-lg mb-0.5 ${active ? 'bg-blue-50' : ''}`}
+                    style={
+                      active
+                        ? { borderLeftWidth: 3, borderLeftColor: '#2563eb', paddingLeft: 10, paddingRight: 10 }
+                        : { paddingLeft: 13, paddingRight: 10 }
+                    }
+                  >
+                    <MaterialIcons name={tab.icon} size={20} color={active ? '#1d4ed8' : '#64748b'} />
+                    <Text
+                      className="ml-2.5 font-semibold text-[15px] flex-1"
+                      style={{ color: active ? '#1e3a8a' : '#334155' }}
+                      numberOfLines={2}
+                    >
+                      {tab.label}
+                    </Text>
+                    {errDot ? <View className="w-2 h-2 rounded-full bg-red-500 ml-1" /> : null}
+                  </Pressable>
+                );
+              })}
             </View>
-        </View>
 
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <Text className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Basic Information</Text>
-            <InputField label="Title" value={title} onChangeText={setTitle} required />
+            <View className="border-t border-slate-200 px-2 pt-3 pb-3" style={{ gap: 8 }}>
+              <TouchableOpacity
+                className="w-full py-2.5 rounded-lg flex-row items-center justify-center bg-slate-100 border border-slate-200 active:opacity-80"
+                onPress={() => router.back()}
+                disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel without saving"
+              >
+                <MaterialIcons name="arrow-back" size={18} color="#334155" />
+                <Text className="text-slate-800 font-semibold ml-2">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`w-full py-2.5 rounded-lg flex-row items-center justify-center border ${
+                  loading ? 'bg-blue-400 border-blue-400' : 'bg-blue-600 border-blue-600'
+                } active:opacity-90`}
+                onPress={handleSave}
+                disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="Save property"
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <MaterialIcons name="save" size={18} color="#fff" />
+                )}
+                <Text className="text-white font-semibold ml-2">Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View className="flex-1 min-h-0 min-w-0 bg-slate-50" style={{ flex: 1, minHeight: 0 }}>
+            <View className="flex-1 px-6 py-5" style={{ flex: 1, minHeight: 0 }}>
+        {activeTab === 'basic' && (
+        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 mb-1">Basics</Text>
+            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">Title, price, type, status, and description</Text>
+            <InputField label="Title" value={title} onChangeText={(t) => { setTitle(t); clearFieldError('title'); }} required error={fieldErrors.title} />
             <InputField label="Description/Details" value={details} onChangeText={setDetails} multiline />
             
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/3 px-2">
-                    <InputField label="Price (PHP)" value={price} onChangeText={setPrice} keyboardType="numeric" required />
+                    <InputField
+                      label="Price (PHP)"
+                      value={price}
+                      onChangeText={(t) => {
+                        setPrice(t);
+                        clearFieldError('price');
+                      }}
+                      keyboardType="numeric"
+                      required
+                      error={fieldErrors.price}
+                    />
                 </View>
                 <View className="w-1/3 px-2 mb-4">
                      <Text className="text-gray-700 font-semibold mb-2">Type</Text>
@@ -406,55 +560,93 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 </View>
             </View>
         </View>
+        )}
 
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <Text className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Location</Text>
+        {activeTab === 'location' && (
+        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 mb-1">Location</Text>
+            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">
+              Street address, barangay, city, and province
+            </Text>
             <InputField label="Address (Street/Subdivision)" value={address} onChangeText={setAddress} />
             <InputField label="Barangay" value={barangay} onChangeText={setBarangay} />
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/2 px-2">
-                    <InputField label="City/Municipality" value={city} onChangeText={setCity} required />
+                    <InputField
+                      label="City/Municipality"
+                      value={city}
+                      onChangeText={(t) => {
+                        setCity(t);
+                        clearFieldError('city');
+                      }}
+                      required
+                      error={fieldErrors.city}
+                    />
                 </View>
                 <View className="w-1/2 px-2">
-                    <InputField label="Province" value={province} onChangeText={setProvince} required />
+                    <InputField
+                      label="Province"
+                      value={province}
+                      onChangeText={(t) => {
+                        setProvince(t);
+                        clearFieldError('province');
+                      }}
+                      required
+                      error={fieldErrors.province}
+                    />
                 </View>
             </View>
-            
-            <View className="flex-row items-center justify-between mt-6 mb-4 border-b border-gray-100 pb-2">
-                <Text className="text-lg font-bold text-gray-800">Map Coordinates & Boundaries</Text>
-                <TouchableOpacity 
-                   className="bg-blue-600 px-4 py-2 rounded-lg flex-row items-center shadow-sm"
+        </View>
+        )}
+
+        {activeTab === 'map' && (
+        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 mb-1">Map coordinates & boundaries</Text>
+            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">
+              Place the pin and draw a boundary polygon in the map editor
+            </Text>
+            <View className="flex-row flex-wrap items-center justify-between gap-3 mb-4">
+                <Text className="text-gray-700 font-semibold flex-1 min-w-[160px]">Map editor</Text>
+                <TouchableOpacity
+                   className="bg-blue-600 px-4 py-2.5 rounded-lg flex-row items-center shadow-sm shrink-0"
                    onPress={() => setIsMapModalOpen(true)}
                 >
                    <MaterialIcons name="map" size={18} color="white" />
-                   <Text className="text-white font-bold ml-2">Open Map Editor</Text>
+                   <Text className="text-white font-bold ml-2">Open map editor</Text>
                 </TouchableOpacity>
             </View>
 
             {latitude && longitude ? (
                 <View className="mb-4">
-                  <Text className="text-gray-700 font-semibold mb-1">Pin (Lat/Lng):</Text>
+                  <Text className="text-gray-700 font-semibold mb-1">Pin (lat / lng)</Text>
                   <Text className="text-gray-600 font-mono bg-gray-50 p-3 rounded-lg border border-gray-200">{latitude}, {longitude}</Text>
-                  
-                  <Text className="text-gray-700 font-semibold mt-3 mb-1">Drawn Boundaries (Polygon Points):</Text>
+
+                  <Text className="text-gray-700 font-semibold mt-3 mb-1">Drawn boundaries (polygon points)</Text>
                   <Text className="text-gray-600 font-mono bg-gray-50 p-3 rounded-lg border border-gray-200">
-                     {boundariesRaw ? (() => { 
-                         try { 
-                             return JSON.parse(boundariesRaw).length + " Points Configured"; 
-                         } catch(e) { 
-                             return "Invalid/No JSON"; 
+                     {boundariesRaw ? (() => {
+                         try {
+                             return JSON.parse(boundariesRaw).length + ' points configured';
+                         } catch {
+                             return 'Invalid / no JSON';
                          }
-                     })() : "No polygon drawn"}
+                     })() : 'No polygon drawn'}
                   </Text>
                 </View>
             ) : (
-                <Text className="text-gray-500 italic mb-4">No map location set. Click 'Open Map Editor' above to place the pin.</Text>
+                <Text className="text-gray-500 italic mb-4">
+                  No map location set yet. Use Open map editor to place the pin and optional boundary.
+                </Text>
             )}
-
+            {fieldErrors.boundaries ? (
+              <Text className="text-red-600 text-sm">{fieldErrors.boundaries}</Text>
+            ) : null}
         </View>
+        )}
 
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <Text className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Dimensions & Rooms</Text>
+        {activeTab === 'dimensions' && (
+        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 mb-1">Size & rooms</Text>
+            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">Lot size, floor area, and counts</Text>
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/3 px-2">
                     <InputField label="Lot Area (sqm)" value={lotArea} onChangeText={setLotArea} keyboardType="numeric" />
@@ -473,11 +665,15 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 </View>
             </View>
         </View>
+        )}
 
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        {activeTab === 'features' && (
+        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 mb-1">Features & amenities</Text>
+            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">Tap to toggle what applies to this listing</Text>
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/2 px-2">
-                    <Text className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Features</Text>
+                    <Text className="text-base font-bold text-gray-800 mb-3">Nearby features</Text>
                     <View className="flex-row flex-wrap">
                         {AVAILABLE_FEATURES.map(f => (
                             <TouchableOpacity 
@@ -493,7 +689,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                     </View>
                 </View>
                 <View className="w-1/2 px-2">
-                    <Text className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Amenities</Text>
+                    <Text className="text-base font-bold text-gray-800 mb-3">Amenities</Text>
                     <View className="flex-row flex-wrap">
                         {AVAILABLE_AMENITIES.map(a => (
                             <TouchableOpacity 
@@ -510,9 +706,14 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 </View>
             </View>
         </View>
+        )}
 
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-12">
-          <View className="flex-row flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-100 pb-4">
+        {activeTab === 'photos' && (
+        <View
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex-1"
+          style={{ minHeight: 0, marginBottom: 0 }}
+        >
+          <View className="flex-row flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-100 pb-4 shrink-0">
             <View>
               <Text className="text-lg font-bold text-gray-800">Photos</Text>
               <Text className="text-gray-500 text-sm mt-1">
@@ -549,6 +750,13 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             </View>
           </View>
 
+          <ScrollView
+            style={{ flex: 1, minHeight: 0 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
+          >
           <View className="flex-row flex-wrap" style={{ gap: galleryGap, paddingBottom: 4 }}>
             {photoSlots.map((slot, index) => {
               const uri = slot.kind === 'url' ? (slot.media.url as string) : slot.asset.uri;
@@ -742,6 +950,11 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
               </View>
             </Pressable>
           </View>
+          </ScrollView>
+        </View>
+        )}
+            </View>
+          </View>
         </View>
 
         <Modal visible={isMapModalOpen} animationType="fade" transparent={true}>
@@ -757,6 +970,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                             setLatitude(coords.lat.toString());
                             setLongitude(coords.lng.toString());
                             setBoundariesRaw(bounds.length > 0 ? JSON.stringify(bounds, null, 2) : '');
+                            clearFieldError('boundaries');
                             setIsMapModalOpen(false);
                         }}
                         onCancel={() => setIsMapModalOpen(false)}
@@ -764,7 +978,6 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 </View>
             </View>
         </Modal>
-
-    </ScrollView>
+    </View>
   );
 }

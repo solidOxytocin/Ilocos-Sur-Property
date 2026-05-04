@@ -89,13 +89,12 @@
         -[] Add Dragging
         -[x] Gallery like
         -[x] Primary ( Cover Selection)
-    - [] Re populate The Mock Data and postgress Data with the new Images url
+    - [x] Re populate The Mock Data and postgress Data with the new Images url
 
-- [] Add Image View for Admin
-- [] Add Image Upload for Admin
-- [] Improve Admie
-    -[] Table
-    -[] Add/Edit Form
+- [x] Improve Admin
+    -[x] Table
+    -[x] Add/Edit Form
+- [] Add Auth for all API request
 
 - [] Dark Mode (U)
 - [] Improve Error Handling
@@ -109,6 +108,9 @@
 - [] Settings? (U)
 - [] Filter Slider to One
 - [] Beautify Splash Screen for MOBILE(U)
+- [] Update Ammenities
+- [] Update Features
+- [] Update Selections
 - [] Learn To Deploy
     -[] Create prod Build
     -[] Create an enviroment variables for prod and local   
