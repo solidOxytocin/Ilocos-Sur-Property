@@ -79,7 +79,7 @@
 - [x] Beautify List View Card
 - [x] Beautify Details View
 - [x] Remove Contact Agent Info in Details View and Home View for the public
-- [] Fix admin 
+- [x] Fix admin Broken after Frontend fixes
 - [] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [x] R&D For Image Handling 

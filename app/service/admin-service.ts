@@ -4,6 +4,24 @@ import { Property } from "../constants/mock/mock-properties";
 
 export type UploadedMediaItem = { url: string; cloudinaryPublicId: string };
 
+function getAdminAuthHeaders(
+  extra?: Record<string, string>
+): Record<string, string> {
+  const token = process.env.EXPO_PUBLIC_ADMIN_TOKEN?.trim();
+  if (!token) {
+    if (__DEV__) {
+      console.warn(
+        "EXPO_PUBLIC_ADMIN_TOKEN is not set — admin API requests will return 401."
+      );
+    }
+    return { ...extra };
+  }
+  return {
+    ...extra,
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 /** Uploads one or more images to the API (Cloudinary). Each file max 10MB (enforced server-side). */
 export async function uploadPropertyImages(
   assets: { uri: string; name?: string | null; mimeType?: string | null }[]
@@ -23,6 +41,7 @@ export async function uploadPropertyImages(
     }
     const response = await fetch(ADMIN.uploadMedia, {
       method: "POST",
+      headers: getAdminAuthHeaders(),
       body: formData,
     });
     if (!response.ok) {
@@ -42,9 +61,9 @@ export async function createProperty(data: Partial<Property>): Promise<Property 
   try {
     const response = await fetch(ADMIN.createProperty, {
       method: "POST",
-      headers: {
+      headers: getAdminAuthHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify(data),
     });
     
@@ -64,9 +83,9 @@ export async function updateProperty(id: string | number, data: Partial<Property
   try {
     const response = await fetch(ADMIN.updateProperty(id), {
       method: "PUT",
-      headers: {
+      headers: getAdminAuthHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify(data),
     });
 
@@ -86,6 +105,7 @@ export async function deleteProperty(id: string | number): Promise<boolean> {
   try {
     const response = await fetch(ADMIN.deleteProperty(id), {
       method: "DELETE",
+      headers: getAdminAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -104,9 +124,9 @@ export async function deleteManyProperties(ids: (string | number)[]): Promise<bo
   try {
     const response = await fetch(ADMIN.deleteManyProperties, {
       method: "POST",
-      headers: {
+      headers: getAdminAuthHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify({ ids }),
     });
 
