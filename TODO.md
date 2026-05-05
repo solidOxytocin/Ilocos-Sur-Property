@@ -95,7 +95,11 @@
 - [x] Improve Admin
     -[x] Table
     -[x] Add/Edit Form
-- [] Add Auth for all API request
+
+- [] Added Security in Admin
+    - []
+    - [x] Add Auth for all API request
+- [x] Add Add Feature / Amenity Button in Admin
 
 - [] Dark Mode (U)
 - [] Improve Error Handling

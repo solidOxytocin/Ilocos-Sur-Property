@@ -82,7 +82,7 @@ export async function getProperties(filters?: Record<string, any>): Promise<Prop
     return mockProperties.map(normalizeProperty);
   }
   try {
-    const url = PROPERTY.getProperties + buildQueryString({ ...filters, limit: 1000 });
+    const url = PROPERTY.getProperties + buildQueryString({ ...filters, limit: 99 });
     console.log("getProperties URL:", url);
     const response = await fetch(url);
     if (!response.ok) return [];

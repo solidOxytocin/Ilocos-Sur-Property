@@ -60,6 +60,45 @@ type FieldErrors = {
   boundaries?: string;
 };
 
+function InputField({
+  label,
+  value,
+  onChangeText,
+  keyboardType = 'default' as const,
+  multiline = false,
+  required = false,
+  error,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
+  multiline?: boolean;
+  required?: boolean;
+  error?: string;
+}) {
+  return (
+    <View className="mb-4">
+      <Text className="text-gray-700 font-semibold mb-2">
+        {label} {required ? <Text className="text-red-500">*</Text> : null}
+      </Text>
+      <TextInput
+        className={`bg-white border rounded-lg p-3 text-gray-800 ${multiline ? 'min-h-[80px] text-left' : ''} ${
+          error ? 'border-red-400 bg-red-50/40' : 'border-gray-200'
+        }`}
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+        multiline={multiline}
+        style={multiline ? { textAlignVertical: 'top' } : undefined}
+        placeholder={`Enter ${label.toLowerCase()}`}
+        accessibilityLabel={label}
+      />
+      {error ? <Text className="text-red-600 text-sm mt-1.5">{error}</Text> : null}
+    </View>
+  );
+}
+
 const FORM_TABS: { id: FormTab; label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   { id: 'basic', label: 'Basics', icon: 'description' },
   { id: 'location', label: 'Location', icon: 'place' },
@@ -618,43 +657,6 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
       Alert.alert('Save failed', 'The operation could not complete. Check your connection and try again.');
     }
   };
-
-  const InputField = ({
-    label,
-    value,
-    onChangeText,
-    keyboardType = 'default' as const,
-    multiline = false,
-    required = false,
-    error,
-  }: {
-    label: string;
-    value: string;
-    onChangeText: (t: string) => void;
-    keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
-    multiline?: boolean;
-    required?: boolean;
-    error?: string;
-  }) => (
-    <View className="mb-4">
-      <Text className="text-gray-700 font-semibold mb-2">
-        {label} {required ? <Text className="text-red-500">*</Text> : null}
-      </Text>
-      <TextInput
-        className={`bg-white border rounded-lg p-3 text-gray-800 ${multiline ? 'min-h-[80px] text-left' : ''} ${
-          error ? 'border-red-400 bg-red-50/40' : 'border-gray-200'
-        }`}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        multiline={multiline}
-        style={multiline ? { textAlignVertical: 'top' } : undefined}
-        placeholder={`Enter ${label.toLowerCase()}`}
-        accessibilityLabel={label}
-      />
-      {error ? <Text className="text-red-600 text-sm mt-1.5">{error}</Text> : null}
-    </View>
-  );
 
   return (
     <View className="flex-1 bg-slate-50 w-full" style={{ minHeight: 0 }}>
