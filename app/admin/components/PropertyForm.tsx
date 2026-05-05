@@ -112,8 +112,12 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   const [photoSlots, setPhotoSlots] = useState<PhotoSlot[]>(() => slotsFromInitialMedia(initialData?.media));
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [photoDropHover, setPhotoDropHover] = useState(false);
+  const [draggingPhotoId, setDraggingPhotoId] = useState<string | null>(null);
+  const [dragOverPhotoId, setDragOverPhotoId] = useState<string | null>(null);
   const photoDropDepthRef = useRef(0);
   const photoDropTileRef = useRef<View | null>(null);
+  const photoTileRefs = useRef<Record<string, View | null>>({});
+  const dragPreviewRef = useRef<HTMLElement | null>(null);
 
   const galleryCols = windowWidth >= 960 ? 4 : windowWidth >= 640 ? 3 : 2;
   const galleryGap = 12;
@@ -212,6 +216,27 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
       return next;
     });
   };
+
+  const reorderPhotoSlots = useCallback((sourceId: string, targetId: string) => {
+    if (!sourceId || !targetId || sourceId === targetId) return;
+    setPhotoSlots((prev) => {
+      const sourceIndex = prev.findIndex((s) => s.id === sourceId);
+      const targetIndex = prev.findIndex((s) => s.id === targetId);
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+  }, []);
+
+  const setPhotoTileRef = useCallback((id: string, node: View | null) => {
+    if (node) {
+      photoTileRefs.current[id] = node;
+      return;
+    }
+    delete photoTileRefs.current[id];
+  }, []);
 
   const clearFieldError = (key: keyof FieldErrors) => {
     setFieldErrors((prev) => {
@@ -392,6 +417,91 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
       node.removeEventListener('drop', onDrop);
     };
   }, [activeTab, appendStagedPickerAssets]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    if (activeTab !== 'photos') return;
+    if (!photoSlots.length) return;
+
+    const cleanups: Array<() => void> = [];
+
+    for (const slot of photoSlots) {
+      const node = photoTileRefs.current[slot.id] as unknown as HTMLElement | null;
+      if (!node) continue;
+
+      node.setAttribute('draggable', 'true');
+      node.style.cursor = 'grab';
+
+      const onDragStart = (e: DragEvent) => {
+        setDraggingPhotoId(slot.id);
+        setDragOverPhotoId(null);
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', slot.id);
+          const preview = node.cloneNode(true) as HTMLElement;
+          preview.style.position = 'fixed';
+          preview.style.top = '-9999px';
+          preview.style.left = '-9999px';
+          preview.style.width = `${node.clientWidth}px`;
+          preview.style.height = `${node.clientHeight}px`;
+          preview.style.transform = 'scale(1.04)';
+          preview.style.borderRadius = '14px';
+          preview.style.boxShadow = '0 18px 35px rgba(15, 23, 42, 0.35)';
+          preview.style.opacity = '0.97';
+          preview.style.pointerEvents = 'none';
+          preview.style.zIndex = '9999';
+          document.body.appendChild(preview);
+          dragPreviewRef.current = preview;
+          e.dataTransfer.setDragImage(preview, node.clientWidth / 2, node.clientHeight / 2);
+        }
+      };
+      const onDragOver = (e: DragEvent) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        setDragOverPhotoId(slot.id);
+      };
+      const onDragLeave = () => {
+        setDragOverPhotoId((prev) => (prev === slot.id ? null : prev));
+      };
+      const onDrop = (e: DragEvent) => {
+        e.preventDefault();
+        const sourceId = e.dataTransfer?.getData('text/plain') || draggingPhotoId;
+        if (sourceId) reorderPhotoSlots(sourceId, slot.id);
+        setDragOverPhotoId(null);
+      };
+      const onDragEnd = () => {
+        if (dragPreviewRef.current) {
+          dragPreviewRef.current.remove();
+          dragPreviewRef.current = null;
+        }
+        setDraggingPhotoId(null);
+        setDragOverPhotoId(null);
+      };
+
+      node.addEventListener('dragstart', onDragStart);
+      node.addEventListener('dragover', onDragOver);
+      node.addEventListener('dragleave', onDragLeave);
+      node.addEventListener('drop', onDrop);
+      node.addEventListener('dragend', onDragEnd);
+
+      cleanups.push(() => {
+        node.removeEventListener('dragstart', onDragStart);
+        node.removeEventListener('dragover', onDragOver);
+        node.removeEventListener('dragleave', onDragLeave);
+        node.removeEventListener('drop', onDrop);
+        node.removeEventListener('dragend', onDragEnd);
+        node.removeAttribute('draggable');
+      });
+    }
+
+    return () => {
+      if (dragPreviewRef.current) {
+        dragPreviewRef.current.remove();
+        dragPreviewRef.current = null;
+      }
+      for (const cleanup of cleanups) cleanup();
+    };
+  }, [activeTab, photoSlots, draggingPhotoId, reorderPhotoSlots]);
 
   const handleSave = async () => {
     const { ok, firstTab } = validateForm();
@@ -826,7 +936,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
               <Text className="text-gray-500 text-sm mt-1">
                 Gallery order = listing order. First photo is the cover.{' '}
                 {Platform.OS === 'web'
-                  ? 'Click the dashed tile to choose files, or drag images directly onto it.'
+                  ? 'Drag existing photos to reorder. Click the dashed tile to choose files, or drag images directly onto it.'
                   : 'Tap the dashed tile to add from your device.'}{' '}
                 Max 10MB each.
               </Text>
@@ -876,14 +986,28 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
               return (
                 <View
                   key={slot.id}
+                  ref={(node) => setPhotoTileRef(slot.id, node)}
                   style={{
                     width: tileSize,
                     height: tileSize,
                     borderRadius: 14,
                     overflow: 'hidden',
                     borderWidth: 2,
-                    borderColor: isSelected ? '#2563eb' : isPrimary ? '#93c5fd' : '#e5e7eb',
-                    backgroundColor: '#f1f5f9',
+                    borderColor: dragOverPhotoId === slot.id
+                      ? '#4338ca'
+                      : isSelected
+                        ? '#2563eb'
+                        : isPrimary
+                          ? '#93c5fd'
+                          : '#e5e7eb',
+                    backgroundColor: dragOverPhotoId === slot.id ? '#e0e7ff' : '#f1f5f9',
+                    opacity: draggingPhotoId === slot.id ? 0.28 : 1,
+                    transform: draggingPhotoId === slot.id ? [{ scale: 0.96 }] : undefined,
+                    shadowColor: dragOverPhotoId === slot.id ? '#4338ca' : '#0f172a',
+                    shadowOpacity: dragOverPhotoId === slot.id ? 0.32 : 0.08,
+                    shadowRadius: dragOverPhotoId === slot.id ? 10 : 4,
+                    shadowOffset: { width: 0, height: dragOverPhotoId === slot.id ? 6 : 2 },
+                    elevation: dragOverPhotoId === slot.id ? 8 : 1,
                   }}
                 >
                   <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />

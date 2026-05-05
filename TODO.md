@@ -86,7 +86,7 @@
     - [x] Setup Image CDN
     - [x] Apply Cloudinary in API
     - [x] Admin View Add Image uploading
-        -[] Add Dragging for reordering
+        -[x] Add Dragging for reordering
         -[x] Add Dragging to Upload
         -[x] Gallery like
         -[x] Primary ( Cover Selection)
