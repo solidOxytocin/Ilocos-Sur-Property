@@ -8,6 +8,7 @@ export const PROPERTY = {
 };
 
 export const ADMIN = {
+  login: `${BASE_URL}/admin/auth/login`,
   createProperty: `${BASE_URL}/admin/property`,
   updateProperty: (id: string | number) => `${BASE_URL}/admin/property/${id}`,
   deleteProperty: (id: string | number) => `${BASE_URL}/admin/property/${id}`,

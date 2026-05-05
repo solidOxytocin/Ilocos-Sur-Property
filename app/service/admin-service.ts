@@ -3,17 +3,111 @@ import { ADMIN } from "../constants/paths";
 import { Property } from "../constants/mock/mock-properties";
 
 export type UploadedMediaItem = { url: string; cloudinaryPublicId: string };
+type AdminLoginResponse = {
+  accessToken: string;
+  tokenType: "Bearer";
+  expiresIn: string;
+  expiresAt: string | null;
+};
+type AdminAuthListener = (authed: boolean) => void;
+
+const ADMIN_TOKEN_STORAGE_KEY = "admin_access_token";
+let adminTokenCache: string | null = null;
+const authListeners = new Set<AdminAuthListener>();
+
+function notifyAuthChange(): void {
+  const authed = Boolean(adminTokenCache);
+  authListeners.forEach((listener) => listener(authed));
+}
+
+function getStorage(): Storage | null {
+  if (Platform.OS !== "web") return null;
+  if (typeof globalThis === "undefined") return null;
+  return globalThis.localStorage ?? null;
+}
+
+function persistToken(token: string | null): void {
+  const storage = getStorage();
+  if (!storage) return;
+
+  if (!token) {
+    storage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+    return;
+  }
+
+  storage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
+}
+
+function getCachedToken(): string | null {
+  if (adminTokenCache) return adminTokenCache;
+  const storage = getStorage();
+  if (!storage) return null;
+  const fromStorage = storage.getItem(ADMIN_TOKEN_STORAGE_KEY)?.trim();
+  adminTokenCache = fromStorage || null;
+  return adminTokenCache;
+}
+
+export async function initializeAdminAuth(): Promise<boolean> {
+  getCachedToken();
+  return Boolean(adminTokenCache);
+}
+
+export function isAdminAuthenticated(): boolean {
+  return Boolean(getCachedToken());
+}
+
+export function clearAdminAuth(): void {
+  adminTokenCache = null;
+  persistToken(null);
+  notifyAuthChange();
+}
+
+export function subscribeAdminAuth(listener: AdminAuthListener): () => void {
+  authListeners.add(listener);
+  return () => {
+    authListeners.delete(listener);
+  };
+}
+
+export async function loginAdmin(username: string, password: string): Promise<boolean> {
+  try {
+    const response = await fetch(ADMIN.login, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.trim(),
+        password,
+      }),
+    });
+
+    if (!response.ok) {
+      clearAdminAuth();
+      return false;
+    }
+
+    const json = (await response.json()) as Partial<AdminLoginResponse>;
+    const token = json.accessToken?.trim();
+    if (!token) {
+      clearAdminAuth();
+      return false;
+    }
+
+    adminTokenCache = token;
+    persistToken(token);
+    notifyAuthChange();
+    return true;
+  } catch (error) {
+    console.error("loginAdmin error:", error);
+    clearAdminAuth();
+    return false;
+  }
+}
 
 function getAdminAuthHeaders(
   extra?: Record<string, string>
 ): Record<string, string> {
-  const token = process.env.EXPO_PUBLIC_ADMIN_TOKEN?.trim();
+  const token = getCachedToken();
   if (!token) {
-    if (__DEV__) {
-      console.warn(
-        "EXPO_PUBLIC_ADMIN_TOKEN is not set — admin API requests will return 401."
-      );
-    }
     return { ...extra };
   }
   return {
@@ -44,6 +138,10 @@ export async function uploadPropertyImages(
       headers: getAdminAuthHeaders(),
       body: formData,
     });
+    if (response.status === 401 || response.status === 403) {
+      clearAdminAuth();
+      return null;
+    }
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       console.error("uploadPropertyImages failed:", err);
@@ -67,6 +165,10 @@ export async function createProperty(data: Partial<Property>): Promise<Property 
       body: JSON.stringify(data),
     });
     
+    if (response.status === 401 || response.status === 403) {
+        clearAdminAuth();
+        return null;
+    }
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to create property:", errorData);
@@ -89,6 +191,10 @@ export async function updateProperty(id: string | number, data: Partial<Property
       body: JSON.stringify(data),
     });
 
+    if (response.status === 401 || response.status === 403) {
+        clearAdminAuth();
+        return null;
+    }
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to update property:", errorData);
@@ -108,6 +214,10 @@ export async function deleteProperty(id: string | number): Promise<boolean> {
       headers: getAdminAuthHeaders(),
     });
 
+    if (response.status === 401 || response.status === 403) {
+        clearAdminAuth();
+        return false;
+    }
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to delete property:", errorData);
@@ -130,6 +240,10 @@ export async function deleteManyProperties(ids: (string | number)[]): Promise<bo
       body: JSON.stringify({ ids }),
     });
 
+    if (response.status === 401 || response.status === 403) {
+        clearAdminAuth();
+        return false;
+    }
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to delete many properties:", errorData);

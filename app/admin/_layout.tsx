@@ -1,64 +1,134 @@
 import { Stack, useRouter, usePathname } from 'expo-router';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Pressable } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Pressable, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-
-// A simple mock authentication state
-let isAuthenticated = false;
+import { clearAdminAuth, initializeAdminAuth, loginAdmin, subscribeAdminAuth } from '../service/admin-service';
 
 export default function AdminLayout() {
-  const [authed, setAuthed] = useState(isAuthenticated);
+  const [authed, setAuthed] = useState(false);
+  const [bootstrapping, setBootstrapping] = useState(true);
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-     setAuthed(isAuthenticated);
-  }, [pathname]);
-
-  const handleLogin = () => {
-    // Mock password for development
-    if (password === 'admin123') {
-      isAuthenticated = true;
-      setAuthed(true);
-      setError('');
-      // Default admin URL is `/admin`, which has no stack screen without a redirect — land on listings.
-      if (pathname === '/admin' || pathname === '/admin/') {
-        router.replace('/admin/properties' as any);
+    let mounted = true;
+    const bootstrap = async () => {
+      const loggedIn = await initializeAdminAuth();
+      if (mounted) {
+        setAuthed(loggedIn);
+        setBootstrapping(false);
       }
-    } else {
-      setError('Invalid password. Try admin123');
+    };
+    bootstrap();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    return subscribeAdminAuth((nextState) => {
+      setAuthed(nextState);
+    });
+  }, []);
+
+  const handleLogin = async () => {
+    if (submitting) return;
+    if (!username.trim() || !password) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+    const ok = await loginAdmin(username, password);
+    setSubmitting(false);
+
+    if (!ok) {
+      setError('Invalid credentials or server unavailable.');
+      return;
+    }
+
+    setAuthed(true);
+    setPassword('');
+    if (pathname === '/admin' || pathname === '/admin/') {
+      router.replace('/admin/properties' as any);
     }
   };
 
   const handleLogout = () => {
-    isAuthenticated = false;
+    clearAdminAuth();
     setAuthed(false);
+    setPassword('');
+    setError('');
     router.replace('/');
   };
+
+  if (bootstrapping) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text className="text-slate-500 mt-3">Preparing admin session...</Text>
+      </SafeAreaView>
+    );
+  }
 
   if (!authed) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
-        <View className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
-          <Text className="text-2xl font-bold text-center mb-6 text-gray-800">Admin Login</Text>
+        <View className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border border-slate-100">
+          <Text className="text-2xl font-bold text-center mb-2 text-gray-800">Admin Login</Text>
+          <Text className="text-center text-slate-500 mb-6">Sign in to manage property listings.</Text>
+
+          <Text className="text-slate-600 text-xs font-semibold uppercase tracking-wide mb-1.5">Username</Text>
           <TextInput
             className="w-full bg-gray-100 p-4 rounded-lg mb-4 border border-gray-200"
-            placeholder="Enter Admin Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            onSubmitEditing={handleLogin}
+            placeholder="Enter admin username"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={username}
+            onChangeText={(value) => {
+              setUsername(value);
+              if (error) setError('');
+            }}
           />
+
+          <Text className="text-slate-600 text-xs font-semibold uppercase tracking-wide mb-1.5">Password</Text>
+          <View className="w-full bg-gray-100 rounded-lg mb-4 border border-gray-200 flex-row items-center">
+            <TextInput
+              className="flex-1 p-4"
+              placeholder="Enter admin password"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={(value) => {
+                setPassword(value);
+                if (error) setError('');
+              }}
+              onSubmitEditing={handleLogin}
+            />
+            <TouchableOpacity className="px-3 py-2 mr-1" onPress={() => setShowPassword((v) => !v)}>
+              <MaterialIcons name={showPassword ? 'visibility-off' : 'visibility'} size={20} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
           {error ? <Text className="text-red-500 mb-4 text-center">{error}</Text> : null}
-          <TouchableOpacity 
-            className="w-full bg-blue-600 p-4 rounded-lg items-center"
+
+          <TouchableOpacity
+            className={`w-full p-4 rounded-lg items-center ${submitting ? 'bg-blue-400' : 'bg-blue-600'}`}
             onPress={handleLogin}
+            disabled={submitting}
           >
-            <Text className="text-white font-bold text-lg">Login</Text>
+            {submitting ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text className="text-white font-bold text-lg">Login</Text>
+            )}
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="mt-6 items-center"
             onPress={() => router.replace('/')}
           >
