@@ -86,7 +86,8 @@
     - [x] Setup Image CDN
     - [x] Apply Cloudinary in API
     - [x] Admin View Add Image uploading
-        -[] Add Dragging
+        -[] Add Dragging for reordering
+        -[x] Add Dragging to Upload
         -[x] Gallery like
         -[x] Primary ( Cover Selection)
     - [x] Re populate The Mock Data and postgress Data with the new Images url
@@ -111,6 +112,7 @@
 - [] Update Ammenities
 - [] Update Features
 - [] Update Selections
+- [] Seperate Admin Frontend to a new Project
 - [] Learn To Deploy
     -[] Create prod Build
     -[] Create an enviroment variables for prod and local   

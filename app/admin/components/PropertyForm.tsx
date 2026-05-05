@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
   useWindowDimensions,
   Pressable,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -70,6 +71,13 @@ const FORM_TABS: { id: FormTab; label: string; icon: keyof typeof MaterialIcons.
 
 export default function PropertyForm({ initialData, isEdit = false }: PropertyFormProps) {
   const router = useRouter();
+  const leavePropertyForm = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/admin/properties' as any);
+    }
+  }, [router]);
   const { width: windowWidth } = useWindowDimensions();
   const [loading, setLoading] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -103,6 +111,9 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   
   const [photoSlots, setPhotoSlots] = useState<PhotoSlot[]>(() => slotsFromInitialMedia(initialData?.media));
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [photoDropHover, setPhotoDropHover] = useState(false);
+  const photoDropDepthRef = useRef(0);
+  const photoDropTileRef = useRef<View | null>(null);
 
   const galleryCols = windowWidth >= 960 ? 4 : windowWidth >= 640 ? 3 : 2;
   const galleryGap = 12;
@@ -263,6 +274,22 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
     return { ok: Object.keys(errors).length === 0, firstTab };
   };
 
+  const appendStagedPickerAssets = useCallback(
+    (assets: ImagePicker.ImagePickerAsset[]) => {
+      if (!assets.length) return;
+      const tooLarge = assets.find((a) => a.fileSize != null && a.fileSize > MAX_IMAGE_BYTES);
+      if (tooLarge) {
+        Alert.alert('File too large', 'Each image must be 10MB or smaller.');
+        return;
+      }
+      setPhotoSlots((prev) => [
+        ...prev,
+        ...assets.map((asset) => ({ id: genPhotoId(), kind: 'staged' as const, asset })),
+      ]);
+    },
+    [genPhotoId]
+  );
+
   const pickImages = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -275,16 +302,96 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
       quality: 0.85,
     });
     if (result.canceled) return;
-    const tooLarge = result.assets.find((a) => a.fileSize != null && a.fileSize > MAX_IMAGE_BYTES);
-    if (tooLarge) {
-      Alert.alert('File too large', 'Each image must be 10MB or smaller.');
-      return;
-    }
-    setPhotoSlots((prev) => [
-      ...prev,
-      ...result.assets.map((asset) => ({ id: genPhotoId(), kind: 'staged' as const, asset })),
-    ]);
-  }, [genPhotoId]);
+    appendStagedPickerAssets(result.assets);
+  }, [appendStagedPickerAssets]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const onWindowDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+    const onWindowDrop = (event: DragEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener('dragover', onWindowDragOver);
+    window.addEventListener('drop', onWindowDrop);
+    return () => {
+      window.removeEventListener('dragover', onWindowDragOver);
+      window.removeEventListener('drop', onWindowDrop);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    if (activeTab !== 'photos') return;
+    const node = photoDropTileRef.current as unknown as HTMLElement | null;
+    if (!node) return;
+
+    const hasFiles = (e: DragEvent) => {
+      const types = e.dataTransfer?.types;
+      if (!types) return false;
+      for (let i = 0; i < types.length; i++) {
+        if (types[i] === 'Files') return true;
+      }
+      return false;
+    };
+
+    const onDragEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      photoDropDepthRef.current += 1;
+      setPhotoDropHover(true);
+    };
+    const onDragOver = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    };
+    const onDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      photoDropDepthRef.current = Math.max(0, photoDropDepthRef.current - 1);
+      if (photoDropDepthRef.current === 0) setPhotoDropHover(false);
+    };
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      photoDropDepthRef.current = 0;
+      setPhotoDropHover(false);
+      const files = e.dataTransfer?.files;
+      if (!files?.length) return;
+      const imageFiles: File[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const f = files.item(i);
+        if (f && f.type.startsWith('image/')) imageFiles.push(f);
+      }
+      if (!imageFiles.length) {
+        Alert.alert('No images', 'Drop image files only (for example PNG, JPEG, or WebP).');
+        return;
+      }
+      const assets: ImagePicker.ImagePickerAsset[] = imageFiles.map((file) => ({
+        uri: URL.createObjectURL(file),
+        width: 0,
+        height: 0,
+        type: 'image' as const,
+        mimeType: file.type || 'image/jpeg',
+        fileName: file.name,
+        fileSize: file.size,
+        file,
+      }));
+      appendStagedPickerAssets(assets);
+    };
+
+    node.addEventListener('dragenter', onDragEnter);
+    node.addEventListener('dragover', onDragOver);
+    node.addEventListener('dragleave', onDragLeave);
+    node.addEventListener('drop', onDrop);
+    return () => {
+      node.removeEventListener('dragenter', onDragEnter);
+      node.removeEventListener('dragover', onDragOver);
+      node.removeEventListener('dragleave', onDragLeave);
+      node.removeEventListener('drop', onDrop);
+    };
+  }, [activeTab, appendStagedPickerAssets]);
 
   const handleSave = async () => {
     const { ok, firstTab } = validateForm();
@@ -395,7 +502,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
 
     if (result) {
       Alert.alert('Success', isEdit ? 'Property updated successfully.' : 'Property created successfully.', [
-        { text: 'OK', onPress: () => router.back() },
+        { text: 'OK', onPress: () => leavePropertyForm() },
       ]);
     } else {
       Alert.alert('Save failed', 'The operation could not complete. Check your connection and try again.');
@@ -479,7 +586,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             <View className="border-t border-slate-200 px-2 pt-3 pb-3" style={{ gap: 8 }}>
               <TouchableOpacity
                 className="w-full py-2.5 rounded-lg flex-row items-center justify-center bg-slate-100 border border-slate-200 active:opacity-80"
-                onPress={() => router.back()}
+                onPress={() => leavePropertyForm()}
                 disabled={loading}
                 accessibilityRole="button"
                 accessibilityLabel="Cancel without saving"
@@ -717,8 +824,11 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             <View>
               <Text className="text-lg font-bold text-gray-800">Photos</Text>
               <Text className="text-gray-500 text-sm mt-1">
-                Gallery order = listing order. First photo is the cover. Tap the dashed tile to add from your
-                device. Max 10MB each.
+                Gallery order = listing order. First photo is the cover.{' '}
+                {Platform.OS === 'web'
+                  ? 'Click the dashed tile to choose files, or drag images directly onto it.'
+                  : 'Tap the dashed tile to add from your device.'}{' '}
+                Max 10MB each.
               </Text>
             </View>
             <View className="flex-row flex-wrap items-center" style={{ gap: 10 }}>
@@ -874,6 +984,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             })}
 
             <Pressable
+              ref={photoDropTileRef as React.RefObject<View>}
               onPress={pickImages}
               disabled={loading}
               style={{
@@ -882,9 +993,9 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 borderRadius: 14,
                 overflow: 'hidden',
                 borderWidth: 2,
-                borderColor: '#e2e8f0',
+                borderColor: photoDropHover ? '#6366f1' : '#e2e8f0',
                 borderStyle: 'dashed',
-                backgroundColor: '#f8fafc',
+                backgroundColor: photoDropHover ? '#eef2ff' : '#f8fafc',
               }}
             >
               <View
@@ -946,7 +1057,22 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                 >
                   <MaterialIcons name="add-photo-alternate" size={26} color="#4f46e5" />
                 </View>
-                <Text style={{ marginTop: 8, fontSize: 12, fontWeight: '700', color: '#475569' }}>Add photos</Text>
+                <Text
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    fontWeight: '700',
+                    color: photoDropHover ? '#3730a3' : '#475569',
+                    textAlign: 'center',
+                    paddingHorizontal: 8,
+                  }}
+                >
+                  {photoDropHover
+                    ? 'Drop to upload'
+                    : Platform.OS === 'web'
+                      ? 'Drag or Click to upload'
+                      : 'Add photos'}
+                </Text>
               </View>
             </Pressable>
           </View>
