@@ -104,12 +104,12 @@
     - [x] Added File Security
 
 - [x] Dark Mode (A)
-- [] Improve Error Handling = Should be graceful
-    - [ ] Show specific error messages and uniformed
-    - [ ] Add retry options for failed requests
-    - [ ] Handle offline scenarios gracefully
-    - [ ] No Internet
-    - [ ] No Data from Fetch
+- [x] Improve Error Handling = Should be graceful
+    - [x] Show specific error messages and uniformed
+    - [x] Add retry options for failed requests
+    - [x] Handle offline scenarios gracefully
+    - [x] No Internet
+    - [x] No Data from Fetch
 
 - [] Contacts View (U)
 - [] Settings? (U)
