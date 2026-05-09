@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { GoogleMap, useJsApiLoader, PolygonF, MarkerF, Autocomplete } from '@react-google-maps/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColorScheme } from 'nativewind';
 import { Coordinate } from '../../../../constants/mock/mock-properties';
 
 interface WebAdminMapPickerProps {
@@ -20,6 +21,8 @@ const containerStyle = {
 const libraries: any = ['places'];
 
 export default function WebAdminMapPicker({ initialCoordinates, initialBoundaries, onSave, onCancel }: WebAdminMapPickerProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -86,37 +89,42 @@ export default function WebAdminMapPicker({ initialCoordinates, initialBoundarie
     onSave(coordinates, boundaries);
   };
 
-  if (!apiKey) return <Text>Google Maps API Key not configured.</Text>;
-  if (loadError) return <Text>Map Error: {loadError.message}</Text>;
-  if (!isLoaded) return <View className="h-[500px] flex items-center justify-center bg-gray-100 rounded-xl"><Text>Loading interactive map...</Text></View>;
+  if (!apiKey) return <Text className={isDark ? 'text-slate-200' : ''}>Google Maps API Key not configured.</Text>;
+  if (loadError) return <Text className={isDark ? 'text-red-300' : ''}>Map Error: {loadError.message}</Text>;
+  if (!isLoaded)
+    return (
+      <View className="h-[500px] flex items-center justify-center bg-gray-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+        <Text className={isDark ? 'text-slate-300' : 'text-gray-700'}>Loading interactive map...</Text>
+      </View>
+    );
 
   const polygonPaths = boundaries.map(b => ({ lat: b.lat, lng: b.lng }));
 
   return (
-    <View className="flex-1 bg-white flex flex-col h-full rounded-xl overflow-hidden p-4">
+    <View className="flex-1 bg-white dark:bg-slate-900 flex flex-col h-full rounded-xl overflow-hidden p-4">
       {/* Top Controls Toolbar */}
-      <View className="flex-row items-center justify-between z-10 mb-4 bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+      <View className="flex-row items-center justify-between z-10 mb-4 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-3">
         <View className="flex-row items-center space-x-2 flex-1">
            {/* Editor Modes */}
            <TouchableOpacity 
-              className={`px-4 py-2 rounded-lg flex-row items-center ${mode === 'pin' ? 'bg-red-50 border border-red-500' : 'bg-gray-100 border border-transparent'}`}
+              className={`px-4 py-2 rounded-lg flex-row items-center ${mode === 'pin' ? 'bg-red-50 dark:bg-red-950/50 border border-red-500' : 'bg-gray-100 dark:bg-slate-800 border border-transparent dark:border-transparent'}`}
               onPress={() => setMode('pin')}
            >
-              <MaterialCommunityIcons name="map-marker" size={20} color={mode === 'pin' ? '#ef4444' : '#6b7280'} />
-              <Text className={`ml-2 font-bold ${mode === 'pin' ? 'text-red-700' : 'text-gray-600'}`}>1. Pin Location</Text>
+              <MaterialCommunityIcons name="map-marker" size={20} color={mode === 'pin' ? '#ef4444' : isDark ? '#94a3b8' : '#6b7280'} />
+              <Text className={`ml-2 font-bold ${mode === 'pin' ? 'text-red-700 dark:text-red-300' : 'text-gray-600 dark:text-slate-300'}`}>1. Pin Location</Text>
            </TouchableOpacity>
 
            <TouchableOpacity 
-              className={`px-4 py-2 rounded-lg flex-row items-center ${mode === 'boundary' ? 'bg-blue-50 border border-blue-500' : 'bg-gray-100 border border-transparent'}`}
+              className={`px-4 py-2 rounded-lg flex-row items-center ${mode === 'boundary' ? 'bg-blue-50 dark:bg-blue-950/50 border border-blue-500' : 'bg-gray-100 dark:bg-slate-800 border border-transparent dark:border-transparent'}`}
               onPress={() => setMode('boundary')}
            >
-              <MaterialCommunityIcons name="vector-polygon" size={20} color={mode === 'boundary' ? '#3b82f6' : '#6b7280'} />
-              <Text className={`ml-2 font-bold ${mode === 'boundary' ? 'text-blue-700' : 'text-gray-600'}`}>2. Draw Area</Text>
+              <MaterialCommunityIcons name="vector-polygon" size={20} color={mode === 'boundary' ? '#3b82f6' : isDark ? '#94a3b8' : '#6b7280'} />
+              <Text className={`ml-2 font-bold ${mode === 'boundary' ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-slate-300'}`}>2. Draw Area</Text>
            </TouchableOpacity>
 
            {boundaries.length > 0 && mode === 'boundary' && (
              <TouchableOpacity className="px-3 py-2" onPress={clearBoundaries}>
-                <Text className="text-red-500 font-semibold hover:underline">Clear Area</Text>
+                <Text className="text-red-500 dark:text-red-400 font-semibold hover:underline">Clear Area</Text>
              </TouchableOpacity>
            )}
         </View>
@@ -133,7 +141,9 @@ export default function WebAdminMapPicker({ initialCoordinates, initialBoundarie
                 placeholder="Search location to fly to..."
                 style={{
                   boxSizing: 'border-box',
-                  border: '1px solid #e5e7eb',
+                  border: isDark ? '1px solid #475569' : '1px solid #e5e7eb',
+                  backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                  color: isDark ? '#f1f5f9' : '#0f172a',
                   width: '100%',
                   height: '40px',
                   padding: '10px 14px',
@@ -147,9 +157,9 @@ export default function WebAdminMapPicker({ initialCoordinates, initialBoundarie
       </View>
 
       {/* Map Segment */}
-      <View className="flex-1 rounded-xl overflow-hidden border border-gray-300 relative bg-gray-100">
-         <View className="absolute top-4 left-4 z-10 bg-white/90 px-3 py-2 rounded-lg shadow-sm backdrop-blur-md">
-            <Text className="text-sm font-bold text-gray-800">
+      <View className="flex-1 rounded-xl overflow-hidden border border-gray-300 dark:border-slate-600 relative bg-gray-100 dark:bg-slate-950">
+         <View className="absolute top-4 left-4 z-10 bg-white/90 dark:bg-slate-800/95 px-3 py-2 rounded-lg shadow-sm backdrop-blur-md border border-slate-200/80 dark:border-slate-600">
+            <Text className="text-sm font-bold text-gray-800 dark:text-slate-100">
                 {mode === 'pin' ? "Click anywhere on the map to drop the marker." : "Click multiple points on the map to draw corners."}
             </Text>
          </View>
@@ -207,17 +217,17 @@ export default function WebAdminMapPicker({ initialCoordinates, initialBoundarie
       {/* Footer controls */}
       <View className="pt-4 flex-row justify-end space-x-3 items-center">
          <View className="flex-1">
-             {coordinates ? <Text className="text-xs text-green-600 font-semibold">✓ Location Set</Text> : <Text className="text-xs text-red-500 font-semibold">✗ Pin Required</Text>}
-             {boundaries.length >= 3 ? <Text className="text-xs text-green-600 font-semibold">✓ Custom Polygon drawn ({boundaries.length} points)</Text> : <Text className="text-xs text-gray-500 font-semibold">Area: none (or drawing incomplete)</Text>}
+             {coordinates ? <Text className="text-xs text-green-600 dark:text-green-400 font-semibold">✓ Location Set</Text> : <Text className="text-xs text-red-500 dark:text-red-400 font-semibold">✗ Pin Required</Text>}
+             {boundaries.length >= 3 ? <Text className="text-xs text-green-600 dark:text-green-400 font-semibold">✓ Custom Polygon drawn ({boundaries.length} points)</Text> : <Text className="text-xs text-gray-500 dark:text-slate-400 font-semibold">Area: none (or drawing incomplete)</Text>}
          </View>
 
-         <TouchableOpacity onPress={onCancel} className="px-6 py-3 rounded-lg bg-gray-200">
-             <Text className="font-bold text-gray-700">Cancel</Text>
+         <TouchableOpacity onPress={onCancel} className="px-6 py-3 rounded-lg bg-gray-200 dark:bg-slate-700">
+             <Text className="font-bold text-gray-700 dark:text-slate-200">Cancel</Text>
          </TouchableOpacity>
          
          <TouchableOpacity 
              onPress={handleSave} 
-             className={`px-6 py-3 rounded-lg ${coordinates ? 'bg-blue-600' : 'bg-blue-300'}`}
+             className={`px-6 py-3 rounded-lg ${coordinates ? 'bg-blue-600 dark:bg-blue-500' : 'bg-blue-300 dark:bg-blue-900'}`}
          >
              <Text className="font-bold text-white">Save Coordinates & Area</Text>
          </TouchableOpacity>

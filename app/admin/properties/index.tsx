@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Pressable, type ViewStyle } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useColorScheme } from 'nativewind';
 import { getProperties } from '../../service/property-service';
 import { deleteProperty, deleteManyProperties } from '../../service/admin-service';
 import { Property } from '../../constants/mock/mock-properties';
@@ -21,6 +22,8 @@ export default function AdminPropertiesScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const router = useRouter();
+    const { colorScheme } = useColorScheme();
+    const isDark = colorScheme === 'dark';
 
     // Debounce search
     useEffect(() => {
@@ -87,15 +90,18 @@ export default function AdminPropertiesScreen() {
         }
     };
 
+    const sortMuted = isDark ? '#64748b' : '#9ca3af';
+    const sortActive = isDark ? '#60a5fa' : '#2563eb';
+
     const SortIcon = ({ field }: { field: SortField }) => {
         if (sortField !== field) {
-            return <MaterialIcons name="unfold-more" size={14} color="#9ca3af" style={{ marginLeft: 2 }} />;
+            return <MaterialIcons name="unfold-more" size={14} color={sortMuted} style={{ marginLeft: 2 }} />;
         }
         return (
             <MaterialIcons
                 name={sortOrder === 'asc' ? 'arrow-upward' : 'arrow-downward'}
                 size={14}
-                color="#2563eb"
+                color={sortActive}
                 style={{ marginLeft: 2 }}
             />
         );
@@ -109,7 +115,7 @@ export default function AdminPropertiesScreen() {
         >
             <Text
                 className={`font-bold text-xs uppercase tracking-wider ${
-                    sortField === field ? 'text-blue-600' : 'text-gray-500'
+                    sortField === field ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-slate-400'
                 }`}
             >
                 {label}
@@ -153,8 +159,8 @@ export default function AdminPropertiesScreen() {
     if (loading) {
         return (
             <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#2563eb" />
-                <Text className="mt-4 text-gray-500">Loading Properties...</Text>
+                <ActivityIndicator size="large" color={isDark ? '#60a5fa' : '#2563eb'} />
+                <Text className="mt-4 text-gray-500 dark:text-slate-400">Loading Properties...</Text>
             </View>
         );
     }
@@ -172,48 +178,57 @@ export default function AdminPropertiesScreen() {
         actions: { width: 168, flexShrink: 0 } as ViewStyle,
     };
 
+    const cardBgLight = '#ffffff';
+    const cardBgDark = '#0f172a'; // slate-900 — explicit for web so rounded corners don’t show RN-Web default white
+    const scrollBgLight = '#ffffff';
+    const scrollBgDark = '#0f172a';
+
     return (
         <View
-            className="flex-1 bg-white rounded-2xl overflow-hidden border border-slate-200/80 w-full"
+            className="flex-1 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700 w-full"
             style={{
+                backgroundColor: isDark ? cardBgDark : cardBgLight,
                 shadowColor: '#0f172a',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.06,
+                shadowOpacity: isDark ? 0.25 : 0.06,
                 shadowRadius: 16,
                 elevation: 3,
             }}
         >
             {/* Header bar */}
-            <View className="flex-row flex-wrap justify-between items-start gap-4 p-6 border-b border-slate-100 bg-slate-50">
+            <View
+                className="flex-row flex-wrap justify-between items-start gap-4 p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80"
+                style={{ backgroundColor: isDark ? '#0c1222' : '#f8fafc' }}
+            >
                 <View className="flex-row items-start" style={{ gap: 14 }}>
-                    <View className="w-11 h-11 rounded-xl bg-blue-600/10 items-center justify-center border border-blue-100">
-                        <MaterialIcons name="table-chart" size={22} color="#2563eb" />
+                    <View className="w-11 h-11 rounded-xl bg-blue-600/10 dark:bg-blue-500/15 items-center justify-center border border-blue-100 dark:border-blue-900/80">
+                        <MaterialIcons name="table-chart" size={22} color={isDark ? '#60a5fa' : '#2563eb'} />
                     </View>
                     <View>
-                        <Text className="text-2xl font-bold text-slate-900 tracking-tight">Property listings</Text>
-                        <Text className="text-slate-500 text-sm mt-1 leading-5">
-                            Showing <Text className="text-slate-800 font-semibold">{sorted.length}</Text> of{' '}
-                            <Text className="text-slate-800 font-semibold">{properties.length}</Text>
+                        <Text className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Property listings</Text>
+                        <Text className="text-slate-500 dark:text-slate-400 text-sm mt-1 leading-5">
+                            Showing <Text className="text-slate-800 dark:text-slate-200 font-semibold">{sorted.length}</Text> of{' '}
+                            <Text className="text-slate-800 dark:text-slate-200 font-semibold">{properties.length}</Text>
                         </Text>
                     </View>
                 </View>
 
                 <View className="flex-row flex-wrap items-center justify-end" style={{ gap: 10 }}>
                     <View
-                        className="flex-row items-center bg-white border border-slate-200 rounded-xl px-3.5"
+                        className="flex-row items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3.5"
                         style={{ minWidth: 220, maxWidth: 320, height: 42 }}
                     >
-                        <MaterialIcons name="search" size={20} color="#94a3b8" />
+                        <MaterialIcons name="search" size={20} color={isDark ? '#64748b' : '#94a3b8'} />
                         <TextInput
                             placeholder="Search title, city, ID…"
-                            placeholderTextColor="#94a3b8"
+                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             style={{
                                 flex: 1,
                                 marginLeft: 10,
                                 fontSize: 14,
-                                color: '#0f172a',
+                                color: isDark ? '#f1f5f9' : '#0f172a',
                                 height: 42,
                                 outlineStyle: 'none',
                             } as any}
@@ -226,23 +241,23 @@ export default function AdminPropertiesScreen() {
                                 }}
                                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                             >
-                                <MaterialIcons name="close" size={18} color="#94a3b8" />
+                                <MaterialIcons name="close" size={18} color={isDark ? '#64748b' : '#94a3b8'} />
                             </TouchableOpacity>
                         )}
                     </View>
 
                     {selectedIds.size > 0 && (
                         <TouchableOpacity
-                            className="bg-red-50 px-4 py-2.5 rounded-xl flex-row items-center border border-red-200/80"
+                            className="bg-red-50 dark:bg-red-950/50 px-4 py-2.5 rounded-xl flex-row items-center border border-red-200/80 dark:border-red-900/80"
                             onPress={handleDeleteSelected}
                         >
-                            <MaterialIcons name="delete-outline" size={20} color="#dc2626" />
-                            <Text className="text-red-700 font-semibold ml-2">Delete ({selectedIds.size})</Text>
+                            <MaterialIcons name="delete-outline" size={20} color={isDark ? '#f87171' : '#dc2626'} />
+                            <Text className="text-red-700 dark:text-red-300 font-semibold ml-2">Delete ({selectedIds.size})</Text>
                         </TouchableOpacity>
                     )}
 
                     <TouchableOpacity
-                        className="bg-blue-600 px-5 py-2.5 rounded-xl flex-row items-center"
+                        className="bg-blue-600 dark:bg-blue-500 px-5 py-2.5 rounded-xl flex-row items-center"
                         style={{
                             shadowColor: '#2563eb',
                             shadowOffset: { width: 0, height: 2 },
@@ -260,13 +275,21 @@ export default function AdminPropertiesScreen() {
 
             <ScrollView
                 className="flex-1 w-full"
-                style={{ minHeight: 0 }}
+                style={{
+                    minHeight: 0,
+                    flex: 1,
+                    backgroundColor: isDark ? scrollBgDark : scrollBgLight,
+                }}
                 stickyHeaderIndices={[0]}
-                contentContainerStyle={{ flexGrow: 1, width: '100%' }}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    width: '100%',
+                    backgroundColor: isDark ? scrollBgDark : scrollBgLight,
+                }}
             >
                     {/* Sticky table header (index 0) */}
                     <View
-                        className="flex-row bg-slate-100 border-b border-slate-200 py-3.5 px-3 sm:px-4 items-center w-full"
+                        className="flex-row bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 py-3.5 px-3 sm:px-4 items-center w-full"
                         style={{ width: '100%' }}
                     >
                         <TouchableOpacity
@@ -282,7 +305,7 @@ export default function AdminPropertiesScreen() {
                                         : 'check-box-outline-blank'
                                 }
                                 size={22}
-                                color="#64748b"
+                                color={isDark ? '#94a3b8' : '#64748b'}
                             />
                         </TouchableOpacity>
 
@@ -295,19 +318,22 @@ export default function AdminPropertiesScreen() {
                         <ColHeader label="Location" field="city" style={col.location} />
 
                         <View style={col.actions} className="items-center">
-                            <Text className="font-bold text-slate-500 text-xs uppercase tracking-wider">Actions</Text>
+                            <Text className="font-bold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Actions</Text>
                         </View>
                     </View>
 
                     {sorted.length === 0 ? (
-                        <View className="py-16 items-center justify-center px-6 w-full">
-                            <View className="w-16 h-16 rounded-2xl bg-slate-100 items-center justify-center mb-4">
-                                <MaterialIcons name="search-off" size={36} color="#cbd5e1" />
+                        <View
+                            className="py-16 items-center justify-center px-6 w-full"
+                            style={{ backgroundColor: isDark ? scrollBgDark : scrollBgLight }}
+                        >
+                            <View className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 items-center justify-center mb-4">
+                                <MaterialIcons name="search-off" size={36} color={isDark ? '#475569' : '#cbd5e1'} />
                             </View>
-                            <Text className="text-slate-600 font-semibold text-base text-center">
+                            <Text className="text-slate-600 dark:text-slate-300 font-semibold text-base text-center">
                                 {debouncedSearch ? `No matches for "${debouncedSearch}"` : 'No properties yet'}
                             </Text>
-                            <Text className="text-slate-400 text-sm mt-2 text-center max-w-md">
+                            <Text className="text-slate-400 dark:text-slate-500 text-sm mt-2 text-center max-w-md">
                                 {debouncedSearch
                                     ? 'Try a different keyword or clear the search filter.'
                                     : 'Create a listing with the New property button above.'}
@@ -317,11 +343,24 @@ export default function AdminPropertiesScreen() {
                         sorted.map((property, index) => (
                             <Pressable
                                 key={property.id}
-                                style={({ hovered }) => ({
-                                    width: '100%',
-                                    backgroundColor: hovered ? '#f8fafc' : index % 2 === 0 ? '#ffffff' : '#fafafa',
-                                })}
-                                className="flex-row border-b border-slate-100 py-3.5 px-3 sm:px-4 items-center"
+                                style={({ hovered }) => {
+                                    const zebra = index % 2 === 0;
+                                    if (isDark) {
+                                        return {
+                                            width: '100%',
+                                            backgroundColor: hovered
+                                                ? '#1e293b'
+                                                : zebra
+                                                  ? '#0f172a'
+                                                  : '#020617',
+                                        };
+                                    }
+                                    return {
+                                        width: '100%',
+                                        backgroundColor: hovered ? '#f8fafc' : zebra ? '#ffffff' : '#fafafa',
+                                    };
+                                }}
+                                className="flex-row border-b border-slate-100 dark:border-slate-800 py-3.5 px-3 sm:px-4 items-center"
                             >
                                 <TouchableOpacity
                                     style={col.check}
@@ -331,25 +370,33 @@ export default function AdminPropertiesScreen() {
                                     <MaterialIcons
                                         name={selectedIds.has(property.id) ? 'check-box' : 'check-box-outline-blank'}
                                         size={22}
-                                        color={selectedIds.has(property.id) ? '#2563eb' : '#cbd5e1'}
+                                        color={
+                                            selectedIds.has(property.id)
+                                                ? isDark
+                                                    ? '#60a5fa'
+                                                    : '#2563eb'
+                                                : isDark
+                                                  ? '#475569'
+                                                  : '#cbd5e1'
+                                        }
                                     />
                                 </TouchableOpacity>
 
                                 <View style={col.id}>
-                                    <Text className="text-slate-400 text-xs font-medium uppercase tracking-wide">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-xs font-medium uppercase tracking-wide">
                                         #{property.id}
                                     </Text>
                                 </View>
 
                                 <View style={col.title}>
-                                    <Text className="text-slate-900 font-semibold text-[15px]" numberOfLines={1}>
+                                    <Text className="text-slate-900 dark:text-slate-100 font-semibold text-[15px]" numberOfLines={1}>
                                         {property.title}
                                     </Text>
                                 </View>
 
                                 <View style={col.type}>
-                                    <View className="bg-sky-50 self-start px-2.5 py-1 rounded-lg border border-sky-100">
-                                        <Text className="text-sky-800 text-xs font-bold capitalize tracking-wide">
+                                    <View className="bg-sky-50 dark:bg-sky-950/80 self-start px-2.5 py-1 rounded-lg border border-sky-100 dark:border-sky-800">
+                                        <Text className="text-sky-800 dark:text-sky-200 text-xs font-bold capitalize tracking-wide">
                                             {property.type?.toLowerCase()}
                                         </Text>
                                     </View>
@@ -359,19 +406,19 @@ export default function AdminPropertiesScreen() {
                                     <View
                                         className={`self-start px-2.5 py-1 rounded-lg border ${
                                             property.status?.toLowerCase() === 'available'
-                                                ? 'bg-emerald-50 border-emerald-100'
+                                                ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-100 dark:border-emerald-900'
                                                 : property.status?.toLowerCase() === 'sold'
-                                                  ? 'bg-rose-50 border-rose-100'
-                                                  : 'bg-amber-50 border-amber-100'
+                                                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-100 dark:border-rose-900'
+                                                  : 'bg-amber-50 dark:bg-amber-950/60 border-amber-100 dark:border-amber-900'
                                         }`}
                                     >
                                         <Text
                                             className={`text-xs font-bold capitalize ${
                                                 property.status?.toLowerCase() === 'available'
-                                                    ? 'text-emerald-800'
+                                                    ? 'text-emerald-800 dark:text-emerald-300'
                                                     : property.status?.toLowerCase() === 'sold'
-                                                      ? 'text-rose-800'
-                                                      : 'text-amber-900'
+                                                      ? 'text-rose-800 dark:text-rose-300'
+                                                      : 'text-amber-900 dark:text-amber-200'
                                             }`}
                                         >
                                             {property.status?.toLowerCase()}
@@ -380,37 +427,37 @@ export default function AdminPropertiesScreen() {
                                 </View>
 
                                 <View style={col.price}>
-                                    <Text className="text-slate-800 font-semibold font-mono text-sm">
+                                    <Text className="text-slate-800 dark:text-slate-200 font-semibold font-mono text-sm">
                                         ₱{property.price?.toLocaleString()}
                                     </Text>
                                 </View>
 
                                 <View style={col.lot}>
-                                    <Text className="text-slate-500 text-sm font-mono">
+                                    <Text className="text-slate-500 dark:text-slate-400 text-sm font-mono">
                                         {property.lotArea != null ? `${property.lotArea.toLocaleString()} m²` : '—'}
                                     </Text>
                                 </View>
 
                                 <View style={col.location}>
-                                    <Text className="text-slate-500 text-sm" numberOfLines={1}>
+                                    <Text className="text-slate-500 dark:text-slate-400 text-sm" numberOfLines={1}>
                                         {property.location?.city}, {property.location?.province}
                                     </Text>
                                 </View>
 
                                 <View className="flex-row justify-center items-center" style={{ ...col.actions, gap: 6 }}>
                                     <TouchableOpacity
-                                        className="flex-row items-center bg-slate-100 border border-slate-200/80 px-3 py-2 rounded-lg"
+                                        className="flex-row items-center bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-600 px-3 py-2 rounded-lg"
                                         onPress={() => router.push(`/admin/properties/edit/${property.id}` as any)}
                                     >
-                                        <MaterialIcons name="edit" size={18} color="#334155" />
-                                        <Text className="text-slate-700 font-semibold text-sm ml-1.5">Edit</Text>
+                                        <MaterialIcons name="edit" size={18} color={isDark ? '#cbd5e1' : '#334155'} />
+                                        <Text className="text-slate-700 dark:text-slate-200 font-semibold text-sm ml-1.5">Edit</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        className="flex-row items-center bg-rose-50 border border-rose-100 px-3 py-2 rounded-lg"
+                                        className="flex-row items-center bg-rose-50 dark:bg-rose-950/50 border border-rose-100 dark:border-rose-900 px-3 py-2 rounded-lg"
                                         onPress={() => handleDeleteSingle(property.id)}
                                     >
-                                        <MaterialIcons name="delete-outline" size={18} color="#e11d48" />
-                                        <Text className="text-rose-700 font-semibold text-sm ml-1">Delete</Text>
+                                        <MaterialIcons name="delete-outline" size={18} color={isDark ? '#fb7185' : '#e11d48'} />
+                                        <Text className="text-rose-700 dark:text-rose-300 font-semibold text-sm ml-1">Delete</Text>
                                     </TouchableOpacity>
                                 </View>
                             </Pressable>

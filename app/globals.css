@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+/* NativeWind toggles `dark` on documentElement; paint the page when admin (or app) is in dark mode. */
+html.dark body {
+  background-color: #020617;
+}
+
 /* Fix for Google Maps Autocomplete Dropdown appearing behind or outside React Native Web Modals */
 .pac-container {
     z-index: 999999 !important;

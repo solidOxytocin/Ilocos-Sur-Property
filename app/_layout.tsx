@@ -14,6 +14,8 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
+        // Default stack scene is white on web; transparency lets route-level / body backgrounds show through.
+        contentStyle: { flex: 1, backgroundColor: "transparent" },
       }}
     />
   );

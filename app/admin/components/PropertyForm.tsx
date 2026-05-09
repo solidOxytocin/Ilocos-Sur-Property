@@ -19,6 +19,7 @@ import { Image } from 'expo-image';
 import { createProperty, updateProperty, uploadPropertyImages } from '../../service/admin-service';
 import { Property, Media } from '../../constants/mock/mock-properties';
 import AdminMapPicker from './AdminMapPicker';
+import { useColorScheme } from 'nativewind';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -77,14 +78,18 @@ function InputField({
   required?: boolean;
   error?: string;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   return (
     <View className="mb-4">
-      <Text className="text-gray-700 font-semibold mb-2">
-        {label} {required ? <Text className="text-red-500">*</Text> : null}
+      <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-2">
+        {label} {required ? <Text className="text-red-500 dark:text-red-400">*</Text> : null}
       </Text>
       <TextInput
-        className={`bg-white border rounded-lg p-3 text-gray-800 ${multiline ? 'min-h-[80px] text-left' : ''} ${
-          error ? 'border-red-400 bg-red-50/40' : 'border-gray-200'
+        className={`bg-white dark:bg-slate-800 border rounded-lg p-3 text-gray-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 ${multiline ? 'min-h-[80px] text-left' : ''} ${
+          error
+            ? 'border-red-400 dark:border-red-500 bg-red-50/40 dark:bg-red-950/30'
+            : 'border-gray-200 dark:border-slate-600'
         }`}
         value={value}
         onChangeText={onChangeText}
@@ -92,9 +97,10 @@ function InputField({
         multiline={multiline}
         style={multiline ? { textAlignVertical: 'top' } : undefined}
         placeholder={`Enter ${label.toLowerCase()}`}
+        placeholderTextColor={isDark ? '#64748b' : '#9ca3af'}
         accessibilityLabel={label}
       />
-      {error ? <Text className="text-red-600 text-sm mt-1.5">{error}</Text> : null}
+      {error ? <Text className="text-red-600 dark:text-red-400 text-sm mt-1.5">{error}</Text> : null}
     </View>
   );
 }
@@ -109,6 +115,8 @@ const FORM_TABS: { id: FormTab; label: string; icon: keyof typeof MaterialIcons.
 ];
 
 export default function PropertyForm({ initialData, isEdit = false }: PropertyFormProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const router = useRouter();
   const leavePropertyForm = useCallback(() => {
     if (router.canGoBack()) {
@@ -659,14 +667,14 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   };
 
   return (
-    <View className="flex-1 bg-slate-50 w-full" style={{ minHeight: 0 }}>
-        <View className="flex-1 flex-row min-h-0 bg-slate-100" style={{ minHeight: 0 }}>
+    <View className="flex-1 bg-slate-50 dark:bg-slate-950 w-full" style={{ minHeight: 0 }}>
+        <View className="flex-1 flex-row min-h-0 bg-slate-100 dark:bg-slate-950" style={{ minHeight: 0 }}>
           <View
-            className="shrink-0 bg-white border-r border-slate-200"
+            className="shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700"
             style={{ width: 220, alignSelf: 'stretch', flexDirection: 'column' }}
           >
             <View className="flex-1 py-3 px-2" style={{ minHeight: 0 }}>
-              <Text className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Sections</Text>
+              <Text className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">Sections</Text>
               {FORM_TABS.map((tab) => {
                 const active = activeTab === tab.id;
                 const errDot = tabHasError(tab.id);
@@ -674,17 +682,16 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                   <Pressable
                     key={tab.id}
                     onPress={() => setActiveTab(tab.id)}
-                    className={`flex-row items-center py-3 rounded-lg mb-0.5 ${active ? 'bg-blue-50' : ''}`}
+                    className={`flex-row items-center py-3 rounded-lg mb-0.5 ${active ? 'bg-blue-50 dark:bg-blue-950/50' : ''}`}
                     style={
                       active
                         ? { borderLeftWidth: 3, borderLeftColor: '#2563eb', paddingLeft: 10, paddingRight: 10 }
                         : { paddingLeft: 13, paddingRight: 10 }
                     }
                   >
-                    <MaterialIcons name={tab.icon} size={20} color={active ? '#1d4ed8' : '#64748b'} />
+                    <MaterialIcons name={tab.icon} size={20} color={active ? (isDark ? '#60a5fa' : '#1d4ed8') : isDark ? '#94a3b8' : '#64748b'} />
                     <Text
-                      className="ml-2.5 font-semibold text-[15px] flex-1"
-                      style={{ color: active ? '#1e3a8a' : '#334155' }}
+                      className={`ml-2.5 font-semibold text-[15px] flex-1 ${active ? 'text-blue-900 dark:text-blue-200' : 'text-slate-700 dark:text-slate-300'}`}
                       numberOfLines={2}
                     >
                       {tab.label}
@@ -695,20 +702,22 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
               })}
             </View>
 
-            <View className="border-t border-slate-200 px-2 pt-3 pb-3" style={{ gap: 8 }}>
+            <View className="border-t border-slate-200 dark:border-slate-700 px-2 pt-3 pb-3" style={{ gap: 8 }}>
               <TouchableOpacity
-                className="w-full py-2.5 rounded-lg flex-row items-center justify-center bg-slate-100 border border-slate-200 active:opacity-80"
+                className="w-full py-2.5 rounded-lg flex-row items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 active:opacity-80"
                 onPress={() => leavePropertyForm()}
                 disabled={loading}
                 accessibilityRole="button"
                 accessibilityLabel="Cancel without saving"
               >
-                <MaterialIcons name="arrow-back" size={18} color="#334155" />
-                <Text className="text-slate-800 font-semibold ml-2">Cancel</Text>
+                <MaterialIcons name="arrow-back" size={18} color={isDark ? '#cbd5e1' : '#334155'} />
+                <Text className="text-slate-800 dark:text-slate-200 font-semibold ml-2">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className={`w-full py-2.5 rounded-lg flex-row items-center justify-center border ${
-                  loading ? 'bg-blue-400 border-blue-400' : 'bg-blue-600 border-blue-600'
+                  loading
+                    ? 'bg-blue-400 dark:bg-blue-600 border-blue-400 dark:border-blue-600'
+                    : 'bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500'
                 } active:opacity-90`}
                 onPress={handleSave}
                 disabled={loading}
@@ -725,12 +734,12 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
             </View>
           </View>
 
-          <View className="flex-1 min-h-0 min-w-0 bg-slate-50" style={{ flex: 1, minHeight: 0 }}>
+          <View className="flex-1 min-h-0 min-w-0 bg-slate-50 dark:bg-slate-950" style={{ flex: 1, minHeight: 0 }}>
             <View className="flex-1 px-6 py-5" style={{ flex: 1, minHeight: 0 }}>
         {activeTab === 'basic' && (
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <Text className="text-lg font-bold text-gray-800 mb-1">Basics</Text>
-            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">Title, price, type, status, and description</Text>
+        <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Basics</Text>
+            <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">Title, price, type, status, and description</Text>
             <InputField label="Title" value={title} onChangeText={(t) => { setTitle(t); clearFieldError('title'); }} required error={fieldErrors.title} />
             <InputField label="Description/Details" value={details} onChangeText={setDetails} multiline />
             
@@ -749,30 +758,30 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                     />
                 </View>
                 <View className="w-1/3 px-2 mb-4">
-                     <Text className="text-gray-700 font-semibold mb-2">Type</Text>
-                     <View className="flex-row border border-gray-200 rounded-lg overflow-hidden">
+                     <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-2">Type</Text>
+                     <View className="flex-row border border-gray-200 dark:border-slate-600 rounded-lg overflow-hidden">
                         
                         {['LOT', 'HOUSE', 'CONDO'].map(t => (
                             <TouchableOpacity 
                                 key={t} 
-                                className={`flex-1 py-3 items-center ${type === t ? 'bg-blue-600' : 'bg-white'}`}
+                                className={`flex-1 py-3 items-center ${type === t ? 'bg-blue-600 dark:bg-blue-500' : 'bg-white dark:bg-slate-800'}`}
                                 onPress={() => setType(t as any)}
                             >
-                                <Text className={`capitalize font-semibold ${type === t ? 'text-white' : 'text-gray-600'}`}>{t}</Text>
+                                <Text className={`capitalize font-semibold ${type === t ? 'text-white' : 'text-gray-600 dark:text-slate-300'}`}>{t}</Text>
                             </TouchableOpacity>
                         ))}
                      </View>
                 </View>
                 <View className="w-1/3 px-2 mb-4">
-                     <Text className="text-gray-700 font-semibold mb-2">Status</Text>
-                     <View className="flex-row border border-gray-200 rounded-lg overflow-hidden">
+                     <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-2">Status</Text>
+                     <View className="flex-row border border-gray-200 dark:border-slate-600 rounded-lg overflow-hidden">
                         {['AVAILABLE', 'SOLD', 'RESERVED'].map(s => (
                             <TouchableOpacity 
                                 key={s} 
-                                className={`flex-1 py-3 items-center ${status === s ? 'bg-blue-600' : 'bg-white'}`}
+                                className={`flex-1 py-3 items-center ${status === s ? 'bg-blue-600 dark:bg-blue-500' : 'bg-white dark:bg-slate-800'}`}
                                 onPress={() => setStatus(s as any)}
                             >
-                                <Text className={`capitalize font-semibold ${status === s ? 'text-white' : 'text-gray-600'}`}>{s}</Text>
+                                <Text className={`capitalize font-semibold ${status === s ? 'text-white' : 'text-gray-600 dark:text-slate-300'}`}>{s}</Text>
                             </TouchableOpacity>
                         ))}
                      </View>
@@ -782,9 +791,9 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         )}
 
         {activeTab === 'location' && (
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <Text className="text-lg font-bold text-gray-800 mb-1">Location</Text>
-            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">
+        <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Location</Text>
+            <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
               Street address, barangay, city, and province
             </Text>
             <InputField label="Address (Street/Subdivision)" value={address} onChangeText={setAddress} />
@@ -819,15 +828,15 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         )}
 
         {activeTab === 'map' && (
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <Text className="text-lg font-bold text-gray-800 mb-1">Map coordinates & boundaries</Text>
-            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">
+        <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Map coordinates & boundaries</Text>
+            <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
               Place the pin and draw a boundary polygon in the map editor
             </Text>
             <View className="flex-row flex-wrap items-center justify-between gap-3 mb-4">
-                <Text className="text-gray-700 font-semibold flex-1 min-w-[160px]">Map editor</Text>
+                <Text className="text-gray-700 dark:text-slate-200 font-semibold flex-1 min-w-[160px]">Map editor</Text>
                 <TouchableOpacity
-                   className="bg-blue-600 px-4 py-2.5 rounded-lg flex-row items-center shadow-sm shrink-0"
+                   className="bg-blue-600 dark:bg-blue-500 px-4 py-2.5 rounded-lg flex-row items-center shadow-sm shrink-0"
                    onPress={() => setIsMapModalOpen(true)}
                 >
                    <MaterialIcons name="map" size={18} color="white" />
@@ -837,11 +846,11 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
 
             {latitude && longitude ? (
                 <View className="mb-4">
-                  <Text className="text-gray-700 font-semibold mb-1">Pin (lat / lng)</Text>
-                  <Text className="text-gray-600 font-mono bg-gray-50 p-3 rounded-lg border border-gray-200">{latitude}, {longitude}</Text>
+                  <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-1">Pin (lat / lng)</Text>
+                  <Text className="text-gray-600 dark:text-slate-300 font-mono bg-gray-50 dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">{latitude}, {longitude}</Text>
 
-                  <Text className="text-gray-700 font-semibold mt-3 mb-1">Drawn boundaries (polygon points)</Text>
-                  <Text className="text-gray-600 font-mono bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <Text className="text-gray-700 dark:text-slate-200 font-semibold mt-3 mb-1">Drawn boundaries (polygon points)</Text>
+                  <Text className="text-gray-600 dark:text-slate-300 font-mono bg-gray-50 dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
                      {boundariesRaw ? (() => {
                          try {
                              return JSON.parse(boundariesRaw).length + ' points configured';
@@ -852,20 +861,20 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                   </Text>
                 </View>
             ) : (
-                <Text className="text-gray-500 italic mb-4">
+                <Text className="text-gray-500 dark:text-slate-400 italic mb-4">
                   No map location set yet. Use Open map editor to place the pin and optional boundary.
                 </Text>
             )}
             {fieldErrors.boundaries ? (
-              <Text className="text-red-600 text-sm">{fieldErrors.boundaries}</Text>
+              <Text className="text-red-600 dark:text-red-400 text-sm">{fieldErrors.boundaries}</Text>
             ) : null}
         </View>
         )}
 
         {activeTab === 'dimensions' && (
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <Text className="text-lg font-bold text-gray-800 mb-1">Size & rooms</Text>
-            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">Lot size, floor area, and counts</Text>
+        <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Size & rooms</Text>
+            <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">Lot size, floor area, and counts</Text>
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/3 px-2">
                     <InputField label="Lot Area (sqm)" value={lotArea} onChangeText={setLotArea} keyboardType="numeric" />
@@ -887,20 +896,20 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         )}
 
         {activeTab === 'features' && (
-        <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
-            <Text className="text-lg font-bold text-gray-800 mb-1">Features & amenities</Text>
-            <Text className="text-gray-500 text-sm mb-4 border-b border-gray-100 pb-3">Tap to toggle what applies to this listing</Text>
+        <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
+            <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Features & amenities</Text>
+            <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">Tap to toggle what applies to this listing</Text>
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/2 px-2">
-                    <Text className="text-base font-bold text-gray-800 mb-3">Nearby features</Text>
+                    <Text className="text-base font-bold text-gray-800 dark:text-slate-100 mb-3">Nearby features</Text>
                     <View className="flex-row flex-wrap">
                         {AVAILABLE_FEATURES.map(f => (
                             <TouchableOpacity 
                                 key={f.key}
-                                className={`mr-2 mb-2 px-3 py-2 rounded-full border ${selectedFeatures.has(f.key) ? 'bg-blue-50 border-blue-500' : 'bg-white border-gray-300'}`}
+                                className={`mr-2 mb-2 px-3 py-2 rounded-full border ${selectedFeatures.has(f.key) ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 dark:border-blue-400' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600'}`}
                                 onPress={() => toggleFeature(f.key)}
                             >
-                                <Text className={`${selectedFeatures.has(f.key) ? 'text-blue-700 font-semibold' : 'text-gray-600'}`}>
+                                <Text className={`${selectedFeatures.has(f.key) ? 'text-blue-700 dark:text-blue-300 font-semibold' : 'text-gray-600 dark:text-slate-300'}`}>
                                     {f.name}
                                 </Text>
                             </TouchableOpacity>
@@ -908,15 +917,15 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                     </View>
                 </View>
                 <View className="w-1/2 px-2">
-                    <Text className="text-base font-bold text-gray-800 mb-3">Amenities</Text>
+                    <Text className="text-base font-bold text-gray-800 dark:text-slate-100 mb-3">Amenities</Text>
                     <View className="flex-row flex-wrap">
                         {AVAILABLE_AMENITIES.map(a => (
                             <TouchableOpacity 
                                 key={a.key}
-                                className={`mr-2 mb-2 px-3 py-2 rounded-full border ${selectedAmenities.has(a.key) ? 'bg-green-50 border-green-500' : 'bg-white border-gray-300'}`}
+                                className={`mr-2 mb-2 px-3 py-2 rounded-full border ${selectedAmenities.has(a.key) ? 'bg-green-50 dark:bg-emerald-950/60 border-green-500 dark:border-emerald-400' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600'}`}
                                 onPress={() => toggleAmenity(a.key)}
                             >
-                                <Text className={`${selectedAmenities.has(a.key) ? 'text-green-700 font-semibold' : 'text-gray-600'}`}>
+                                <Text className={`${selectedAmenities.has(a.key) ? 'text-green-700 dark:text-emerald-300 font-semibold' : 'text-gray-600 dark:text-slate-300'}`}>
                                     {a.name}
                                 </Text>
                             </TouchableOpacity>
@@ -929,13 +938,13 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
 
         {activeTab === 'photos' && (
         <View
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex-1"
+          className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 flex-1"
           style={{ minHeight: 0, marginBottom: 0 }}
         >
-          <View className="flex-row flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-100 pb-4 shrink-0">
+          <View className="flex-row flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-100 dark:border-slate-700 pb-4 shrink-0">
             <View>
-              <Text className="text-lg font-bold text-gray-800">Photos</Text>
-              <Text className="text-gray-500 text-sm mt-1">
+              <Text className="text-lg font-bold text-gray-800 dark:text-slate-100">Photos</Text>
+              <Text className="text-gray-500 dark:text-slate-400 text-sm mt-1">
                 Gallery order = listing order. First photo is the cover.{' '}
                 {Platform.OS === 'web'
                   ? 'Drag existing photos to reorder. Click the dashed tile to choose files, or drag images directly onto it.'
@@ -947,22 +956,22 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
               {photoSlots.length > 0 && (
                 <>
                   <TouchableOpacity
-                    className="px-3 py-2 rounded-lg bg-gray-100 border border-gray-200"
+                    className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-600"
                     onPress={selectAllPhotos}
                     disabled={loading}
                   >
-                    <Text className="text-gray-800 font-semibold text-sm">
+                    <Text className="text-gray-800 dark:text-slate-200 font-semibold text-sm">
                       {selectedPhotoIds.size === photoSlots.length ? 'Clear selection' : 'Select all'}
                     </Text>
                   </TouchableOpacity>
                   {selectedPhotoIds.size > 0 && (
                     <TouchableOpacity
-                      className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 flex-row items-center"
+                      className="px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 flex-row items-center"
                       onPress={deleteSelectedPhotos}
                       disabled={loading}
                     >
-                      <MaterialIcons name="delete-outline" size={18} color="#b91c1c" />
-                      <Text className="text-red-700 font-semibold text-sm ml-1">
+                      <MaterialIcons name="delete-outline" size={18} color={isDark ? '#f87171' : '#b91c1c'} />
+                      <Text className="text-red-700 dark:text-red-300 font-semibold text-sm ml-1">
                         Delete ({selectedPhotoIds.size})
                       </Text>
                     </TouchableOpacity>
@@ -998,11 +1007,24 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                     borderColor: dragOverPhotoId === slot.id
                       ? '#4338ca'
                       : isSelected
-                        ? '#2563eb'
+                        ? isDark
+                          ? '#60a5fa'
+                          : '#2563eb'
                         : isPrimary
-                          ? '#93c5fd'
-                          : '#e5e7eb',
-                    backgroundColor: dragOverPhotoId === slot.id ? '#e0e7ff' : '#f1f5f9',
+                          ? isDark
+                            ? '#3b82f6'
+                            : '#93c5fd'
+                          : isDark
+                            ? '#475569'
+                            : '#e5e7eb',
+                    backgroundColor:
+                      dragOverPhotoId === slot.id
+                        ? isDark
+                          ? '#312e81'
+                          : '#e0e7ff'
+                        : isDark
+                          ? '#1e293b'
+                          : '#f1f5f9',
                     opacity: draggingPhotoId === slot.id ? 0.28 : 1,
                     transform: draggingPhotoId === slot.id ? [{ scale: 0.96 }] : undefined,
                     shadowColor: dragOverPhotoId === slot.id ? '#4338ca' : '#0f172a',
@@ -1137,7 +1159,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                   style={{
                     height: 10,
                     borderRadius: 5,
-                    backgroundColor: '#cbd5e1',
+                    backgroundColor: isDark ? '#475569' : '#cbd5e1',
                     width: '72%',
                     marginBottom: 8,
                   }}
@@ -1146,7 +1168,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                   style={{
                     height: 8,
                     borderRadius: 4,
-                    backgroundColor: '#e2e8f0',
+                    backgroundColor: isDark ? '#334155' : '#e2e8f0',
                     width: '55%',
                     marginBottom: 8,
                   }}
@@ -1155,7 +1177,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                   style={{
                     height: 8,
                     borderRadius: 4,
-                    backgroundColor: '#e2e8f0',
+                    backgroundColor: isDark ? '#334155' : '#e2e8f0',
                     width: '40%',
                   }}
                 />
@@ -1174,21 +1196,21 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
                     width: 44,
                     height: 44,
                     borderRadius: 22,
-                    backgroundColor: '#e0e7ff',
+                    backgroundColor: isDark ? '#312e81' : '#e0e7ff',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderWidth: 1,
-                    borderColor: '#c7d2fe',
+                    borderColor: isDark ? '#4f46e5' : '#c7d2fe',
                   }}
                 >
-                  <MaterialIcons name="add-photo-alternate" size={26} color="#4f46e5" />
+                  <MaterialIcons name="add-photo-alternate" size={26} color={isDark ? '#a5b4fc' : '#4f46e5'} />
                 </View>
                 <Text
                   style={{
                     marginTop: 8,
                     fontSize: 12,
                     fontWeight: '700',
-                    color: photoDropHover ? '#3730a3' : '#475569',
+                    color: photoDropHover ? '#3730a3' : isDark ? '#94a3b8' : '#475569',
                     textAlign: 'center',
                     paddingHorizontal: 8,
                   }}
@@ -1211,7 +1233,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
 
         <Modal visible={isMapModalOpen} animationType="fade" transparent={true}>
             <View className="flex-1 bg-black/60 justify-center items-center p-6">
-                <View className="w-full max-w-5xl h-[85%] bg-white rounded-2xl shadow-xl overflow-hidden p-2">
+                <View className="w-full max-w-5xl h-[85%] bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden p-2 border border-slate-200 dark:border-slate-700">
                     <AdminMapPicker
                         initialCoordinates={(latitude && longitude) ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
                         initialBoundaries={(() => {

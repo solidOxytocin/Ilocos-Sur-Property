@@ -96,10 +96,12 @@
     -[x] Table
     -[x] Add/Edit Form
 
-- [] Added Security in Admin
-    - []
+- [x] Added Security in Admin
+    - [x] Added Login API
     - [x] Add Auth for all API request
-- [x] Add Add Feature / Amenity Button in Admin
+    - [x] Added Helmet for security 
+    - [x] Added Zod for input validation
+    - [x] Added File Security
 
 - [] Dark Mode (U)
 - [] Improve Error Handling
