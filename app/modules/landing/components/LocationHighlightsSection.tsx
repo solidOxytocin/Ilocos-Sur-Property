@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getCityPropertyCounts } from "@/app/service/property-service";
+import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
 
 // Static definition of the towns we want to showcase.
 // "cityKey" must match the city name in the database / mock data exactly.
@@ -114,22 +115,26 @@ export default function LocationHighlightsSection() {
 
   const [cityCounts, setCityCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [countsError, setCountsError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      try {
-        const counts = await getCityPropertyCounts();
-        if (!cancelled) setCityCounts(counts);
-      } catch {
-        // silently keep empty — graceful fallback
-      } finally {
-        if (!cancelled) setLoading(false);
+      setCountsError(null);
+      const result = await getCityPropertyCounts();
+      if (cancelled) return;
+      if (!result.ok) {
+        setCountsError(result.error.message);
+        setCityCounts({});
+      } else {
+        setCityCounts(result.data);
       }
+      setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [retryKey]);
 
   return (
     <View style={styles.section}>
@@ -147,6 +152,17 @@ export default function LocationHighlightsSection() {
           </Text>
         </View>
 
+        {countsError ? (
+          <DataFetchState
+            variant="error"
+            title="Couldn’t load location stats"
+            message={countsError}
+            onRetry={() => setRetryKey((k) => k + 1)}
+            retryLabel="Try again"
+            compact
+          />
+        ) : null}
+
         {/* Grid */}
         <View style={[styles.grid, { flexDirection: "row", flexWrap: "wrap" }]}>
           {LOCATIONS.map((loc) => (
@@ -160,7 +176,7 @@ export default function LocationHighlightsSection() {
               <LocationCard
                 loc={loc}
                 count={cityCounts[loc.cityKey] ?? null}
-                loading={loading}
+                loading={loading && !countsError}
               />
             </View>
           ))}

@@ -40,7 +40,9 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
   useEffect(() => {
     if (visible) {
       setLocalFilters(filters);
-      getPropertyBounds().then(b => {
+      getPropertyBounds().then((res) => {
+          if (!res.ok) return;
+          const b = res.data;
           setBounds(b);
           setLocalFilters(prev => ({
               ...prev,

@@ -74,11 +74,11 @@ export default function AdminLayout() {
 
     setSubmitting(true);
     setError('');
-    const ok = await loginAdmin(username, password);
+    const loginResult = await loginAdmin(username, password);
     setSubmitting(false);
 
-    if (!ok) {
-      setError('Invalid credentials or server unavailable.');
+    if (!loginResult.ok) {
+      setError(loginResult.error.message);
       return;
     }
 

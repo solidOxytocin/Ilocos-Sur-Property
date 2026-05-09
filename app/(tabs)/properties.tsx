@@ -14,7 +14,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { mockProperties, Property } from "../constants/mock/mock-properties";
-import { getPropertiesPaginated } from "../service/property-service";
+import { getPropertiesPaginated, propertyListFromPaginatedOk, type ApiFailure } from "../service/property-service";
+import { API_USER_MESSAGES } from "../lib/api-result";
+import { DataFetchState } from "../modules/generics/components/DataFetchState";
 import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
 import { FilterModal, FilterState } from "../modules/property-list/components/filterModal";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -57,6 +59,9 @@ export default function PropertyList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages]   = useState(1);
   const [total, setTotal]             = useState(0);
+  const [fetchError, setFetchError]   = useState<ApiFailure | null>(null);
+  const [loadMoreError, setLoadMoreError] = useState<ApiFailure | null>(null);
+  const [listRetryKey, setListRetryKey] = useState(0);
 
   // Sort state — null means no active sort
   const [sortField, setSortField] = useState<SortField | null>("createdAt");
@@ -136,6 +141,8 @@ export default function PropertyList() {
 
     async function fetchFirstPage() {
       setLoading(true);
+      setFetchError(null);
+      setLoadMoreError(null);
       setProperties([]);
       setCurrentPage(1);
      
@@ -172,17 +179,24 @@ export default function PropertyList() {
 
       const result = await getPropertiesPaginated(buildFetchFilters(), 1, PAGE_SIZE);
       if (!cancelled) {
-        setProperties(result.data);
-        setTotal(result.total);
-        setTotalPages(result.totalPages);
-        setCurrentPage(1);
+        if (!result.ok) {
+          setFetchError(result.error);
+          setProperties([]);
+          setTotal(0);
+          setTotalPages(0);
+        } else {
+          setProperties(propertyListFromPaginatedOk(result.data));
+          setTotal(result.data.total);
+          setTotalPages(result.data.totalPages);
+          setCurrentPage(1);
+        }
         setLoading(false);
       }
     }
 
     fetchFirstPage();
     return () => { cancelled = true; };
-  }, [debouncedSearchQuery, filters, sortField, sortOrder]);
+  }, [debouncedSearchQuery, filters, sortField, sortOrder, listRetryKey]);
 
   // ── Append next page on scroll-to-end ─────────────────────────────────────
   const loadNextPage = useCallback(async () => {
@@ -215,11 +229,26 @@ export default function PropertyList() {
     }
 
     const result = await getPropertiesPaginated(buildFetchFilters(), nextPage, PAGE_SIZE);
-    setProperties((prev) => [...prev, ...result.data]);
+    if (!result.ok) {
+      setLoadMoreError(result.error);
+      setLoadingMore(false);
+      return;
+    }
+    setLoadMoreError(null);
+    setProperties((prev) => [...prev, ...propertyListFromPaginatedOk(result.data)]);
     setCurrentPage(nextPage);
-    setTotalPages(result.totalPages);
+    setTotalPages(result.data.totalPages);
     setLoadingMore(false);
   }, [loadingMore, loading, currentPage, totalPages, buildFetchFilters, filters, debouncedSearchQuery, sortField, sortOrder]);
+
+  const retryFirstPage = useCallback(() => {
+    setListRetryKey((k) => k + 1);
+  }, []);
+
+  const retryLoadMore = useCallback(() => {
+    setLoadMoreError(null);
+    loadNextPage();
+  }, [loadNextPage]);
 
   // ── Layout ─────────────────────────────────────────────────────────────────
   const { width } = useWindowDimensions();
@@ -275,6 +304,20 @@ export default function PropertyList() {
     );
 
   const renderFooter = () => {
+    if (loadMoreError) {
+      return (
+        <View className="py-6 px-4 items-center">
+          <Text className="text-sm text-red-600 text-center mb-2">{loadMoreError.message}</Text>
+          <Pressable
+            onPress={retryLoadMore}
+            className="px-4 py-2 rounded-lg bg-blue-600"
+            disabled={loadingMore}
+          >
+            <Text className="text-white font-semibold text-sm">Try again</Text>
+          </Pressable>
+        </View>
+      );
+    }
     if (loadingMore) {
       return (
         <View className="py-6 items-center">
@@ -384,10 +427,20 @@ export default function PropertyList() {
               <View className="flex-1 justify-center items-center">
                 <ActivityIndicator size="large" color="#1d4ed8" />
               </View>
+            ) : fetchError ? (
+              <DataFetchState
+                variant={fetchError.code === "offline" ? "offline" : "error"}
+                title={fetchError.code === "offline" ? "You’re offline" : "Couldn’t load listings"}
+                message={fetchError.message}
+                onRetry={retryFirstPage}
+                retryLabel="Try again"
+              />
             ) : properties.length === 0 ? (
-              <View className="flex-1 justify-center items-center">
-                <Text className="text-lg text-gray-500">No properties found matching your search.</Text>
-              </View>
+              <DataFetchState
+                variant="empty"
+                title="No properties found"
+                message={API_USER_MESSAGES.emptyList}
+              />
             ) : (
               <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
                 <FlatList

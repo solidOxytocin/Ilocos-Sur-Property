@@ -23,23 +23,29 @@ export default function HeroSection() {
 
   const [totalListings, setTotalListings] = useState<number | null>(null);
   const [totalTowns, setTotalTowns] = useState<number | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [statsRetryKey, setStatsRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const counts = await getCityPropertyCounts();
-        if (cancelled) return;
-        const listings = Object.values(counts).reduce((sum, n) => sum + n, 0);
-        const towns = Object.keys(counts).length;
-        setTotalListings(listings);
-        setTotalTowns(towns);
-      } catch {
-        // keep null — will fall back to dashes
+      const result = await getCityPropertyCounts();
+      if (cancelled) return;
+      if (!result.ok) {
+        setStatsError(result.error.message);
+        setTotalListings(null);
+        setTotalTowns(null);
+        return;
       }
+      setStatsError(null);
+      const counts = result.data;
+      const listings = Object.values(counts).reduce((sum, n) => sum + n, 0);
+      const towns = Object.keys(counts).length;
+      setTotalListings(listings);
+      setTotalTowns(towns);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [statsRetryKey]);
 
   return (
     <ImageBackground
@@ -116,6 +122,23 @@ export default function HeroSection() {
             </View>
           ))}
         </View>
+        {statsError ? (
+          <View style={{ marginTop: 12, alignItems: isMobile ? "stretch" : "flex-start" }}>
+            <Text style={{ color: "#fecaca", fontSize: 13, marginBottom: 6 }}>{statsError}</Text>
+            <Pressable
+              onPress={() => setStatsRetryKey((k) => k + 1)}
+              style={{
+                alignSelf: isMobile ? "center" : "flex-start",
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 8,
+                backgroundColor: "rgba(255,255,255,0.15)",
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}>Try again</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* CTA Button */}
         <View

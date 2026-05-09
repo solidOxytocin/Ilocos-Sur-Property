@@ -1,6 +1,15 @@
 import { Platform } from "react-native";
 import { ADMIN } from "../constants/paths";
 import { Property } from "../constants/mock/mock-properties";
+import {
+  ApiFailure,
+  ApiResult,
+  API_USER_MESSAGES,
+  err,
+  fetchMutationJson,
+  fetchMutationOk,
+  ok,
+} from "../lib/api-result";
 
 export type UploadedMediaItem = { url: string; cloudinaryPublicId: string };
 type AdminLoginResponse = {
@@ -14,6 +23,23 @@ type AdminAuthListener = (authed: boolean) => void;
 const ADMIN_TOKEN_STORAGE_KEY = "admin_access_token";
 let adminTokenCache: string | null = null;
 const authListeners = new Set<AdminAuthListener>();
+
+function loginErrorFromFailure(status?: number): ApiFailure {
+  if (status === 401 || status === 403) {
+    return {
+      code: status === 401 ? "unauthorized" : "forbidden",
+      message: "Invalid username or password.",
+      status,
+      retryable: false,
+    };
+  }
+  return {
+    code: "http",
+    message: API_USER_MESSAGES.http,
+    status,
+    retryable: true,
+  };
+}
 
 function notifyAuthChange(): void {
   const authed = Boolean(adminTokenCache);
@@ -69,7 +95,9 @@ export function subscribeAdminAuth(listener: AdminAuthListener): () => void {
   };
 }
 
-export async function loginAdmin(username: string, password: string): Promise<boolean> {
+export type LoginResult = ApiResult<{ token: string }>;
+
+export async function loginAdmin(username: string, password: string): Promise<LoginResult> {
   try {
     const response = await fetch(ADMIN.login, {
       method: "POST",
@@ -82,30 +110,35 @@ export async function loginAdmin(username: string, password: string): Promise<bo
 
     if (!response.ok) {
       clearAdminAuth();
-      return false;
+      return err(loginErrorFromFailure(response.status));
     }
 
     const json = (await response.json()) as Partial<AdminLoginResponse>;
     const token = json.accessToken?.trim();
     if (!token) {
       clearAdminAuth();
-      return false;
+      return err({
+        code: "empty_body",
+        message: API_USER_MESSAGES.emptyBody,
+        retryable: true,
+      });
     }
 
     adminTokenCache = token;
     persistToken(token);
     notifyAuthChange();
-    return true;
-  } catch (error) {
-    console.error("loginAdmin error:", error);
+    return ok({ token });
+  } catch {
     clearAdminAuth();
-    return false;
+    return err({
+      code: "network",
+      message: API_USER_MESSAGES.network,
+      retryable: true,
+    });
   }
 }
 
-function getAdminAuthHeaders(
-  extra?: Record<string, string>
-): Record<string, string> {
+function getAdminAuthHeaders(extra?: Record<string, string>): Record<string, string> {
   const token = getCachedToken();
   if (!token) {
     return { ...extra };
@@ -116,11 +149,14 @@ function getAdminAuthHeaders(
   };
 }
 
+export type UploadMediaResult = ApiResult<UploadedMediaItem[]>;
+
 /** Uploads one or more images to the API (Cloudinary). Each file max 10MB (enforced server-side). */
 export async function uploadPropertyImages(
   assets: { uri: string; name?: string | null; mimeType?: string | null }[]
-): Promise<UploadedMediaItem[] | null> {
-  if (!assets.length) return [];
+): Promise<UploadMediaResult> {
+  if (!assets.length) return ok([]);
+
   try {
     const formData = new FormData();
     for (const a of assets) {
@@ -133,125 +169,107 @@ export async function uploadPropertyImages(
         formData.append("images", { uri: a.uri, name, type } as any);
       }
     }
-    const response = await fetch(ADMIN.uploadMedia, {
+    const res = await fetch(ADMIN.uploadMedia, {
       method: "POST",
       headers: getAdminAuthHeaders(),
       body: formData,
     });
-    if (response.status === 401 || response.status === 403) {
+
+    if (res.status === 401 || res.status === 403) {
       clearAdminAuth();
-      return null;
+      return err({
+        code: res.status === 401 ? "unauthorized" : "forbidden",
+        message: API_USER_MESSAGES.unauthorized,
+        status: res.status,
+        retryable: false,
+      });
     }
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      console.error("uploadPropertyImages failed:", err);
-      return null;
-    }
-    const json = (await response.json()) as { items?: UploadedMediaItem[] };
-    return json.items ?? null;
-  } catch (e) {
-    console.error("uploadPropertyImages error:", e);
-    return null;
-  }
-}
 
-export async function createProperty(data: Partial<Property>): Promise<Property | null> {
-  try {
-    const response = await fetch(ADMIN.createProperty, {
-      method: "POST",
-      headers: getAdminAuthHeaders({
-        "Content-Type": "application/json",
-      }),
-      body: JSON.stringify(data),
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      const msg =
+        json && typeof json === "object" && "message" in json && typeof (json as any).message === "string"
+          ? String((json as any).message)
+          : "Upload failed. Check image size and format.";
+      return err({
+        code: "server",
+        message: msg,
+        status: res.status,
+        retryable: res.status >= 500,
+      });
+    }
+
+    const items = (json as { items?: UploadedMediaItem[] })?.items ?? null;
+    if (!items || !Array.isArray(items)) {
+      return err({
+        code: "empty_body",
+        message: API_USER_MESSAGES.emptyBody,
+        retryable: true,
+      });
+    }
+
+    return ok(items);
+  } catch {
+    return err({
+      code: "network",
+      message: API_USER_MESSAGES.network,
+      retryable: true,
     });
-    
-    if (response.status === 401 || response.status === 403) {
-        clearAdminAuth();
-        return null;
-    }
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to create property:", errorData);
-        return null;
-    }
-    return await response.json();
-  } catch (e) {
-    console.error("Error calling createProperty:", e);
-    return null;
   }
 }
 
-export async function updateProperty(id: string | number, data: Partial<Property>): Promise<Property | null> {
-  try {
-    const response = await fetch(ADMIN.updateProperty(id), {
-      method: "PUT",
-      headers: getAdminAuthHeaders({
-        "Content-Type": "application/json",
-      }),
-      body: JSON.stringify(data),
-    });
+export type PropertyMutationResult = ApiResult<Property>;
 
-    if (response.status === 401 || response.status === 403) {
-        clearAdminAuth();
-        return null;
-    }
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to update property:", errorData);
-        return null;
-    }
-    return await response.json();
-  } catch (e) {
-    console.error("Error calling updateProperty:", e);
-    return null;
-  }
+export async function createProperty(data: Partial<Property>): Promise<PropertyMutationResult> {
+  return fetchMutationJson<Property>(ADMIN.createProperty, {
+    method: "POST",
+    headers: getAdminAuthHeaders({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(data),
+  }).then((r) => {
+    if (!r.ok && (r.error.status === 401 || r.error.status === 403)) clearAdminAuth();
+    return r;
+  });
 }
 
-export async function deleteProperty(id: string | number): Promise<boolean> {
-  try {
-    const response = await fetch(ADMIN.deleteProperty(id), {
-      method: "DELETE",
-      headers: getAdminAuthHeaders(),
-    });
-
-    if (response.status === 401 || response.status === 403) {
-        clearAdminAuth();
-        return false;
-    }
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to delete property:", errorData);
-        return false;
-    }
-    return true;
-  } catch (e) {
-    console.error("Error calling deleteProperty:", e);
-    return false;
-  }
+export async function updateProperty(id: string | number, data: Partial<Property>): Promise<PropertyMutationResult> {
+  return fetchMutationJson<Property>(ADMIN.updateProperty(id), {
+    method: "PUT",
+    headers: getAdminAuthHeaders({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify(data),
+  }).then((r) => {
+    if (!r.ok && (r.error.status === 401 || r.error.status === 403)) clearAdminAuth();
+    return r;
+  });
 }
 
-export async function deleteManyProperties(ids: (string | number)[]): Promise<boolean> {
-  try {
-    const response = await fetch(ADMIN.deleteManyProperties, {
-      method: "POST",
-      headers: getAdminAuthHeaders({
-        "Content-Type": "application/json",
-      }),
-      body: JSON.stringify({ ids }),
-    });
+export type DeleteResult = ApiResult<void>;
 
-    if (response.status === 401 || response.status === 403) {
-        clearAdminAuth();
-        return false;
-    }
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to delete many properties:", errorData);
-        return false;
-    }
-    return true;
-  } catch (e) {
-    console.error("Error calling deleteManyProperties:", e);
-    return false;
-  }
+export async function deleteProperty(id: string | number): Promise<DeleteResult> {
+  return fetchMutationOk(ADMIN.deleteProperty(id), {
+    method: "DELETE",
+    headers: getAdminAuthHeaders(),
+  }).then((r) => {
+    if (!r.ok && (r.error.status === 401 || r.error.status === 403)) clearAdminAuth();
+    return r;
+  });
 }
+
+export async function deleteManyProperties(ids: (string | number)[]): Promise<DeleteResult> {
+  return fetchMutationOk(ADMIN.deleteManyProperties, {
+    method: "POST",
+    headers: getAdminAuthHeaders({
+      "Content-Type": "application/json",
+    }),
+    body: JSON.stringify({ ids }),
+  }).then((r) => {
+    if (!r.ok && (r.error.status === 401 || r.error.status === 403)) clearAdminAuth();
+    return r;
+  });
+}
+
+export type { ApiFailure, ApiResult };

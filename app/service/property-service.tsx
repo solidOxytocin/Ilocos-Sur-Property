@@ -1,6 +1,14 @@
-import { mockProperties, Property } from "../constants/mock/mock-properties"
-import config from "../config/env"
-import { PROPERTY } from "../constants/paths"
+import { mockProperties, Property } from "../constants/mock/mock-properties";
+import config from "../config/env";
+import { PROPERTY } from "../constants/paths";
+import {
+  ApiResult,
+  err,
+  fetchGetJson,
+  notFoundFailure,
+  ok,
+  type ApiFailure,
+} from "../lib/api-result";
 
 export interface PaginatedPropertiesResponse {
   data: Property[];
@@ -40,118 +48,156 @@ function buildQueryString(filters?: Record<string, any>): string {
   return qs ? `?${qs}` : "";
 }
 
+const isMock = () => process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock;
+
+/** API may send `data` as a single object or non-array; only map real arrays. */
+function coercePropertyRows(raw: unknown): any[] {
+  if (Array.isArray(raw)) return raw;
+  return [];
+}
+
+/**
+ * Safe `data[]` from a successful paginated response (avoids `.map` on non-arrays in UI).
+ */
+export function propertyListFromPaginatedOk(
+  page: PaginatedPropertiesResponse
+): Property[] {
+  const inner = page?.data;
+  return Array.isArray(inner) ? inner : [];
+}
+
 /** Fetches a single page of properties. Used for infinite scroll. */
 export async function getPropertiesPaginated(
   filters?: Record<string, any>,
   page = 1,
   limit = 12
-): Promise<PaginatedPropertiesResponse> {
-  const empty: PaginatedPropertiesResponse = { data: [], total: 0, page, totalPages: 0 };
-  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
+): Promise<ApiResult<PaginatedPropertiesResponse>> {
+  const emptyPage = (): PaginatedPropertiesResponse => ({
+    data: [],
+    total: 0,
+    page,
+    totalPages: 0,
+  });
+
+  if (isMock()) {
     const start = (page - 1) * limit;
     const paginated = mockProperties.slice(start, start + limit);
-    return {
+    return ok({
       data: paginated.map(normalizeProperty),
       total: mockProperties.length,
       page,
-      totalPages: Math.ceil(mockProperties.length / limit)
-    };
+      totalPages: Math.ceil(mockProperties.length / limit),
+    });
   }
-  try {
-    const params = { ...filters, page, limit };
-    const url = PROPERTY.getProperties + buildQueryString(params);
-    console.log("getPropertiesPaginated URL:", url);
-    const response = await fetch(url);
-    if (!response.ok) return empty;
-    const json = await response.json();
-    // Support both old array response and new paginated envelope
-    if (Array.isArray(json)) {
-      return { data: json.map(normalizeProperty), total: json.length, page: 1, totalPages: 1 };
+
+  const params = { ...filters, page, limit };
+  const url = PROPERTY.getProperties + buildQueryString(params);
+
+  const res = await fetchGetJson<PaginatedPropertiesResponse | Property[]>(url);
+  if (!res.ok) return res;
+
+  const json = res.data;
+  if (Array.isArray(json)) {
+    if (json.length === 0 && page === 1) {
+      return ok(emptyPage());
     }
-    const envelope = json as PaginatedPropertiesResponse;
-    return { ...envelope, data: (envelope.data ?? []).map(normalizeProperty) };
-  } catch (e) {
-    console.log("Error Fetching Properties (paginated):", e);
-    return empty;
+    return ok({
+      data: json.map(normalizeProperty),
+      total: json.length,
+      page: 1,
+      totalPages: 1,
+    });
   }
+
+  const envelope = json as PaginatedPropertiesResponse;
+  const data = coercePropertyRows(envelope.data).map(normalizeProperty);
+  return ok({
+    ...envelope,
+    data,
+    total: envelope.total ?? data.length,
+    totalPages: envelope.totalPages ?? 0,
+  });
 }
 
 /** Kept for backward compatibility (admin view fetches all at once). */
-export async function getProperties(filters?: Record<string, any>): Promise<Property[]> {
-  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
-    return mockProperties.map(normalizeProperty);
+export async function getProperties(filters?: Record<string, any>): Promise<ApiResult<Property[]>> {
+  if (isMock()) {
+    return ok(mockProperties.map(normalizeProperty));
   }
-  try {
-    const url = PROPERTY.getProperties + buildQueryString({ ...filters, limit: 99 });
-    console.log("getProperties URL:", url);
-    const response = await fetch(url);
-    if (!response.ok) return [];
-    const json = await response.json();
-    if (Array.isArray(json)) return json;
-    return (json as PaginatedPropertiesResponse).data ?? [];
-  } catch (e) {
-    console.log("Error Fetching Properties:", e);
-    return [];
+
+  const url = PROPERTY.getProperties + buildQueryString({ ...filters, limit: 99 });
+  const res = await fetchGetJson<PaginatedPropertiesResponse | Property[]>(url);
+  if (!res.ok) return res;
+
+  const json = res.data;
+  if (Array.isArray(json)) {
+    return ok(json.map(normalizeProperty));
   }
+  return ok(coercePropertyRows((json as PaginatedPropertiesResponse).data).map(normalizeProperty));
 }
 
-export async function getPropertyById(id: string): Promise<Property | null> {
-  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
-    return mockProperties.find(p => p.id === Number(id)) || null;
+export async function getPropertyById(id: string): Promise<ApiResult<Property>> {
+  if (isMock()) {
+    const p = mockProperties.find((x) => String(x.id) === String(id));
+    return p ? ok(normalizeProperty(p)) : err(notFoundFailure());
   }
-  try {
-    const properties = await getProperties();
-    return properties.find(p => p.id === Number(id)) || null;
-  } catch (e) {
-    console.log("Error Fetching Property:", e);
-    return null;
-  }
+
+  const list = await getProperties();
+  if (!list.ok) return list;
+
+  const found = list.data.find((p) => String(p.id) === String(id));
+  if (!found) return err(notFoundFailure());
+  return ok(found);
 }
 
-export async function getPropertyBounds(): Promise<{ maxPrice: number; maxLotArea: number }> {
-  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
-    return { maxPrice: 50000000, maxLotArea: 1000 };
+export async function getPropertyBounds(): Promise<
+  ApiResult<{ maxPrice: number; maxLotArea: number }>
+> {
+  const fallback = { maxPrice: 50000000, maxLotArea: 1000 };
+
+  if (isMock()) {
+    return ok(fallback);
   }
-  try {
-    const res = await fetch(PROPERTY.getBounds);
-    if (res.ok) return await res.json();
-    return { maxPrice: 50000000, maxLotArea: 1000 };
-  } catch (e) {
-    return { maxPrice: 50000000, maxLotArea: 1000 };
+
+  const res = await fetchGetJson<{ maxPrice: number; maxLotArea: number }>(PROPERTY.getBounds);
+  if (!res.ok) {
+    return res;
   }
+  return ok({
+    maxPrice: Number(res.data.maxPrice) || fallback.maxPrice,
+    maxLotArea: Number(res.data.maxLotArea) || fallback.maxLotArea,
+  });
 }
 
 /** Returns a map of { cityName: count } for all cities that have at least one property. */
-export async function getCityPropertyCounts(): Promise<Record<string, number>> {
-  if (process.env.EXPO_PUBLIC_IS_MOCK === "true" || config.useMock) {
-    // Compute counts from mock data client-side
+export async function getCityPropertyCounts(): Promise<ApiResult<Record<string, number>>> {
+  if (isMock()) {
     const counts: Record<string, number> = {};
     for (const p of mockProperties) {
       const city = p.location?.city;
       if (city) counts[city] = (counts[city] ?? 0) + 1;
     }
-    return counts;
+    return ok(counts);
   }
-  try {
-    const res = await fetch(PROPERTY.getCityCounts);
-    if (!res.ok) return {};
-    // Expected API shape: [{ city: string; count: number }] or { [city]: count }
-    const json = await res.json();
-    if (Array.isArray(json)) {
-      // Convert array shape → record
-      const map: Record<string, number> = {};
-      for (const item of json) {
-        if (item.city && typeof item.count === "number") {
-          map[item.city] = item.count;
-        }
+
+  const res = await fetchGetJson<unknown>(PROPERTY.getCityCounts);
+  if (!res.ok) return res;
+
+  const json = res.data;
+  if (Array.isArray(json)) {
+    const map: Record<string, number> = {};
+    for (const item of json as { city?: string; count?: number }[]) {
+      if (item.city && typeof item.count === "number") {
+        map[item.city] = item.count;
       }
-      return map;
     }
-    // Already a record shape
-    return json as Record<string, number>;
-  } catch (e) {
-    console.log("Error fetching city property counts:", e);
-    return {};
+    return ok(map);
   }
+  if (json && typeof json === "object") {
+    return ok(json as Record<string, number>);
+  }
+  return ok({});
 }
 
+/** Re-export for screens that branch on failure codes without importing api-result. */
+export type { ApiFailure, ApiResult };

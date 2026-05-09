@@ -15,7 +15,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { getPropertiesPaginated, getCityPropertyCounts } from "../service/property-service";
+import { getPropertiesPaginated, getCityPropertyCounts, propertyListFromPaginatedOk } from "../service/property-service";
+import { API_USER_MESSAGES } from "../lib/api-result";
+import { DataFetchState } from "../modules/generics/components/DataFetchState";
 import type { Property } from "../constants/mock/mock-properties";
 
 // Hero banner images – provincial Ilocos Sur scenery
@@ -97,20 +99,25 @@ export default function HomeScreen() {
   // Fetch city counts → derive totalListings & totalTowns
   const [totalListings, setTotalListings] = useState<number | null>(null);
   const [totalTowns, setTotalTowns] = useState<number | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const counts = await getCityPropertyCounts();
-        if (cancelled) return;
-        const listings = Object.values(counts).reduce((sum, n) => sum + n, 0);
-        const towns = Object.keys(counts).length;
-        setTotalListings(listings);
-        setTotalTowns(towns);
-      } catch {
-        // keep null — shows dashes
+      const countsResult = await getCityPropertyCounts();
+      if (cancelled) return;
+      if (!countsResult.ok) {
+        setStatsError(countsResult.error.message);
+        setTotalListings(null);
+        setTotalTowns(null);
+        return;
       }
+      setStatsError(null);
+      const counts = countsResult.data;
+      const listings = Object.values(counts).reduce((sum, n) => sum + n, 0);
+      const towns = Object.keys(counts).length;
+      setTotalListings(listings);
+      setTotalTowns(towns);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -118,22 +125,26 @@ export default function HomeScreen() {
   // Fetch 5 featured properties from the real data source
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
+  const [featuredRetryKey, setFeaturedRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setFeaturedLoading(true);
-      try {
-        const result = await getPropertiesPaginated({}, 1, 5);
-        if (!cancelled) setFeaturedProperties(result.data);
-      } catch {
-        // silently keep empty
-      } finally {
-        if (!cancelled) setFeaturedLoading(false);
+      setFeaturedError(null);
+      const result = await getPropertiesPaginated({}, 1, 5);
+      if (cancelled) return;
+      if (!result.ok) {
+        setFeaturedError(result.error.message);
+        setFeaturedProperties([]);
+      } else {
+        setFeaturedProperties(propertyListFromPaginatedOk(result.data));
       }
+      setFeaturedLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [featuredRetryKey]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -222,6 +233,29 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
+          {statsError ? (
+            <View style={{ marginTop: 10, paddingHorizontal: 4 }}>
+              <Text style={{ fontSize: 12, color: "#b91c1c", textAlign: "center" }}>{statsError}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setStatsError(null);
+                  void (async () => {
+                    const r = await getCityPropertyCounts();
+                    if (!r.ok) {
+                      setStatsError(r.error.message);
+                      return;
+                    }
+                    const c = r.data;
+                    setTotalListings(Object.values(c).reduce((s, n) => s + n, 0));
+                    setTotalTowns(Object.keys(c).length);
+                  })();
+                }}
+                style={{ alignSelf: "center", marginTop: 6, paddingVertical: 6, paddingHorizontal: 12 }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: "600", color: "#2563eb" }}>Try again</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
 
         {/* Hero Section: Automatic Slide Show */}
@@ -298,6 +332,21 @@ export default function HomeScreen() {
           {featuredLoading ? (
             <View style={{ height: 200, justifyContent: "center", alignItems: "center" }}>
               <ActivityIndicator size="large" color="#1d4ed8" />
+            </View>
+          ) : featuredError ? (
+            <DataFetchState
+              variant="error"
+              title="Couldn’t load featured listings"
+              message={featuredError}
+              onRetry={() => setFeaturedRetryKey((k) => k + 1)}
+              retryLabel="Try again"
+              compact
+            />
+          ) : featuredProperties.length === 0 ? (
+            <View style={{ paddingVertical: 24, paddingHorizontal: 16 }}>
+              <Text style={{ textAlign: "center", color: "#64748b", fontSize: 15 }}>
+                {API_USER_MESSAGES.noListings}
+              </Text>
             </View>
           ) : (
             <ScrollView

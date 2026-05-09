@@ -103,9 +103,9 @@
     - [x] Added Zod for input validation
     - [x] Added File Security
 
-- [] Dark Mode (U)
-- [] Improve Error Handling
-    - [ ] Show specific error messages
+- [x] Dark Mode (A)
+- [] Improve Error Handling = Should be graceful
+    - [ ] Show specific error messages and uniformed
     - [ ] Add retry options for failed requests
     - [ ] Handle offline scenarios gracefully
     - [ ] No Internet

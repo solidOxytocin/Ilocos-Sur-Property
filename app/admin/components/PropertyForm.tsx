@@ -584,9 +584,12 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
           mimeType: s.asset.mimeType ?? undefined,
         }))
       );
-      if (uploaded === null || uploaded.length !== stagedInOrder.length) {
+      if (!uploaded.ok || uploaded.data.length !== stagedInOrder.length) {
         setLoading(false);
-        Alert.alert('Upload failed', 'Could not upload images. Check your API and Cloudinary configuration.');
+        Alert.alert(
+          'Upload failed',
+          uploaded.ok ? 'Could not upload all images. Try again.' : uploaded.error.message
+        );
         return;
       }
       let upIdx = 0;
@@ -594,7 +597,7 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         if (slot.kind === 'url') {
           return { ...slot.media, type: (slot.media.type ?? 'image') as 'image' | 'video' };
         }
-        const u = uploaded[upIdx++];
+        const u = uploaded.data[upIdx++];
         return {
           url: u.url,
           type: 'image' as const,
@@ -657,12 +660,12 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
 
     setLoading(false);
 
-    if (result) {
+    if (result.ok) {
       Alert.alert('Success', isEdit ? 'Property updated successfully.' : 'Property created successfully.', [
         { text: 'OK', onPress: () => leavePropertyForm() },
       ]);
     } else {
-      Alert.alert('Save failed', 'The operation could not complete. Check your connection and try again.');
+      Alert.alert('Save failed', result.error.message);
     }
   };
 

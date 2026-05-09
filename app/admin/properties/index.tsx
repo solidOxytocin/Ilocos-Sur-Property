@@ -2,8 +2,10 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, TextInput,
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useColorScheme } from 'nativewind';
-import { getProperties } from '../../service/property-service';
+import { getProperties, type ApiFailure } from '../../service/property-service';
 import { deleteProperty, deleteManyProperties } from '../../service/admin-service';
+import { API_USER_MESSAGES } from '../../lib/api-result';
+import { DataFetchState } from '../../modules/generics/components/DataFetchState';
 import { Property } from '../../constants/mock/mock-properties';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -21,6 +23,7 @@ export default function AdminPropertiesScreen() {
     const [sortOrder, setSortOrder]   = useState<SortOrder>('asc');
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [listError, setListError] = useState<ApiFailure | null>(null);
     const router = useRouter();
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -33,8 +36,14 @@ export default function AdminPropertiesScreen() {
 
     const fetchProperties = useCallback(async () => {
         setLoading(true);
-        const data = await getProperties();
-        setProperties(data || []);
+        setListError(null);
+        const result = await getProperties();
+        if (!result.ok) {
+            setListError(result.error);
+            setProperties([]);
+        } else {
+            setProperties(result.data);
+        }
         setLoading(false);
     }, []);
 
@@ -142,17 +151,17 @@ export default function AdminPropertiesScreen() {
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
         if (window.confirm(`Delete ${selectedIds.size} propert${selectedIds.size === 1 ? 'y' : 'ies'}?`)) {
-            const ok = await deleteManyProperties(Array.from(selectedIds));
-            if (ok) { setSelectedIds(new Set()); fetchProperties(); }
-            else window.alert('Failed to delete. Please try again.');
+            const del = await deleteManyProperties(Array.from(selectedIds));
+            if (del.ok) { setSelectedIds(new Set()); fetchProperties(); }
+            else window.alert(del.error.message);
         }
     };
 
     const handleDeleteSingle = async (id: number) => {
         if (window.confirm('Delete this property?')) {
-            const ok = await deleteProperty(id);
-            if (ok) fetchProperties();
-            else window.alert('Failed to delete.');
+            const del = await deleteProperty(id);
+            if (del.ok) fetchProperties();
+            else window.alert(del.error.message);
         }
     };
 
@@ -161,6 +170,20 @@ export default function AdminPropertiesScreen() {
             <View className="flex-1 justify-center items-center">
                 <ActivityIndicator size="large" color={isDark ? '#60a5fa' : '#2563eb'} />
                 <Text className="mt-4 text-gray-500 dark:text-slate-400">Loading Properties...</Text>
+            </View>
+        );
+    }
+
+    if (listError) {
+        return (
+            <View className="flex-1 justify-center px-4 py-8 min-h-[280px] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <DataFetchState
+                    variant={listError.code === 'offline' ? 'offline' : 'error'}
+                    title={listError.code === 'offline' ? 'You’re offline' : 'Couldn’t load listings'}
+                    message={listError.message}
+                    onRetry={() => void fetchProperties()}
+                    retryLabel="Try again"
+                />
             </View>
         );
     }
@@ -336,7 +359,7 @@ export default function AdminPropertiesScreen() {
                             <Text className="text-slate-400 dark:text-slate-500 text-sm mt-2 text-center max-w-md">
                                 {debouncedSearch
                                     ? 'Try a different keyword or clear the search filter.'
-                                    : 'Create a listing with the New property button above.'}
+                                    : `${API_USER_MESSAGES.emptyListAdmin}`}
                             </Text>
                         </View>
                     ) : (

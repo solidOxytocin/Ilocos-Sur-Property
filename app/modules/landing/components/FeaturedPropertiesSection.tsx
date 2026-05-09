@@ -10,8 +10,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { getPropertiesPaginated } from "@/app/service/property-service";
+import { getPropertiesPaginated, propertyListFromPaginatedOk } from "@/app/service/property-service";
 import type { Property } from "@/app/constants/mock/mock-properties";
+import { API_USER_MESSAGES } from "@/app/lib/api-result";
+import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
 
 const FEATURED_COUNT = 6;
 
@@ -84,22 +86,26 @@ export default function FeaturedPropertiesSection() {
   const { width } = useWindowDimensions();
   const [featured, setFeatured] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      try {
-        const result = await getPropertiesPaginated({}, 1, FEATURED_COUNT);
-        if (!cancelled) setFeatured(result.data);
-      } catch {
-        // silently keep empty — no crash on landing page
-      } finally {
-        if (!cancelled) setLoading(false);
+      setFetchError(null);
+      const result = await getPropertiesPaginated({}, 1, FEATURED_COUNT);
+      if (cancelled) return;
+      if (!result.ok) {
+        setFetchError(result.error.message);
+        setFeatured([]);
+      } else {
+        setFeatured(propertyListFromPaginatedOk(result.data));
       }
+      setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [retryKey]);
 
   return (
     <View style={styles.section}>
@@ -121,6 +127,21 @@ export default function FeaturedPropertiesSection() {
       {loading ? (
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color="#1d4ed8" />
+        </View>
+      ) : fetchError ? (
+        <DataFetchState
+          variant="error"
+          title="Couldn’t load featured listings"
+          message={fetchError}
+          onRetry={() => setRetryKey((k) => k + 1)}
+          retryLabel="Try again"
+          compact
+        />
+      ) : featured.length === 0 ? (
+        <View style={{ paddingVertical: 24 }}>
+          <Text style={{ textAlign: "center", color: "#64748b", fontSize: 15 }}>
+            {API_USER_MESSAGES.noListings}
+          </Text>
         </View>
       ) : (
         <ScrollView
