@@ -17,12 +17,48 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
+import { Dropdown } from 'react-native-element-dropdown';
 import { createProperty, updateProperty, uploadPropertyImages } from '../../service/admin-service';
 import { Property, Media } from '../../constants/mock/mock-properties';
 import AdminMapPicker from './AdminMapPicker';
 import { useColorScheme } from 'nativewind';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+const ILOCOS_SUR_LOCATIONS: Record<string, string[]> = {
+  "Alilem": ["Alilem Daya", "Amilongan", "Anaao", "Apang", "Apaya", "Batbato", "Daddaay", "Dalawa", "Kiat"],
+  "Banayoyo": ["Bagbagotot", "Banbanaal", "Cabaritan", "Elefante", "Guardia", "Lintic", "Montero", "Nagyubuyuban", "Pila", "Poblacion", "Surong", "Valenzuela", "Villaluz"],
+  "Bantay": ["Aggay", "An-annam", "Balaleng", "Banaoang", "Bulag", "Buquig", "Cabalangegan", "Cabaroan", "Cabuscabusan", "Capangpangan", "Guimod", "Lingsat", "Malingeb", "Mira", "Ora", "Paing", "Puspus", "Quimmarayan", "Sagneb", "Sagpat", "San Isidro", "San Julian", "San Mariano", "San Martin", "San Vicente", "Taleb", "Tay-ac"],
+  "Burgos": ["Amguid", "Balingaoan", "Banay", "Bessang", "Cabaritan", "Calingayan", "Dalig", "Dallang", "Dayawen", "Dirita", "Guang-guang", "Linao", "Luna", "Lucaban", "Macaoayan", "Mambug", "Mandirig", "Nagpanaoan", "Paday", "Pagangpang", "Patar", "San Vicente", "Sardeng", "Subadi Norte", "Subadi Sur", "Taliao"],
+  "Cabugao": ["Alinaay", "Aragan", "Arnap", "Baclig", "Bato", "Bonifacio", "Bungro", "Cacadiran", "Caellayan", "Carusipan", "Catucdaan", "Cuancabal", "Cuantacla", "Daclapan", "Dardarat", "Lipit", "Marcos", "Margaay", "Nagsincaoan", "Namruangan", "Pila", "Pug-os", "Quezon", "Reppaac", "Rizal", "Sabang", "Sagayaden", "Salapasap", "Salomague", "Sisam", "Turod"],
+  "Candon City": ["Allangigan 1st", "Allangigan 2nd", "Amboy", "Ayudante", "Bagani Campo", "Bagani Gabor", "Bagani Macalig", "Bagani Tocgo", "Bagani Ubbog", "Bagar", "Balingaoan", "Bugarin", "Calaoa-an", "Calongbuyan", "Caterman", "Cubcubbuot", "Darapidap", "Langlangca 1st", "Langlangca 2nd", "Oaig-Daya", "Palacapac", "Paras", "Parioc 1st", "Parioc 2nd", "Patpata 1st", "Patpata 2nd", "Paypayad", "San Agustin", "San Andres", "San Antonio", "San Isidro", "San Jose", "San Juan", "San Nicolas", "San Pedro", "Santo Tomas", "Tablac", "Talogtog", "Tamurong 1st", "Tamurong 2nd", "Villarica"],
+  "Caoayan": ["Anonang Mayor", "Anonang Menor", "Baggoc", "Callaguip", "Caparacadan", "Fuerte", "Don Alejandro Quirolgico", "Don Dimas Querubin", "Don Lorenzo Querubin", "Manangat", "Naguilian", "Nansuagao", "Puro", "Tamurong", "Villamar", "Don Lino Abaya", "Pantay-Quitiquit"],
+  "Cervantes": ["Aluling", "Comillas North", "Comillas South", "Concepcion", "Dinwede", "Malaya", "Pilipil", "Remedios", "Rosario", "San Juan", "San Luis", "Santa Clara", "Tagudin"],
+  "Galimuyod": ["Abaya", "Baracbac", "Borobor", "Buyog", "Caliao", "Calimugtong", "Guimod", "Mckinley", "Nagsingcaoan", "Oaig-Daya", "Pagangpang", "Patac", "Poblacion", "San Vicente"],
+  "Gregorio del Pilar": ["Alfonso", "Bussot", "Concepcion", "Doldol", "Mabatano", "Poblacion Norte", "Poblacion Sur"],
+  "Lidlidda": ["Banucal", "Bequi-Walin", "Bugui", "Calungbuyan", "Caminawit", "Carcarabasa", "Labut", "Poblacion Norte", "Poblacion Sur", "San Vicente", "Suysuyan"],
+  "Magsingal": ["Alangan", "Bacar", "Bato", "Bucarot", "Cabaroan", "Camarao", "Caraisan", "Dacutan", "Labut", "Maas-asin", "Macatcatud", "Maratudo", "Miramar", "Namarabar", "Napasan", "Puro", "Purok-a-dakkel", "Purok-a-bassit", "San Basilio", "San Clemente", "San Julian", "San Lucas", "San Ramon", "San Vicente", "Santa Monica", "Sarsaracat"],
+  "Narvacan": ["Abuot", "Aquib", "Banglayan", "Blockhouse", "Bulanos", "Cadacad", "Cagayungan", "Camarao", "Casilian", "Codoog", "Dasay", "Dinalaoan", "Estancia", "Lanipao", "Lungog", "Margaay", "Marozo", "Nanguneg", "Orence", "Pantoc", "Paratong", "Parparia", "Quinarayan", "Rivadavia", "San Antonio", "San Jose", "San Pablo", "San Pedro", "Santa Lucia", "Sarmingan", "Sucoc", "Sulvec", "Turod"],
+  "Quirino": ["Banoen", "Cayus", "Lamag", "Legleg", "Malideg", "Namitpit", "Patiacan", "Poblacion", "Suagayan"],
+  "Salcedo": ["Baybayading", "Boguisil", "Calaoa-an", "Culiong", "Dinaratan", "Kaliwakiw", "Lucbuban", "Madansong", "Maligcong", "Miliang", "Poblacion", "Sagneb", "San Gaspar", "San Juan", "San Roque", "Sibut", "Tagita"],
+  "San Emilio": ["Cabaroan", "Cancio", "Lancuas", "Matindeg", "Poblacion", "San Juan", "Sibsibbu", "Tiagan"],
+  "San Ildefonso": ["Arnap", "Bahet", "Beling", "Bungro", "Busiing Sur", "Busiing Norte", "Gongogong", "Iboy", "Kinamantirisan", "Otol", "Poblacion", "Pudoc", "Sagsagat", "Sagat", "Tuya-a"],
+  "San Juan": ["Asilang", "Bacsil", "Baliw", "Banneng", "Bao-ing", "Barbaran", "Camangaan", "Camindoroan", "Caronoan", "Darao", "Daramuang", "Guimod Norte", "Guimod Sur", "Immayos Norte", "Immayos Sur", "Labnig", "Lapting", "Lira", "Malamin", "Muraya", "Nagsabaran", "Nagsupotan", "Pandayan", "Refaro", "Resurreccion", "Sabangan", "San Isidro", "Saoang", "Solotsolot", "Sunggiam", "Surila"],
+  "San Vicente": ["Bantaoay", "Bayubay Norte", "Bayubay Sur", "Lubong", "Pudoc", "San Sebastian"],
+  "Santa": ["Ampandula", "Banaoang", "Basug", "Bucalag", "Cabangaran", "Calungboyan", "Casiber", "Dammay", "Labut Norte", "Labut Sur", "Mabilbila Norte", "Mabilbila Sur", "Magsaysay District", "Manueva", "Marcos District", "Nagpanaoan", "Namalangan", "Oribi", "Pasungol", "Quezon District", "Quirino District", "Rancho", "Rizal District", "Sacuyya Norte", "Sacuyya Sur", "San Jose"],
+  "Santa Catalina": ["Cabittaogan", "Cabuloan", "Calongbuyan", "Namnama", "Paratong", "Poblacion", "Pangada", "Subec", "Tamurong"],
+  "Santa Cruz": ["Amarao", "Babayoan", "Bacsayan", "Banay", "Bato", "Buliclic", "Calingayan", "Capanikian", "Casilian", "Daligan", "Mambug", "Mantaya", "Poblacion", "Sagapan", "San Antonio", "San Jose", "San Pedro", "Sevilla", "Sidaoen"],
+  "Santa Lucia": ["Alincaoeg", "Angkileng", "Ayaoan", "Banbanaba", "Bantoc", "Bao-as", "Barangay I", "Barangay II", "Barangay III", "Bawani", "Buliclic", "Burgos", "Cabaritan", "Catayagan", "Conconig", "Cuartel", "Damacuag", "Lubong", "Lumbang", "Marcos", "Nagtocaoc", "Namnama", "Palali", "Paratong", "Pias", "Rondalla", "Sabuanan", "San Juan", "San Pedro", "Suagayan", "Valdefuente", "Vigan"],
+  "Santa Maria": ["Ag-agrao", "Ampandula", "Babangot", "Baliw Daya", "Baliw Laud", "Bia-o", "Bulbulala", "Cabaroan", "Danuman East", "Danuman West", "Donghol", "Gusing", "Laslasong Norte", "Laslasong Sur", "Laslasong West", "Lesseb", "Lingsat", "Lubong", "Macatcatud", "Maynganay Norte", "Maynganay Sur", "Nagsayaoan", "Nalidaoan", "Nutia", "Pacang", "Parioc 1st", "Parioc 2nd", "Penned", "Poblacion Norte", "Poblacion Sur", "San Alejandro", "San Gelacio", "San Pedro", "Silag", "Suso", "Tangaoan"],
+  "Santiago": ["Al-alinao Norte", "Al-alinao Sur", "Ambugat", "Bayo", "Bigbiga", "Binacud", "Bucyao", "Bulbulala", "Buso-buso", "Butol", "Caburao", "Danuman East", "Danuman West", "Dinwede East", "Dinwede West", "Gabay", "Imus", "Lang-ayan", "Mambug", "Olo-olo Norte", "Olo-olo Sur", "Poblacion Norte", "Poblacion Sur", "Sabanen", "Salcedo", "San Jose", "San Roque", "San Vicente", "Ubbog"],
+  "Santo Domingo": ["Binalayangan", "Borobor", "Cabigbigaan", "Cabusligan", "Calay-ab", "Camragan", "Casili", "Flora", "Lagatit", "Laoingen", "Lussoc", "Nalasin", "Nagbettedan", "Naglaoa-an", "Pangalisan", "Panay", "Pussuac", "Quimmarayan", "San Pablo", "Santa Clara", "Suksukit", "Suso", "Vacunero"],
+  "Sigay": ["Abquilan", "Mabileg", "Poblacion", "San Elias"],
+  "Sinait": ["Aguing", "Ballaigui", "Baracbac", "Barikir", "Battao", "Cabaritan", "Cabisilan", "Calanutian", "Calingayan", "Concepcion", "Dean Leopoldo Yabes", "Dadao", "Dadalaquiten Norte", "Dadalaquiten Sur", "Duyay-ayat", "Jordan", "Katipunan", "Macabiag", "Magsaysay", "Marnay", "Masical", "Nagbalioartian", "Nagcullooban", "Naglumpa-an", "Nagmullocan", "Namnama", "Pacis", "Paratong", "Poblacion", "Purag", "Quibit-quibit", "Quimmallogong", "Ricudo", "Sabangan", "Sallacapo", "Santa Cruz", "Sapriana", "Tapao", "Teppeng", "Tubigay", "Ubbog"],
+  "Sugpon": ["Balbalayang", "Bangabanga", "Danac", "Pangotan", "Poblacion", "Uguid"],
+  "Suyo": ["Baringcucurong", "Cabcaburao", "Man-atong", "Patoc-ao", "Poblacion", "Suyo Proper", "Urzadan", "Uso"],
+  "Tagudin": ["Ag-aguman", "Al-alinao", "Ambalayat", "Baracbac", "Bariw", "Baroro", "Basca", "Bitalag", "Borono", "Bucao", "Cabaniguan", "Cabaroan", "Caburlaoan", "Cantoria", "Concepcion", "Dada Norte", "Dada Sur", "Del Pilar", "Farig", "Gari Norte", "Gari Sur", "Las-ud", "Lapting", "Libtong", "Lubnac", "Magsaysay", "Malacañang", "Mariposa", "Miguel", "Padua", "Pallogan", "Paratong", "Quirino", "Rizal", "Salcedo", "San Antonio", "San Isidro", "San Juan", "San Jose", "San Rafael", "San Vicente", "Sarmingan", "Tambidao", "Tampugo", "Tarangotong"],
+  "Vigan City": ["Ayusan Norte", "Ayusan Sur", "Barangay I", "Barangay II", "Barangay III", "Barangay IV", "Barangay V", "Barangay VI", "Barraca", "Beddeng Laud", "Beddeng Daya", "Bongtolan", "Bulala", "Cabalangegan", "Cabaroan Daya", "Cabaroan Laud", "Camangaan", "Capangpangan", "Mindoro", "Nagsangalan", "Pantay Daya", "Pantay Fatima", "Pantay Laud", "Paoa", "Paratong", "Pong-ol", "Purok-a-bassit", "Purok-a-dakkel", "Raois", "Rugsuanan", "Salindeg", "San Jose", "San Julian Norte", "San Julian Sur", "San Pedro", "Santa Elena", "Tamag"]
+};
 
 type PhotoSlot =
   | { id: string; kind: 'url'; media: Partial<Media> }
@@ -147,10 +183,10 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
   const [parking, setParking] = useState(initialData?.parking?.toString() || '');
 
   // Location
-  const [address, setAddress] = useState(initialData?.location?.address || '');
-  const [barangay, setBarangay] = useState(initialData?.location?.barangay || '');
+  const [province, setProvince] = useState('Ilocos Sur');
   const [city, setCity] = useState(initialData?.location?.city || '');
-  const [province, setProvince] = useState(initialData?.location?.province || '');
+  const [barangay, setBarangay] = useState(initialData?.location?.barangay || '');
+  const [address, setAddress] = useState(initialData?.location?.address || '');
   
   // Maps & Boundaries
   const [latitude, setLatitude] = useState(initialData?.location?.coordinates?.lat?.toString() || '');
@@ -812,36 +848,107 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
             <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Location</Text>
             <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
-              Street address, barangay, city, and province
+              Province, city, barangay, and street address
             </Text>
-            <InputField label="Address (Street/Subdivision)" value={address} onChangeText={setAddress} />
-            <InputField label="Barangay" value={barangay} onChangeText={setBarangay} />
+            
             <View className="flex-row flex-wrap -mx-2">
                 <View className="w-1/2 px-2">
-                    <InputField
-                      label="City/Municipality"
-                      value={city}
-                      onChangeText={(t) => {
-                        setCity(t);
-                        clearFieldError('city');
-                      }}
-                      required
-                      error={fieldErrors.city}
-                    />
+                    <View className="mb-4">
+                        <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-2">Province</Text>
+                        <TextInput
+                            className="bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-3 text-gray-500 dark:text-slate-400 font-medium"
+                            value="Ilocos Sur"
+                            editable={false}
+                        />
+                    </View>
                 </View>
                 <View className="w-1/2 px-2">
-                    <InputField
-                      label="Province"
-                      value={province}
-                      onChangeText={(t) => {
-                        setProvince(t);
-                        clearFieldError('province');
-                      }}
-                      required
-                      error={fieldErrors.province}
-                    />
+                    <View className="mb-4">
+                        <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-2">
+                            City/Municipality <Text className="text-red-500 dark:text-red-400">*</Text>
+                        </Text>
+                        <Dropdown
+                            style={{
+                                height: 50,
+                                backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                                borderColor: fieldErrors.city ? (isDark ? '#ef4444' : '#f87171') : (isDark ? '#475569' : '#e5e7eb'),
+                                borderWidth: 1,
+                                borderRadius: 8,
+                                paddingHorizontal: 12,
+                            }}
+                            placeholderStyle={{ color: isDark ? '#64748b' : '#9ca3af', fontSize: 14 }}
+                            selectedTextStyle={{ color: isDark ? '#f1f5f9' : '#1f2937', fontSize: 14 }}
+                            inputSearchStyle={{
+                                height: 40,
+                                fontSize: 14,
+                                color: isDark ? '#f1f5f9' : '#1f2937',
+                                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                                borderColor: isDark ? '#334155' : '#e5e7eb',
+                                borderRadius: 6
+                            }}
+                            iconStyle={{ width: 20, height: 20, tintColor: isDark ? '#94a3b8' : '#6b7280' }}
+                            data={Object.keys(ILOCOS_SUR_LOCATIONS).sort().map(m => ({ label: m, value: m }))}
+                            search
+                            maxHeight={300}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select City/Municipality"
+                            searchPlaceholder="Search city..."
+                            value={city}
+                            onChange={item => {
+                                setCity(item.value);
+                                setBarangay(''); // reset barangay when city changes
+                                clearFieldError('city');
+                            }}
+                            containerStyle={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', borderColor: isDark ? '#334155' : '#e5e7eb' }}
+                            itemTextStyle={{ color: isDark ? '#f1f5f9' : '#1f2937' }}
+                            activeColor={isDark ? '#334155' : '#f3f4f6'}
+                        />
+                        {fieldErrors.city ? <Text className="text-red-600 dark:text-red-400 text-sm mt-1.5">{fieldErrors.city}</Text> : null}
+                    </View>
                 </View>
             </View>
+
+            <View className="mb-5">
+                <Text className="text-gray-700 dark:text-slate-200 font-semibold mb-2">Barangay</Text>
+                <Dropdown
+                    style={{
+                        height: 50,
+                        backgroundColor: !city ? (isDark ? '#0f172a' : '#f3f4f6') : (isDark ? '#1e293b' : '#ffffff'),
+                        borderColor: isDark ? '#475569' : '#e5e7eb',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        opacity: !city ? 0.7 : 1
+                    }}
+                    placeholderStyle={{ color: isDark ? '#64748b' : '#9ca3af', fontSize: 14 }}
+                    selectedTextStyle={{ color: isDark ? '#f1f5f9' : '#1f2937', fontSize: 14 }}
+                    inputSearchStyle={{
+                        height: 40,
+                        fontSize: 14,
+                        color: isDark ? '#f1f5f9' : '#1f2937',
+                        backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                        borderColor: isDark ? '#334155' : '#e5e7eb',
+                        borderRadius: 6
+                    }}
+                    iconStyle={{ width: 20, height: 20, tintColor: isDark ? '#94a3b8' : '#6b7280' }}
+                    data={city ? ILOCOS_SUR_LOCATIONS[city]?.map(b => ({ label: b, value: b })) : []}
+                    search
+                    maxHeight={300}
+                    labelField="label"
+                    valueField="value"
+                    placeholder={city ? "Select Barangay" : "Select City/Municipality First"}
+                    searchPlaceholder="Search barangay..."
+                    value={barangay}
+                    onChange={item => setBarangay(item.value)}
+                    disable={!city}
+                    containerStyle={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', borderColor: isDark ? '#334155' : '#e5e7eb' }}
+                    itemTextStyle={{ color: isDark ? '#f1f5f9' : '#1f2937' }}
+                    activeColor={isDark ? '#334155' : '#f3f4f6'}
+                />
+            </View>
+
+            <InputField label="Address (Street/Subdivision)" value={address} onChangeText={setAddress} />
         </View>
         )}
 

@@ -80,8 +80,6 @@
 - [x] Beautify Details View
 - [x] Remove Contact Agent Info in Details View and Home View for the public
 - [x] Fix admin Broken after Frontend fixes
-- [] Add Loadings (Skeleton and Indicators) (U)
-- [] Add Animations(U)
 - [x] R&D For Image Handling 
     - [x] Setup Image CDN
     - [x] Apply Cloudinary in API
@@ -116,8 +114,12 @@
 - [x] Update Ammenities
 - [x] Update Features
 - [x] Add Amenities in Filter (U)
-- [] Update Selections
+- [x] Update Selections
+- [x] Add Barangay in Filter (U)
+- [] Add Loadings (Skeleton and Indicators) (U)
+- [] Add Animations(U)
 - [] Seperate Admin Frontend to a new Project
+- [] Add Read Me Files
 - [] Learn To Deploy
     -[] Create prod Build
     -[] Create an enviroment variables for prod and local   

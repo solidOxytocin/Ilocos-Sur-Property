@@ -86,7 +86,7 @@ export default function PropertyList() {
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: 0, city: "", minArea: 0, maxArea: 0,
+    type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: 0, city: "", barangay: "", minArea: 0, maxArea: 0,
   });
   // Track the absolute bounds so we can skip sending max values that equal the ceiling
   const [filterBounds, setFilterBounds] = useState({ maxPrice: 0, maxLotArea: 0 });
@@ -99,7 +99,7 @@ export default function PropertyList() {
 
   const hasActiveFilters = useMemo(
     () =>
-      filters.type.length > 0 || filters.status.length > 0 || filters.city !== "" ||
+      filters.type.length > 0 || filters.status.length > 0 || filters.city !== "" || filters.barangay !== "" ||
       filters.features.length > 0 || filters.amenities.length > 0 ||
       filters.minPrice > 0 ||
       (filters.maxPrice > 0 && (filterBounds.maxPrice === 0 || filters.maxPrice < filterBounds.maxPrice)) ||
@@ -140,6 +140,7 @@ export default function PropertyList() {
     if (filters.features.length > 0) f.features = filters.features;
     if (filters.amenities.length > 0) f.amenities = filters.amenities;
     if (filters.city)                f.city     = filters.city;
+    if (filters.barangay)            f.barangay = filters.barangay;
     if (filters.minPrice > 0)        f.minPrice = filters.minPrice;
     // Only send maxPrice when user has actually restricted it below the absolute ceiling
     if (filters.maxPrice > 0 && (filterBounds.maxPrice === 0 || filters.maxPrice < filterBounds.maxPrice)) {
@@ -171,6 +172,7 @@ export default function PropertyList() {
           if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
           if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
           if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
+          if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;
           if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
           if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
           if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
@@ -237,6 +239,7 @@ export default function PropertyList() {
         if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
         if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
         if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
+        if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;
         if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
         if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
         if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
