@@ -1,6 +1,7 @@
 import GridViewCardProperty from "@/app/modules/property-list/components/gridViewCardProperty";
 import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
 import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
+import { PropertyCardSkeleton } from "../modules/property-list/components/PropertyCardSkeleton";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
@@ -62,6 +63,11 @@ export default function PropertyList() {
   const [fetchError, setFetchError]   = useState<ApiFailure | null>(null);
   const [loadMoreError, setLoadMoreError] = useState<ApiFailure | null>(null);
   const [listRetryKey, setListRetryKey] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Sort state — null means no active sort
   const [sortField, setSortField] = useState<SortField | null>("createdAt");
@@ -330,6 +336,8 @@ export default function PropertyList() {
   );
 
   const numColumns = isListView ? 1 : width > 1200 ? 5 : width > 1000 ? 4 : width > 800 ? 3 : 2;
+  const skeletonCount = isListView ? 6 : Math.ceil(PAGE_SIZE / numColumns) * numColumns;
+  const skeletonData = Array.from({ length: skeletonCount }, (_, i) => i);
 
   const renderItem = ({ item }: { item: Property }) =>
     isListView ? (
@@ -461,9 +469,17 @@ export default function PropertyList() {
 
           {/* List Body */}
           <View className="flex-1 px-2 pt-3">
-            {loading ? (
-              <View className="flex-1 justify-center items-center">
-                <ActivityIndicator size="large" color="#1d4ed8" />
+            {!isMounted ? null : loading ? (
+              <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
+                <FlatList
+                  key={numColumns + (isListView ? "-list-skel" : "-grid-skel")}
+                  data={skeletonData}
+                  renderItem={() => <PropertyCardSkeleton viewMode={isListView ? "list" : "grid"} />}
+                  keyExtractor={(item) => `skel-${item}`}
+                  numColumns={numColumns}
+                  showsVerticalScrollIndicator={false}
+                  className={isListView ? "w-full" : ""}
+                />
               </View>
             ) : fetchError ? (
               <DataFetchState

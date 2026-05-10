@@ -6,6 +6,7 @@ import { getPropertyById, type ApiFailure } from "./service/property-service";
 import { Property } from "./constants/mock/mock-properties";
 import PropertyDetailsContent from "./modules/details-view/components/propertyDetailsContent";
 import { DataFetchState } from "./modules/generics/components/DataFetchState";
+import { PropertyDetailsSkeleton } from "./modules/details-view/components/PropertyDetailsSkeleton";
 
 export default function PropertyDetails() {
   const { id } = useLocalSearchParams();
@@ -49,8 +50,8 @@ export default function PropertyDetails() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-100 justify-center items-center">
-        <ActivityIndicator size="large" color="#1d4ed8" />
+      <SafeAreaView className="flex-1 bg-white">
+        <PropertyDetailsSkeleton />
       </SafeAreaView>
     );
   }

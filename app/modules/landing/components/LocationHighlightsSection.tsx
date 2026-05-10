@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { getCityPropertyCounts } from "@/app/service/property-service";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
+import { Skeleton } from "@/app/modules/generics/components/Skeleton";
 
 // Static definition of the towns we want to showcase.
 // "cityKey" must match the city name in the database / mock data exactly.
@@ -96,7 +97,7 @@ function LocationCard({
         <Text style={styles.cardDesc}>{loc.description}</Text>
         <View style={styles.countBadge}>
           {loading ? (
-            <ActivityIndicator size="small" color={loc.color} style={{ height: 16 }} />
+            <Skeleton className="w-16 h-4 rounded-sm" />
           ) : (
             <Text style={styles.countText}>
               {count !== null && count > 0 ? `${count} listing${count === 1 ? "" : "s"}` : "No listings yet"}

@@ -14,6 +14,7 @@ import { getPropertiesPaginated, propertyListFromPaginatedOk } from "@/app/servi
 import type { Property } from "@/app/constants/mock/mock-properties";
 import { API_USER_MESSAGES } from "@/app/lib/api-result";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
+import { Skeleton } from "@/app/modules/generics/components/Skeleton";
 
 const FEATURED_COUNT = 6;
 
@@ -125,9 +126,25 @@ export default function FeaturedPropertiesSection() {
 
       {/* Cards */}
       {loading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color="#1d4ed8" />
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.cardRow}
+        >
+          {Array.from({ length: FEATURED_COUNT }).map((_, i) => (
+            <View key={i} style={styles.card}>
+              <View style={styles.cardImageWrap}>
+                <Skeleton className="w-full h-full rounded-none" />
+              </View>
+              <View style={styles.cardBody}>
+                <Skeleton className="w-24 h-6 mb-2" />
+                <Skeleton className="w-full h-4 mb-2" />
+                <Skeleton className="w-3/4 h-3 mb-2" />
+                <Skeleton className="w-16 h-3" />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : fetchError ? (
         <DataFetchState
           variant="error"

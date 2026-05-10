@@ -116,7 +116,7 @@
 - [x] Add Amenities in Filter (U)
 - [x] Update Selections
 - [x] Add Barangay in Filter (U)
-- [] Add Loadings (Skeleton and Indicators) (U)
+- [x] Add Loadings (Skeleton and Indicators) (U)
 - [] Add Animations(U)
 - [] Seperate Admin Frontend to a new Project
 - [] Add Read Me Files
