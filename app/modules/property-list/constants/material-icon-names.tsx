@@ -65,3 +65,8 @@ export const AMENITY_ICONS: Record<string, MaterialIconName> = {
   empty: "help-circle",
   more: "dots-horizontal",
 };
+
+/** Not a screen — satisfies Expo Router when this module sits under `app/`. */
+export default function MaterialIconNamesRouteStub(): null {
+  return null;
+}

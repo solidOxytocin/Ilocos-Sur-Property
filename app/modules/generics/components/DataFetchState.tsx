@@ -80,3 +80,8 @@ export function DataFetchState({
     </View>
   );
 }
+
+/** Not a screen — satisfies Expo Router when this module sits under `app/`. */
+export default function DataFetchStateRouteStub(): null {
+  return null;
+}

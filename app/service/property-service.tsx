@@ -201,3 +201,8 @@ export async function getCityPropertyCounts(): Promise<ApiResult<Record<string, 
 
 /** Re-export for screens that branch on failure codes without importing api-result. */
 export type { ApiFailure, ApiResult };
+
+/** Not a screen — satisfies Expo Router when this module sits under `app/`. */
+export default function PropertyServiceRouteStub(): null {
+  return null;
+}

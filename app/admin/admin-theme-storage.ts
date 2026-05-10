@@ -28,3 +28,8 @@ export async function setAdminThemePreference(pref: AdminColorSchemePreference):
     // persistence is optional
   }
 }
+
+/** Not a screen — satisfies Expo Router when this module sits under `app/`. */
+export default function AdminThemeStorageRouteStub(): null {
+  return null;
+}

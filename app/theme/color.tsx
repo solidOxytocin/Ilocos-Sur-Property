@@ -34,4 +34,9 @@ export const pillColor ={
     backGroundColorSecondary : color.bgSecondary,
     textColorPrimary : color.txtWhite,
     textColorSecondary : color.txtGray
+};
+
+// Satisfies Expo Router when this file lives under app/ (move theme outside app/ for a proper fix).
+export default function ColorThemeRouteStub() {
+  return null;
 }

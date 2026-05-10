@@ -111,8 +111,7 @@
     - [x] No Internet
     - [x] No Data from Fetch
 
-- [] Contacts View (U)
-- [] Settings? (U)
+- [x] Remove Place holder Contacts and Settings (U)
 - [] Filter Slider to One
 - [] Beautify Splash Screen for MOBILE(U)
 - [] Update Ammenities

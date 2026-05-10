@@ -273,3 +273,8 @@ export async function deleteManyProperties(ids: (string | number)[]): Promise<De
 }
 
 export type { ApiFailure, ApiResult };
+
+/** Not a screen — satisfies Expo Router when this module sits under `app/`. */
+export default function AdminServiceRouteStub(): null {
+  return null;
+}

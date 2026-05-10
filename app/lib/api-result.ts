@@ -285,3 +285,8 @@ export function ok<T>(data: T): ApiSuccess<T> {
 export function err(f: ApiFailure): ApiErr {
   return { ok: false, error: f };
 }
+
+/** Not a screen — satisfies Expo Router when this module sits under `app/`. Prefer `@/lib/api-result` from outside `app/`. */
+export default function ApiResultRouteStub(): null {
+  return null;
+}
