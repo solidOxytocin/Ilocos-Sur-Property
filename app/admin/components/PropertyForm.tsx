@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { createProperty, updateProperty, uploadPropertyImages } from '../../service/admin-service';
@@ -174,20 +175,34 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
 
   // Features & Amenities
   const AVAILABLE_FEATURES = [
-      { key: "road", name: "Main Road" },
-      { key: "hospital", name: "Hospital" },
-      { key: "school", name: "School" },
-      { key: "store", name: "Market" },
-      { key: "beach", name: "Beach Spot" },
-      { key: "shopping", name: "Mall Nearby" },
-      { key: "parking", name: "Parking" },
+      { key: "road",        name: "Main Road",       icon: "road-variant" as const },
+      { key: "hospital",    name: "Hospital",         icon: "hospital-building" as const },
+      { key: "school",      name: "School",           icon: "school" as const },
+      { key: "store",       name: "Market",           icon: "store" as const },
+      { key: "beach",       name: "Beach Spot",       icon: "beach" as const },
+      { key: "shopping",    name: "Mall Nearby",      icon: "shopping" as const },
+      { key: "parking",     name: "Parking",          icon: "parking" as const },
+      { key: "church",      name: "Church/Chapel",    icon: "church" as const },
+      { key: "transport",   name: "Transport Hub",    icon: "bus-stop" as const },
+      { key: "nature",      name: "Nature/Park",      icon: "nature-people" as const },
+      { key: "restaurant",  name: "Restaurant",       icon: "food-fork-drink" as const },
+      { key: "gas_station", name: "Gas Station",      icon: "gas-station" as const },
+      { key: "gated",       name: "Gated Community",  icon: "gate" as const },
+      { key: "wifi",        name: "Fiber/Internet",   icon: "wifi" as const },
+      { key: "mountain",    name: "Mountain View",    icon: "image-filter-hdr" as const },
   ];
   
   const AVAILABLE_AMENITIES = [
-      { key: "pool", name: "Swimming Pool" },
-      { key: "gym", name: "Gym" },
-      { key: "security", name: "24/7 Security" },
-      { key: "elevator", name: "Elevator" },
+      { key: "pool",            name: "Swimming Pool",    icon: "pool" as const },
+      { key: "gym",             name: "Gym",              icon: "dumbbell" as const },
+      { key: "security",        name: "24/7 Security",    icon: "shield-check" as const },
+      { key: "elevator",        name: "Elevator",         icon: "elevator" as const },
+      { key: "cctv",            name: "CCTV",             icon: "cctv" as const },
+      { key: "water",           name: "Water System",     icon: "water-pump" as const },
+      { key: "solar",           name: "Solar Power",      icon: "solar-power" as const },
+      { key: "garden",          name: "Garden/Yard",      icon: "flower" as const },
+      { key: "balcony",         name: "Balcony",          icon: "balcony" as const },
+      { key: "covered_parking", name: "Covered Parking",  icon: "car-brake-parking" as const },
   ];
 
   const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(new Set((initialData?.features || (initialData as any)?.feature || []).map((f: any) => f.key)));
@@ -902,39 +917,55 @@ export default function PropertyForm({ initialData, isEdit = false }: PropertyFo
         <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 mb-4">
             <Text className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-1">Features & amenities</Text>
             <Text className="text-gray-500 dark:text-slate-400 text-sm mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">Tap to toggle what applies to this listing</Text>
-            <View className="flex-row flex-wrap -mx-2">
-                <View className="w-1/2 px-2">
-                    <Text className="text-base font-bold text-gray-800 dark:text-slate-100 mb-3">Nearby features</Text>
-                    <View className="flex-row flex-wrap">
-                        {AVAILABLE_FEATURES.map(f => (
-                            <TouchableOpacity 
-                                key={f.key}
-                                className={`mr-2 mb-2 px-3 py-2 rounded-full border ${selectedFeatures.has(f.key) ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 dark:border-blue-400' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600'}`}
-                                onPress={() => toggleFeature(f.key)}
-                            >
-                                <Text className={`${selectedFeatures.has(f.key) ? 'text-blue-700 dark:text-blue-300 font-semibold' : 'text-gray-600 dark:text-slate-300'}`}>
-                                    {f.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-                <View className="w-1/2 px-2">
-                    <Text className="text-base font-bold text-gray-800 dark:text-slate-100 mb-3">Amenities</Text>
-                    <View className="flex-row flex-wrap">
-                        {AVAILABLE_AMENITIES.map(a => (
-                            <TouchableOpacity 
-                                key={a.key}
-                                className={`mr-2 mb-2 px-3 py-2 rounded-full border ${selectedAmenities.has(a.key) ? 'bg-green-50 dark:bg-emerald-950/60 border-green-500 dark:border-emerald-400' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600'}`}
-                                onPress={() => toggleAmenity(a.key)}
-                            >
-                                <Text className={`${selectedAmenities.has(a.key) ? 'text-green-700 dark:text-emerald-300 font-semibold' : 'text-gray-600 dark:text-slate-300'}`}>
-                                    {a.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+            
+            {/* Nearby Features */}
+            <Text className="text-base font-bold text-gray-800 dark:text-slate-100 mb-3">Nearby features</Text>
+            <View className="flex-row flex-wrap mb-6">
+                {AVAILABLE_FEATURES.map(f => {
+                    const isSelected = selectedFeatures.has(f.key);
+                    return (
+                        <TouchableOpacity 
+                            key={f.key}
+                            className={`mr-2 mb-2 flex-row items-center px-3 py-2 rounded-full border ${isSelected ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 dark:border-blue-400' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600'}`}
+                            onPress={() => toggleFeature(f.key)}
+                        >
+                            <MaterialCommunityIcons
+                                name={f.icon}
+                                size={14}
+                                color={isSelected ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#94a3b8' : '#6b7280')}
+                                style={{ marginRight: 5 }}
+                            />
+                            <Text className={`text-sm ${isSelected ? 'text-blue-700 dark:text-blue-300 font-semibold' : 'text-gray-600 dark:text-slate-300'}`}>
+                                {f.name}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+
+            {/* Amenities */}
+            <Text className="text-base font-bold text-gray-800 dark:text-slate-100 mb-3">Amenities</Text>
+            <View className="flex-row flex-wrap">
+                {AVAILABLE_AMENITIES.map(a => {
+                    const isSelected = selectedAmenities.has(a.key);
+                    return (
+                        <TouchableOpacity 
+                            key={a.key}
+                            className={`mr-2 mb-2 flex-row items-center px-3 py-2 rounded-full border ${isSelected ? 'bg-green-50 dark:bg-emerald-950/60 border-green-500 dark:border-emerald-400' : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600'}`}
+                            onPress={() => toggleAmenity(a.key)}
+                        >
+                            <MaterialCommunityIcons
+                                name={a.icon}
+                                size={14}
+                                color={isSelected ? (isDark ? '#6ee7b7' : '#16a34a') : (isDark ? '#94a3b8' : '#6b7280')}
+                                style={{ marginRight: 5 }}
+                            />
+                            <Text className={`text-sm ${isSelected ? 'text-green-700 dark:text-emerald-300 font-semibold' : 'text-gray-600 dark:text-slate-300'}`}>
+                                {a.name}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         </View>
         )}

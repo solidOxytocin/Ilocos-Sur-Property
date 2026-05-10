@@ -4,12 +4,15 @@ import {
   useWindowDimensions, StyleSheet, TextInput, LayoutChangeEvent,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { getPropertyBounds } from '@/app/service/property-service';
 
 export interface FilterState {
   type: string[];
   status: string[];
+  features: string[];
+  amenities: string[];
   minPrice: number;
   maxPrice: number;
   city: string;
@@ -32,6 +35,37 @@ const ilocosSurCities = [
   'Santa Cruz','Santa Lucia','Santa Maria','Santiago','Santo Domingo',
   'Sigay','Sinait','Sugpon','Suyo','Tagudin','Vigan City',
 ].sort();
+
+const FILTER_FEATURES: { key: string; name: string; icon: string }[] = [
+  { key: 'road',        name: 'Main Road',      icon: 'road-variant' },
+  { key: 'hospital',    name: 'Hospital',        icon: 'hospital-building' },
+  { key: 'school',      name: 'School',          icon: 'school' },
+  { key: 'store',       name: 'Market',          icon: 'store' },
+  { key: 'beach',       name: 'Beach Spot',      icon: 'beach' },
+  { key: 'shopping',    name: 'Mall Nearby',     icon: 'shopping' },
+  { key: 'parking',     name: 'Parking',         icon: 'parking' },
+  { key: 'church',      name: 'Church/Chapel',   icon: 'church' },
+  { key: 'transport',   name: 'Transport Hub',   icon: 'bus-stop' },
+  { key: 'nature',      name: 'Nature/Park',     icon: 'nature-people' },
+  { key: 'restaurant',  name: 'Restaurant',      icon: 'food-fork-drink' },
+  { key: 'gas_station', name: 'Gas Station',     icon: 'gas-station' },
+  { key: 'gated',       name: 'Gated Community', icon: 'gate' },
+  { key: 'wifi',        name: 'Fiber/Internet',  icon: 'wifi' },
+  { key: 'mountain',    name: 'Mountain View',   icon: 'image-filter-hdr' },
+];
+
+const FILTER_AMENITIES: { key: string; name: string; icon: string }[] = [
+  { key: 'pool',            name: 'Swimming Pool',   icon: 'pool' },
+  { key: 'gym',             name: 'Gym',             icon: 'dumbbell' },
+  { key: 'security',        name: '24/7 Security',   icon: 'shield-check' },
+  { key: 'elevator',        name: 'Elevator',        icon: 'elevator' },
+  { key: 'cctv',            name: 'CCTV',            icon: 'cctv' },
+  { key: 'water',           name: 'Water System',    icon: 'water-pump' },
+  { key: 'solar',           name: 'Solar Power',     icon: 'solar-panel' },
+  { key: 'garden',          name: 'Garden/Yard',     icon: 'tree' },
+  { key: 'balcony',         name: 'Balcony',         icon: 'balcony' },
+  { key: 'covered_parking', name: 'Covered Parking', icon: 'garage' },
+];
 
 // ─── Dual-handle Range Slider ────────────────────────────────────────────────
 const THUMB = 26;
@@ -205,12 +239,12 @@ function NumInput({ label, value, min, max, formatDisplay, parseInput, onChange 
 export function FilterModal({ visible, onClose, filters, setFilters }: FilterModalProps) {
   const { width, height } = useWindowDimensions();
   const isWebDesktop = width >= 1024 && Platform.OS === 'web';
-  const [localFilters, setLocalFilters] = useState<FilterState>(filters);
+  const [localFilters, setLocalFilters] = useState<FilterState>({ features: [], amenities: [], ...filters });
   const [bounds, setBounds] = useState({ maxPrice: 100_000_000, maxLotArea: 5000 });
 
   useEffect(() => {
     if (!visible) return;
-    setLocalFilters(filters);
+    setLocalFilters({ features: [], amenities: [], ...filters });
     getPropertyBounds().then((res) => {
       if (!res.ok) return;
       const b = res.data;
@@ -223,14 +257,14 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
     });
   }, [visible, filters]);
 
-  const toggle = (key: 'type' | 'status', value: string) =>
+  const toggle = (key: 'type' | 'status' | 'features' | 'amenities', value: string) =>
     setLocalFilters((prev) => {
       const arr = prev[key];
       return { ...prev, [key]: arr.includes(value) ? arr.filter((i) => i !== value) : [...arr, value] };
     });
 
   const clearFilters = () =>
-    setLocalFilters({ type: [], status: [], minPrice: 0, maxPrice: bounds.maxPrice, city: '', minArea: 0, maxArea: bounds.maxLotArea });
+    setLocalFilters({ type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: bounds.maxPrice, city: '', minArea: 0, maxArea: bounds.maxLotArea });
 
   const handleApply = () => { setFilters(localFilters); onClose(); };
 
@@ -275,6 +309,84 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
               <Picker.Item label="All City" value="" />
               {ilocosSurCities.map((c) => <Picker.Item key={c} label={c} value={c} />)}
             </Picker>
+          </View>
+        </View>
+
+        {/* Nearby Features */}
+        <View className="mb-6">
+          <View className="flex-row items-center mb-3">
+            <Text className="text-base font-semibold text-gray-700 flex-1">Nearby Features</Text>
+            {localFilters.features.length > 0 && (
+              <Pressable onPress={() => setLocalFilters((p) => ({ ...p, features: [] }))}>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '500' }}>Clear</Text>
+              </Pressable>
+            )}
+          </View>
+          <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            {FILTER_FEATURES.map((f) => {
+              const active = localFilters.features.includes(f.key);
+              return (
+                <Pressable
+                  key={f.key}
+                  onPress={() => toggle('features', f.key)}
+                  style={[
+                    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
+                    active
+                      ? { backgroundColor: '#2563eb', borderColor: '#2563eb' }
+                      : { backgroundColor: '#fff', borderColor: '#d1d5db' },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={f.icon as any}
+                    size={13}
+                    color={active ? '#fff' : '#6b7280'}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={{ fontSize: 13, fontWeight: active ? '600' : '400', color: active ? '#fff' : '#374151' }}>
+                    {f.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Amenities */}
+        <View className="mb-6">
+          <View className="flex-row items-center mb-3">
+            <Text className="text-base font-semibold text-gray-700 flex-1">Amenities</Text>
+            {localFilters.amenities.length > 0 && (
+              <Pressable onPress={() => setLocalFilters((p) => ({ ...p, amenities: [] }))}>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '500' }}>Clear</Text>
+              </Pressable>
+            )}
+          </View>
+          <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            {FILTER_AMENITIES.map((a) => {
+              const active = localFilters.amenities.includes(a.key);
+              return (
+                <Pressable
+                  key={a.key}
+                  onPress={() => toggle('amenities', a.key)}
+                  style={[
+                    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
+                    active
+                      ? { backgroundColor: '#2563eb', borderColor: '#2563eb' }
+                      : { backgroundColor: '#fff', borderColor: '#d1d5db' },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={a.icon as any}
+                    size={13}
+                    color={active ? '#fff' : '#6b7280'}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={{ fontSize: 13, fontWeight: active ? '600' : '400', color: active ? '#fff' : '#374151' }}>
+                    {a.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 

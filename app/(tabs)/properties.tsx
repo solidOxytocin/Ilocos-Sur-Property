@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { mockProperties, Property } from "../constants/mock/mock-properties";
-import { getPropertiesPaginated, propertyListFromPaginatedOk, type ApiFailure } from "../service/property-service";
+import { getPropertiesPaginated, propertyListFromPaginatedOk, getPropertyBounds, type ApiFailure } from "../service/property-service";
 import { API_USER_MESSAGES } from "../lib/api-result";
 import { DataFetchState } from "../modules/generics/components/DataFetchState";
 import PropertyDetailsContent from "../modules/details-view/components/propertyDetailsContent";
@@ -86,15 +86,26 @@ export default function PropertyList() {
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    type: [], status: [], minPrice: 0, maxPrice: 0, city: "", minArea: 0, maxArea: 0,
+    type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: 0, city: "", minArea: 0, maxArea: 0,
   });
+  // Track the absolute bounds so we can skip sending max values that equal the ceiling
+  const [filterBounds, setFilterBounds] = useState({ maxPrice: 0, maxLotArea: 0 });
+
+  useEffect(() => {
+    getPropertyBounds().then((res) => {
+      if (res.ok) setFilterBounds(res.data);
+    });
+  }, []);
 
   const hasActiveFilters = useMemo(
     () =>
       filters.type.length > 0 || filters.status.length > 0 || filters.city !== "" ||
-      filters.minPrice > 0 || (filters.maxPrice > 0 && filters.maxPrice < 50000000) ||
-      filters.minArea > 0 || (filters.maxArea > 0 && filters.maxArea < 10000),
-    [filters]
+      filters.features.length > 0 || filters.amenities.length > 0 ||
+      filters.minPrice > 0 ||
+      (filters.maxPrice > 0 && (filterBounds.maxPrice === 0 || filters.maxPrice < filterBounds.maxPrice)) ||
+      filters.minArea > 0 ||
+      (filters.maxArea > 0 && (filterBounds.maxLotArea === 0 || filters.maxArea < filterBounds.maxLotArea)),
+    [filters, filterBounds]
   );
 
   const quickFilters = [
@@ -124,16 +135,24 @@ export default function PropertyList() {
   const buildFetchFilters = useCallback((): Record<string, any> => {
     const f: Record<string, any> = {};
     if (debouncedSearchQuery) f.searchQuery = debouncedSearchQuery;
-    if (filters.type.length > 0)   f.type     = filters.type;
-    if (filters.status.length > 0) f.status   = filters.status;
-    if (filters.city)              f.city     = filters.city;
-    if (filters.minPrice > 0)      f.minPrice = filters.minPrice;
-    if (filters.maxPrice > 0)      f.maxPrice = filters.maxPrice;
-    if (filters.minArea > 0)       f.minArea  = filters.minArea;
-    if (filters.maxArea > 0)       f.maxArea  = filters.maxArea;
+    if (filters.type.length > 0)     f.type     = filters.type;
+    if (filters.status.length > 0)   f.status   = filters.status;
+    if (filters.features.length > 0) f.features = filters.features;
+    if (filters.amenities.length > 0) f.amenities = filters.amenities;
+    if (filters.city)                f.city     = filters.city;
+    if (filters.minPrice > 0)        f.minPrice = filters.minPrice;
+    // Only send maxPrice when user has actually restricted it below the absolute ceiling
+    if (filters.maxPrice > 0 && (filterBounds.maxPrice === 0 || filters.maxPrice < filterBounds.maxPrice)) {
+      f.maxPrice = filters.maxPrice;
+    }
+    if (filters.minArea > 0)         f.minArea  = filters.minArea;
+    // Only send maxArea when user has actually restricted it below the absolute ceiling
+    if (filters.maxArea > 0 && (filterBounds.maxLotArea === 0 || filters.maxArea < filterBounds.maxLotArea)) {
+      f.maxArea = filters.maxArea;
+    }
     if (sortField) { f.sortBy = sortField; f.sortOrder = sortOrder; }
     return f;
-  }, [debouncedSearchQuery, filters, sortField, sortOrder]);
+  }, [debouncedSearchQuery, filters, filterBounds, sortField, sortOrder]);
 
   // ── Load page 1 whenever filters / sort change ─────────────────────────────
   useEffect(() => {
@@ -156,6 +175,14 @@ export default function PropertyList() {
           if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
           if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
           if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
+          if (filters.features.length > 0) {
+            const propFeatureKeys = (p.features ?? []).map((f) => f.key);
+            if (!filters.features.every((fk) => propFeatureKeys.includes(fk))) return false;
+          }
+          if (filters.amenities.length > 0) {
+            const propAmenityKeys = (p.amenities ?? []).map((a) => a.key);
+            if (!filters.amenities.every((ak) => propAmenityKeys.includes(ak))) return false;
+          }
           if (debouncedSearchQuery) {
             const q = debouncedSearchQuery.toLowerCase();
             return (
@@ -214,6 +241,14 @@ export default function PropertyList() {
         if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
         if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
         if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
+        if (filters.features.length > 0) {
+          const propFeatureKeys = (p.features ?? []).map((f) => f.key);
+          if (!filters.features.every((fk) => propFeatureKeys.includes(fk))) return false;
+        }
+        if (filters.amenities.length > 0) {
+          const propAmenityKeys = (p.amenities ?? []).map((a) => a.key);
+          if (!filters.amenities.every((ak) => propAmenityKeys.includes(ak))) return false;
+        }
         if (debouncedSearchQuery) {
           const q = debouncedSearchQuery.toLowerCase();
           return p.title?.toLowerCase().includes(q) || p.location?.city?.toLowerCase().includes(q) || p.location?.barangay?.toLowerCase().includes(q);

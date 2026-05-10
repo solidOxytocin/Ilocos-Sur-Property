@@ -112,10 +112,10 @@
     - [x] No Data from Fetch
 
 - [x] Remove Place holder Contacts and Settings (U)
-- [] Filter Slider to One
-- [] Beautify Splash Screen for MOBILE(U)
-- [] Update Ammenities
-- [] Update Features
+- [x] Filter Slider to One
+- [x] Update Ammenities
+- [x] Update Features
+- [x] Add Amenities in Filter (U)
 - [] Update Selections
 - [] Seperate Admin Frontend to a new Project
 - [] Learn To Deploy
@@ -129,3 +129,5 @@
 - [] User Login
     -[] Can Add Favourite listing
     -[] Favourites Listing (like add to cart)
+    
+- [] Beautify Splash Screen for MOBILE(U)
