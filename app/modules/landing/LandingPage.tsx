@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { ScrollView, StyleSheet, View, Platform } from "react-native";
 import HeroSection from "./components/HeroSection";
 import FeaturedPropertiesSection from "./components/FeaturedPropertiesSection";
@@ -7,8 +7,6 @@ import LocationHighlightsSection from "./components/LocationHighlightsSection";
 import LandingFooter from "./components/LandingFooter";
 
 export default function LandingPage() {
-  const featuredRef = useRef<ScrollView>(null);
-
   return (
     <View style={styles.root}>
       {Platform.OS === "web" && (
@@ -23,8 +21,37 @@ export default function LandingPage() {
             from { opacity: 0; }
             to   { opacity: 1; }
           }
+          @keyframes landingScrollNudge {
+            0%, 100% { transform: translateY(0); opacity: 0.65; }
+            50% { transform: translateY(14px); opacity: 1; }
+          }
+          @keyframes landingEyebrowPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.5); }
+            50% { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(96, 165, 250, 0); }
+          }
+          @keyframes landingHeroKenBurns {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.06); }
+          }
+          .landing-hero-kenburns {
+            transform-origin: center center;
+            animation: landingHeroKenBurns 32s ease-in-out infinite alternate;
+          }
+          .landing-scroll-dot {
+            animation: landingScrollNudge 2.2s ease-in-out infinite;
+          }
+          .landing-eyebrow-dot {
+            animation: landingEyebrowPulse 2.4s ease-in-out infinite;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .landing-hero-kenburns,
+            .landing-scroll-dot,
+            .landing-eyebrow-dot {
+              animation: none !important;
+            }
+          }
           .hero-cta-primary:hover { transform: scale(1.04); box-shadow: 0 8px 32px rgba(255,255,255,0.25); }
-          .hero-cta-secondary:hover { background: rgba(255,255,255,0.18); }
+          .hero-cta-secondary:hover { transform: scale(1.02); background: rgba(255,255,255,0.18); }
           .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(29,78,216,0.13); }
           .location-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(29,78,216,0.15); }
           .property-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,0.14); }

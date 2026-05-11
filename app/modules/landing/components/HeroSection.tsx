@@ -6,6 +6,7 @@ import {
   ImageBackground,
   Pressable,
   useWindowDimensions,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getCityPropertyCounts } from "@/app/service/property-service";
@@ -47,15 +48,23 @@ export default function HeroSection() {
     return () => { cancelled = true; };
   }, [statsRetryKey]);
 
+  const heroEase = Platform.OS === "web" ? ({ animationTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" } as const) : {};
+  const minHeroH = isMobile ? 520 : height * 0.88;
+
   return (
-    <ImageBackground
-      source={require("../../../../assets/images/hero-bg.png")}
-      style={[styles.hero, { minHeight: isMobile ? 520 : height * 0.88 }]}
-      resizeMode="cover"
-    >
-      {/* Gradient overlay — dark navy at bottom, blue-tinted at top */}
-      <View style={styles.gradientOverlay} />
-      <View style={styles.gradientOverlayTop} />
+    <View style={[styles.hero, { minHeight: minHeroH }]}>
+      {/* Background only — Ken Burns / scale does not affect text or overlays */}
+      <ImageBackground
+        source={require("../../../../assets/images/hero-bg.png")}
+        // @ts-ignore — web: RN Web forwards className for CSS animation
+        className={Platform.OS === "web" ? "landing-hero-kenburns" : undefined}
+        style={styles.heroBg}
+        resizeMode="cover"
+      >
+        <View style={styles.heroBgFill} />
+      </ImageBackground>
+      <View style={styles.gradientOverlay} pointerEvents="none" />
+      <View style={styles.gradientOverlayTop} pointerEvents="none" />
 
       {/* Content */}
       <View style={[styles.content, { paddingHorizontal: isMobile ? 24 : 64 }]}>
@@ -64,10 +73,19 @@ export default function HeroSection() {
           // @ts-ignore
           style={[
             styles.eyebrow,
-            { animationName: "fadeIn", animationDuration: "0.8s", animationFillMode: "both" },
+            {
+              animationName: "fadeIn",
+              animationDuration: "0.8s",
+              animationFillMode: "both",
+              ...heroEase,
+            },
           ]}
         >
-          <View style={styles.eyebrowDot} />
+          <View
+            // @ts-ignore
+            className={Platform.OS === "web" ? "landing-eyebrow-dot" : undefined}
+            style={styles.eyebrowDot}
+          />
           <Text style={styles.eyebrowText}>Ilocos Sur's #1 Property Platform</Text>
         </View>
 
@@ -77,11 +95,35 @@ export default function HeroSection() {
             styles.headline,
             { fontSize: isMobile ? 34 : 62 },
             // @ts-ignore
-            { animationName: "fadeInUp", animationDuration: "0.9s", animationDelay: "0.1s", animationFillMode: "both" },
+            {
+              animationName: "fadeInUp",
+              animationDuration: "0.9s",
+              animationDelay: "0.1s",
+              animationFillMode: "both",
+              ...heroEase,
+            },
           ]}
         >
           Find Your Dream{"\n"}Property in{" "}
-          <Text style={styles.headlineAccent}>Ilocos Sur</Text>
+          <Text
+            style={[
+              styles.headlineAccent,
+              ...(Platform.OS === "web"
+                ? [
+                    {
+                      animationName: "fadeInUp",
+                      animationDuration: "0.85s",
+                      animationDelay: "0.28s",
+                      animationFillMode: "both",
+                      display: "inline" as const,
+                      ...heroEase,
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            Ilocos Sur
+          </Text>
         </Text>
 
         {/* Subtitle */}
@@ -90,7 +132,13 @@ export default function HeroSection() {
             styles.subtitle,
             { fontSize: isMobile ? 15 : 18, maxWidth: isMobile ? "100%" : 560 },
             // @ts-ignore
-            { animationName: "fadeInUp", animationDuration: "0.9s", animationDelay: "0.25s", animationFillMode: "both" },
+            {
+              animationName: "fadeInUp",
+              animationDuration: "0.9s",
+              animationDelay: "0.25s",
+              animationFillMode: "both",
+              ...heroEase,
+            },
           ]}
         >
           Explore verified residential, commercial, and lot listings across
@@ -102,7 +150,13 @@ export default function HeroSection() {
           style={[
             styles.statsRow,
             // @ts-ignore
-            { animationName: "fadeInUp", animationDuration: "0.9s", animationDelay: "0.35s", animationFillMode: "both" },
+            {
+              animationName: "fadeInUp",
+              animationDuration: "0.9s",
+              animationDelay: "0.35s",
+              animationFillMode: "both",
+              ...heroEase,
+            },
           ]}
         >
           {[
@@ -145,7 +199,13 @@ export default function HeroSection() {
           style={[
             styles.ctaRow,
             // @ts-ignore
-            { animationName: "fadeInUp", animationDuration: "0.9s", animationDelay: "0.45s", animationFillMode: "both" },
+            {
+              animationName: "fadeInUp",
+              animationDuration: "0.9s",
+              animationDelay: "0.45s",
+              animationFillMode: "both",
+              ...heroEase,
+            },
           ]}
         >
           <Pressable
@@ -160,18 +220,40 @@ export default function HeroSection() {
       </View>
 
       {/* Scroll indicator */}
-      <View style={styles.scrollIndicator}>
-        <View style={styles.scrollDot} />
+      <View
+        // @ts-ignore
+        style={[
+          styles.scrollIndicator,
+          Platform.OS === "web" && {
+            animationName: "fadeIn",
+            animationDuration: "1s",
+            animationDelay: "0.65s",
+            animationFillMode: "both",
+            ...heroEase,
+          },
+        ]}
+      >
+        <View
+          // @ts-ignore
+          className={Platform.OS === "web" ? "landing-scroll-dot" : undefined}
+          style={styles.scrollDot}
+        />
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   hero: {
     width: "100%",
-    justifyContent: "center",
     position: "relative",
+    overflow: "hidden",
+  },
+  heroBg: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroBgFill: {
+    flex: 1,
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -193,6 +275,7 @@ const styles = StyleSheet.create({
     maxWidth: 960,
     width: "100%",
     alignSelf: "center",
+    zIndex: 1,
   },
   eyebrow: {
     flexDirection: "row",
@@ -276,7 +359,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.3)",
     transitionDuration: "200ms" as any,
-    transitionProperty: "background" as any,
+    transitionProperty: "transform, background" as any,
     cursor: "pointer" as any,
   },
   ctaSecondaryText: {
@@ -290,6 +373,7 @@ const styles = StyleSheet.create({
     left: "50%",
     transform: [{ translateX: -8 }],
     alignItems: "center",
+    zIndex: 2,
   },
   scrollDot: {
     width: 16,
