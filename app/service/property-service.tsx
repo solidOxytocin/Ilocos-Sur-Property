@@ -119,7 +119,7 @@ export async function getPropertiesPaginated(
   });
 }
 
-/** Kept for backward compatibility (admin view fetches all at once). */
+/** Fetches all properties in one request (used when a full list is needed). */
 export async function getProperties(filters?: Record<string, any>): Promise<ApiResult<Property[]>> {
   if (isMock()) {
     return ok(mockProperties.map(normalizeProperty));
