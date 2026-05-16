@@ -117,9 +117,9 @@
 - [x] Update Selections
 - [x] Add Barangay in Filter (U)
 - [x] Add Loadings (Skeleton and Indicators) (U)
-- [] Add Animations(U)
-- [] Seperate Admin Frontend to a new Project
-- [] Add Read Me Files
+- [x] Add Animations(U)
+- [X] Seperate Admin Frontend to a new Project
+- [x] Add Read Me Files
 - [] Learn To Deploy
     -[] Create prod Build
     -[] Create an enviroment variables for prod and local   
@@ -127,6 +127,7 @@
     -[] Learn to Deploy Frontend
     
 # Changes After Deployment
+- [] Add more Animation
 - [] Admin Dashboard (Statitstics)
 - [] User Login
     -[] Can Add Favourite listing
