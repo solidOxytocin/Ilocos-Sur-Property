@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   cardLocation: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#64748b",
     marginBottom: 4,
   },

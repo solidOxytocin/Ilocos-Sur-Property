@@ -355,53 +355,53 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
             </View>
 
           {/* Core Metrics */}
-          <View className="flex-row justify-between w-full bg-white border border-gray-100 shadow-sm shadow-gray-200 rounded-[24px] py-5 px-6 my-2">
-            <View className="items-center flex-1">
-              <MaterialCommunityIcons name="texture-box" size={26} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-2">
+          <View className="flex-row justify-evenly gap-x-2 w-full bg-white border border-gray-100 shadow-sm shadow-gray-200 rounded-[24px] py-4 px-3 my-2">
+            <View className="items-center">
+              <MaterialCommunityIcons name="texture-box" size={24} color="#9ca3af" />
+              <Text className="text-base font-bold text-gray-800 mt-1.5">
                 {property?.lotArea != null ? (
                   <>
                     {property.lotArea}
-                    <Text className="text-[10px] text-gray-500 font-semibold ml-1"> m²</Text>
+                    <Text className="text-sm text-gray-500 font-semibold ml-0.5"> m²</Text>
                   </>
                 ) : (
                   "—"
                 )}
               </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Lot</Text>
+              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Lot</Text>
             </View>
-            <View className="items-center flex-1">
-              <MaterialCommunityIcons name="floor-plan" size={26} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-2">
+            <View className="items-center">
+              <MaterialCommunityIcons name="floor-plan" size={24} color="#9ca3af" />
+              <Text className="text-base font-bold text-gray-800 mt-1.5">
                 {property?.floorArea != null ? (
                   <>
                     {property.floorArea}
-                    <Text className="text-[10px] text-gray-500 font-semibold ml-1"> m²</Text>
+                    <Text className="text-sm text-gray-500 font-semibold ml-0.5"> m²</Text>
                   </>
                 ) : (
                   "—"
                 )}
               </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Floor</Text>
+              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Floor</Text>
             </View>
-            <View className="items-center flex-1">
-              <MaterialCommunityIcons name="bed-empty" size={26} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-2">
+            <View className="items-center">
+              <MaterialCommunityIcons name="bed-empty" size={24} color="#9ca3af" />
+              <Text className="text-base font-bold text-gray-800 mt-1.5">
                 {property?.bedrooms ?? (property as any)?.bedRooms ?? "—"}
               </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Beds</Text>
+              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Beds</Text>
             </View>
-            <View className="items-center flex-1">
-              <MaterialCommunityIcons name="shower" size={26} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-2">
+            <View className="items-center">
+              <MaterialCommunityIcons name="shower" size={24} color="#9ca3af" />
+              <Text className="text-base font-bold text-gray-800 mt-1.5">
                 {property?.bathrooms ?? (property as any)?.bathRooms ?? "—"}
               </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Baths</Text>
+              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Baths</Text>
             </View>
-            <View className="items-center flex-1">
-              <MaterialCommunityIcons name="car" size={26} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-2">{property?.parking ?? "—"}</Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Parking</Text>
+            <View className="items-center">
+              <MaterialCommunityIcons name="car" size={24} color="#9ca3af" />
+              <Text className="text-base font-bold text-gray-800 mt-1.5">{property?.parking ?? "—"}</Text>
+              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Parking</Text>
             </View>
           </View>
 

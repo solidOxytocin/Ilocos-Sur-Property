@@ -95,7 +95,9 @@ export default function gridViewCardProperty({
   
   return (
     <TouchableOpacity
-      className="bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow"
+      className={`relative bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow ${
+        isSold ? "opacity-75" : ""
+      }`}
       style={{ minHeight: 290 }}
       activeOpacity={0.8}
       onPress={() => {
@@ -110,13 +112,8 @@ export default function gridViewCardProperty({
         <Image
           source={{ uri: property?.media?.[0]?.url }}
           className="w-full h-full"
-          style={isSold ? { opacity: 0.5 } : undefined}
           resizeMode="cover"
         />
-        {/* Grayscale overlay for sold properties */}
-        {isSold && (
-          <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/30" />
-        )}
         
         {/* Media count] */}
         {(property?.media?.length ?? 0) > 1 && (
@@ -195,17 +192,20 @@ export default function gridViewCardProperty({
              </Text>
            </View>
            <Text className="font-extrabold text-base text-blue-600">
-             {(() => {
-               if (!property?.price) return "";
-               const p = Number(property.price);
-               if (p < 1000) return `₱${p}`;
-               if (p < 1000000) return `₱${(p / 1000).toFixed(0)}K`;
-               if (p < 1000000000) return `₱${(p / 1000000).toFixed(0)}M`;
-               return `₱${(p / 1000000000).toFixed(0)}B`;
-             })()}
+             {property?.price != null
+               ? `₱${Number(property.price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+               : ""}
            </Text>
         </View>
       </View>
+
+      {isSold && (
+        <View
+          pointerEvents="none"
+          className="absolute inset-0 bg-gray-500/30"
+          style={{ zIndex: 10 }}
+        />
+      )}
     </TouchableOpacity>
   );
 }

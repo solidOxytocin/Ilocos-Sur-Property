@@ -35,14 +35,35 @@ const SORT_FIELDS: { label: string; field: SortField }[] = [
   { label: "City",  field: "city" },
 ];
 
-// Client-side sort for mock mode
-function sortMockProperties(list: Property[], field: SortField, order: SortOrder): Property[] {
+// Client-side sort for mock mode — sold properties always last
+function isSoldProperty(p: Property): boolean {
+  return p.status?.toUpperCase() === "SOLD";
+}
+
+function compareByField(a: Property, b: Property, field: SortField, order: SortOrder): number {
+  let av: any = field === "city" ? (a.location?.city ?? "") : (a[field as keyof Property] ?? "");
+  let bv: any = field === "city" ? (b.location?.city ?? "") : (b[field as keyof Property] ?? "");
+  if (field === "createdAt") {
+    av = new Date(av).getTime();
+    bv = new Date(bv).getTime();
+  }
+  if (typeof av === "string") return order === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+  return order === "asc" ? av - bv : bv - av;
+}
+
+/** Price/Area chip ↑ = highest first (desc in query), ↓ = lowest first (asc in query). */
+function effectiveSortOrder(field: SortField, order: SortOrder): SortOrder {
+  if (field === "price" || field === "lotArea") return order === "asc" ? "desc" : "asc";
+  return order;
+}
+
+function sortMockProperties(list: Property[], field: SortField | null, order: SortOrder): Property[] {
   return [...list].sort((a, b) => {
-    let av: any = a[field as keyof Property] ?? "";
-    let bv: any = b[field as keyof Property] ?? "";
-    if (field === "createdAt") { av = new Date(av).getTime(); bv = new Date(bv).getTime(); }
-    if (typeof av === "string") return order === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
-    return order === "asc" ? av - bv : bv - av;
+    const aSold = isSoldProperty(a);
+    const bSold = isSoldProperty(b);
+    if (aSold !== bSold) return aSold ? 1 : -1;
+    if (!field) return 0;
+    return compareByField(a, b, field, effectiveSortOrder(field, order));
   });
 }
 
@@ -157,7 +178,10 @@ export default function PropertyList() {
     if (filters.maxArea > 0 && (filterBounds.maxLotArea === 0 || filters.maxArea < filterBounds.maxLotArea)) {
       f.maxArea = filters.maxArea;
     }
-    if (sortField) { f.sortBy = sortField; f.sortOrder = sortOrder; }
+    if (sortField) {
+      f.sortBy = sortField;
+      f.sortOrder = effectiveSortOrder(sortField, sortOrder);
+    }
     return f;
   }, [debouncedSearchQuery, filters, filterBounds, sortField, sortOrder]);
 
@@ -201,7 +225,7 @@ export default function PropertyList() {
           }
           return true;
         });
-        if (sortField) filtered = sortMockProperties(filtered, sortField, sortOrder);
+        filtered = sortMockProperties(filtered, sortField, sortOrder);
         const slice = filtered.slice(0, PAGE_SIZE);
         if (!cancelled) {
           setProperties(slice);
@@ -264,7 +288,7 @@ export default function PropertyList() {
         }
         return true;
       });
-      if (sortField) filtered = sortMockProperties(filtered, sortField, sortOrder);
+      filtered = sortMockProperties(filtered, sortField, sortOrder);
       const slice = filtered.slice((nextPage - 1) * PAGE_SIZE, nextPage * PAGE_SIZE);
       setProperties(prev => [...prev, ...slice]);
       setCurrentPage(nextPage);
@@ -433,6 +457,26 @@ export default function PropertyList() {
                       <Text style={{ fontSize: 11, fontWeight: '500', color: isActive ? '#fff' : '#6b7280' }}>
                         {activeLabel}
                       </Text>
+                      {isActive && field === 'city' && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 4 }}>
+                          <MaterialIcons
+                            name={sortOrder === 'asc' ? 'arrow-upward' : 'arrow-downward'}
+                            size={14}
+                            color="#fff"
+                          />
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff', marginLeft: 2 }}>
+                            {sortOrder === 'asc' ? 'A' : 'Z'}
+                          </Text>
+                        </View>
+                      )}
+                      {isActive && field !== 'createdAt' && field !== 'city' && (
+                        <MaterialIcons
+                          name={sortOrder === 'asc' ? 'arrow-upward' : 'arrow-downward'}
+                          size={14}
+                          color="#fff"
+                          style={{ marginLeft: 4 }}
+                        />
+                      )}
                     </Pressable>
                   );
                 })}

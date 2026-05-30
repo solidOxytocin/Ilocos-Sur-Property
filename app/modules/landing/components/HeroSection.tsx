@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   eyebrowText: {
     color: "#93c5fd",
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
     letterSpacing: 1.5,
     textTransform: "uppercase",

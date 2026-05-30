@@ -128,6 +128,8 @@
     
 # Changes After Deployment
 - [] Add more Animation
+- [] Feature and Amenities Management (Admin)
+- [] Featured Selector (Admin)
 - [] Admin Dashboard (Statitstics)
 - [] User Login
     -[] Can Add Favourite listing

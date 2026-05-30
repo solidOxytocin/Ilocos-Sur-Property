@@ -108,9 +108,9 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
 
   return (
     <TouchableOpacity
-      className={`bg-white rounded-2xl m-2 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-blue-900/10 hover:border-blue-200 transition-all duration-300 overflow-hidden ${
+      className={`relative bg-white rounded-2xl m-2 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-blue-900/10 hover:border-blue-200 transition-all duration-300 overflow-hidden ${
         isHorizontal ? "flex-row h-52" : "flex-col"
-      }`}
+      } ${isSold ? "opacity-75" : ""}`}
       activeOpacity={0.9}
       onPress={handlePress}
     >
@@ -118,13 +118,8 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         <Image
           className="w-full h-full bg-gray-100"
           source={{ uri: property?.media?.[0]?.url }}
-          style={isSold ? { opacity: 0.6 } : undefined}
           resizeMode="cover"
         />
-        {/* Grayscale overlay for sold properties */}
-        {isSold && (
-          <View className="absolute inset-0 bg-black/20" />
-        )}
         
         {/* Top Left: Status Pill */}
         <View className="absolute top-3 left-3">
@@ -178,7 +173,7 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
           
           <View className="items-end">
             <Text className={`${isHorizontal ? "text-xl" : "text-xl"} font-black text-blue-600`}>
-              ₱{Number(property?.price ?? 0).toLocaleString()}
+              ₱{Number(property?.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </Text>
             {property?.lotArea && (
               <View className="flex-row items-center mt-1.5 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">
@@ -214,6 +209,14 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
           })()}
         </View>
       </View>
+
+      {isSold && (
+        <View
+          pointerEvents="none"
+          className="absolute inset-0 bg-gray-500/30"
+          style={{ zIndex: 10 }}
+        />
+      )}
     </TouchableOpacity>
   );
 }

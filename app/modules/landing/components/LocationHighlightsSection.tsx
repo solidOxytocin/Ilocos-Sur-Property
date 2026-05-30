@@ -110,6 +110,7 @@ function LocationCard({
 }
 
 export default function LocationHighlightsSection() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width < 640;
   const isTablet = width >= 640 && width < 1050;
@@ -191,8 +192,7 @@ export default function LocationHighlightsSection() {
           </Text>
           <Pressable
             style={styles.ctaBtn}
-            // @ts-ignore
-            onPress={() => {}}
+            onPress={() => router.push("/properties")}
           >
             <Text style={styles.ctaBtnText}>View All Locations →</Text>
           </Pressable>
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
     color: "#3b82f6",
     letterSpacing: 2.5,

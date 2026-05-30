@@ -14,6 +14,19 @@ import {
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+function FooterLink({ label, onPress }: { label: string; onPress: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Pressable
+      onPress={onPress}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+    >
+      <Text style={[styles.linkItem, hovered && styles.linkItemHover]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export default function LandingFooter() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -88,23 +101,21 @@ export default function LandingFooter() {
                   { label: "Houses",          params: { type: "HOUSE" } },
                   { label: "Commercial",      params: { type: "COMMERCIAL" } },
                 ] as { label: string; params: Record<string, string> }[]).map(({ label, params }) => (
-                  <Pressable
+                  <FooterLink
                     key={label}
+                    label={label}
                     onPress={() => router.push({ pathname: "/properties", params })}
-                  >
-                    <Text style={styles.linkItem}>{label}</Text>
-                  </Pressable>
+                  />
                 ))}
               </View>
               <View style={styles.linkCol}>
                 <Text style={styles.linkHeader}>Locations</Text>
                 {(["Vigan City", "Candon City", "Narvacan", "Bantay", "Santa"].map((city) => (
-                  <Pressable
+                  <FooterLink
                     key={city}
+                    label={city}
                     onPress={() => router.push({ pathname: "/properties", params: { city } })}
-                  >
-                    <Text style={styles.linkItem}>{city}</Text>
-                  </Pressable>
+                  />
                 )))}
               </View>
             </View>
@@ -299,6 +310,11 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.55)",
     fontSize: 13,
     cursor: "pointer" as any,
+    transitionDuration: "200ms" as any,
+    transitionProperty: "color" as any,
+  },
+  linkItemHover: {
+    color: "#ffffff",
   },
   divider: {
     height: 1,
