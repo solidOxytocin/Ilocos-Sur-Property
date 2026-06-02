@@ -16,6 +16,9 @@ import { Feature, Amenity, Property } from "../../../constants/mock/mock-propert
 interface ListViewCardPropertyProps {
   property: Property;
   onPress?: () => void;
+  /** Narrow list column in web split view (35% list / 65% details). */
+  compact?: boolean;
+  isSelected?: boolean;
 }
 
 interface ItemPillComponentProps {
@@ -89,10 +92,15 @@ function ItemPillComponent({
   }
 }
 
-export function ListViewCardProperty({ property, onPress }: ListViewCardPropertyProps) {
+export function ListViewCardProperty({
+  property,
+  onPress,
+  compact = false,
+  isSelected = false,
+}: ListViewCardPropertyProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isHorizontal = width >= 768; // Use horizontal layout on tablet and desktop
+  const isHorizontal = !compact && width >= 768;
   const isSold = property?.status?.toUpperCase() === "SOLD";
 
   const handlePress = () => {
@@ -108,13 +116,23 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
 
   return (
     <TouchableOpacity
-      className={`relative bg-white rounded-2xl m-2 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-blue-900/10 hover:border-blue-200 transition-all duration-300 overflow-hidden ${
-        isHorizontal ? "flex-row h-52" : "flex-col"
-      } ${isSold ? "opacity-75" : ""}`}
+      className={`relative bg-white rounded-xl shadow-sm hover:shadow-md hover:shadow-blue-900/10 transition-all duration-300 overflow-hidden ${
+        compact ? "m-1 flex-col" : "m-2 rounded-2xl"
+      } ${
+        isSelected
+          ? "border-2 border-blue-600 ring-2 ring-blue-100"
+          : "border border-gray-100 hover:border-blue-200"
+      } ${isHorizontal ? "flex-row h-64" : compact ? "flex-col min-h-[340px]" : "flex-col"} ${
+        isSold ? "opacity-75" : ""
+      }`}
       activeOpacity={0.9}
       onPress={handlePress}
     >
-      <View className={`relative ${isHorizontal ? "w-[45%] h-full" : "w-full h-52"}`}>
+      <View
+        className={`relative ${
+          isHorizontal ? "w-[45%] h-full" : compact ? "w-full h-48" : "w-full h-60"
+        }`}
+      >
         <Image
           className="w-full h-full bg-gray-100"
           source={{ uri: property?.media?.[0]?.url }}
@@ -122,11 +140,11 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         />
         
         {/* Top Left: Status Pill */}
-        <View className="absolute top-3 left-3">
+        <View className={`absolute ${compact ? "top-2 left-2" : "top-3 left-3"}`}>
             <Pill 
                 text={property?.status?.toUpperCase() || "AVAILABLE"} 
                 icon="check-circle" 
-                iconSize={12} 
+                iconSize={compact ? 10 : 12} 
                 textSize="text-[10px]" 
                 backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-orange-500" : "bg-emerald-500"} 
                 textColor="text-white"
@@ -135,11 +153,11 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         </View>
 
         {/* Bottom Left: Property Type */}
-        <View className="absolute bottom-3 left-3">
+        <View className={`absolute ${compact ? "bottom-2 left-2" : "bottom-3 left-3"}`}>
           <Pill 
             text={property?.type?.toUpperCase() || "PROPERTY"} 
             icon="home-city" 
-            iconSize={14} 
+            iconSize={compact ? 12 : 14} 
             textSize="text-xs" 
             backGroundColor="bg-blue-600/90" 
             textColor="text-white"
@@ -148,7 +166,7 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         </View>
 
         {/* Bottom Right: Media Count */}
-        {(property?.media?.length ?? 0) > 1 && (
+        {!compact && (property?.media?.length ?? 0) > 1 && (
           <View className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md rounded-full flex-row items-center px-3 py-1.5">
             <MaterialCommunityIcons name="image-multiple-outline" size={14} color="white" />
             <Text className="text-white text-xs font-bold ml-1.5">+{(property?.media?.length ?? 1) - 1}</Text>
@@ -156,57 +174,70 @@ export function ListViewCardProperty({ property, onPress }: ListViewCardProperty
         )}
       </View>
 
-      <View className={`p-4 ${isHorizontal ? "flex-1 justify-center" : ""}`}>
-        {/* Header Row */}
-        <View className="flex-row justify-between items-start">
-          <View className="flex-1 pr-4">
-            <Text className={`${isHorizontal ? "text-xl" : "text-xl"} font-extrabold text-gray-900 mb-1`} numberOfLines={1}>
-              {property?.location?.city || "Unknown Location"}
-            </Text>
-            <View className="flex-row items-center">
-              <MaterialCommunityIcons name="map-marker-outline" size={16} color="#6b7280" />
-              <Text className="font-medium text-sm text-gray-500 ml-1" numberOfLines={1}>
-                {property?.location?.barangay || " "}
-              </Text>
-            </View>
-          </View>
-          
-          <View className="items-end">
-            <Text className={`${isHorizontal ? "text-xl" : "text-xl"} font-black text-blue-600`}>
-              ₱{Number(property?.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </Text>
-            {property?.lotArea && (
-              <View className="flex-row items-center mt-1.5 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">
-                <MaterialCommunityIcons name="vector-square" size={12} color="#f97316" />
-                <Text className="font-bold text-[11px] text-orange-600 ml-1">
-                  {property.lotArea} SQM
-                </Text>
-              </View>
+      <View
+        className={`${compact ? "p-3.5 flex-1" : "p-4"} ${
+          isHorizontal || compact ? "flex-1 justify-between" : ""
+        }`}
+      >
+        <View>
+          <Text
+            className={`font-extrabold text-gray-900 ${compact ? "text-base mb-1" : "text-2xl mb-1.5"}`}
+            numberOfLines={1}
+          >
+            {property?.location?.city || "Unknown Location"}
+          </Text>
+          <View className="flex-row items-center">
+            {!compact && (
+              <MaterialCommunityIcons name="map-marker-outline" size={18} color="#6b7280" />
             )}
+            <Text
+              className={`text-gray-500 ${compact ? "text-sm" : "font-medium text-base ml-1"}`}
+              numberOfLines={1}
+            >
+              {property?.location?.barangay || "—"}
+            </Text>
+          </View>
+
+          <View className={`h-[1px] bg-gray-100 w-full ${compact ? "my-3" : "my-3.5"}`} />
+
+          <View className="flex-row flex-wrap gap-x-1.5 gap-y-1">
+            {(() => {
+              const combined = [
+                ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
+                ...(property?.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
+              ];
+              const maxPills = compact ? 3 : isHorizontal ? 3 : 4;
+              return combined.slice(0, maxPills).map((item, index) => (
+                <ItemPillComponent
+                  key={index}
+                  item={item}
+                  index={index + 1}
+                  length={combined.length}
+                  isAmenity={item.isAmenity}
+                />
+              ));
+            })()}
           </View>
         </View>
 
-        {/* Divider */}
-        <View className="h-[1px] bg-gray-100 w-full my-3" />
-
-        {/* Features Row */}
-        <View className="flex-row flex-wrap gap-x-2 gap-y-1">
-          {(() => {
-            const combined = [
-              ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
-              ...(property?.amenities ?? []).map((a) => ({ ...a, isAmenity: true })),
-            ];
-            // If horizontal, maybe show fewer features so it fits
-            return combined.slice(0, isHorizontal ? 3 : 4).map((item, index) => (
-              <ItemPillComponent
-                key={index}
-                item={item}
-                index={index + 1}
-                length={combined.length}
-                isAmenity={item.isAmenity}
-              />
-            ));
-          })()}
+        <View
+          className={`flex-row items-center justify-between ${
+            compact ? "mt-3 pt-3 border-t border-gray-100" : "mt-4 pt-4 border-t border-gray-100"
+          }`}
+        >
+          <Text className={`font-bold text-blue-600 ${compact ? "text-base" : "text-lg"}`}>
+            ₱{Number(property?.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </Text>
+          <View className="flex-row items-center">
+            <MaterialCommunityIcons
+              name="vector-square"
+              size={compact ? 20 : 21}
+              color="#fb923c"
+            />
+            <Text className={`font-bold text-orange-600 ml-1 ${compact ? "text-base" : "text-lg"}`}>
+              {property?.lotArea ? `${property.lotArea} SQM` : "N/A"}
+            </Text>
+          </View>
         </View>
       </View>
 

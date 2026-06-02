@@ -363,11 +363,15 @@ export default function PropertyList() {
   const skeletonCount = isListView ? 6 : Math.ceil(PAGE_SIZE / numColumns) * numColumns;
   const skeletonData = Array.from({ length: skeletonCount }, (_, i) => i);
 
+  const isWebSplitList = isWebDesktop && isListView;
+
   const renderItem = ({ item }: { item: Property }) =>
     isListView ? (
       <ListViewCardProperty
         property={item}
         onPress={isWebDesktop ? () => setSelectedPropertyId(item.id) : undefined}
+        compact={isWebSplitList}
+        isSelected={isWebSplitList && selectedPropertyId === item.id}
       />
     ) : (
       <GridViewCardProperty property={item} />
@@ -414,9 +418,9 @@ export default function PropertyList() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
-      <View className="flex-1 flex-row">
+      <View className="flex-1 flex-row min-h-0">
         {/* ── LEFT COLUMN (Header + List) ────────────────────────── */}
-        <View className="flex-1">
+        <View className={isWebSplitList ? "w-[35%] min-w-0 shrink-0" : "flex-1 min-w-0"}>
           {/* Header spanning full width of left column */}
           <View className="bg-white z-10">
             <SearchAndFilters
@@ -426,10 +430,11 @@ export default function PropertyList() {
               setListView={setIsListView}
               onOpenFilters={() => setIsFilterModalVisible(true)}
               hasActiveFilters={hasActiveFilters}
+              compact={isWebSplitList}
             />
 
             {/* Sort chips — one chip per field, arrow appears only when active */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: isWebSplitList ? 8 : 16, paddingVertical: 8 }}>
               <MaterialIcons name="sort" size={16} color="#6b7280" />
               <Text style={{ fontSize: 11, fontWeight: '500', color: '#6b7280', marginLeft: 4, marginRight: 8 }}>Sort:</Text>
               <ScrollView
@@ -484,7 +489,7 @@ export default function PropertyList() {
             </View>
 
             {/* Quick filter chips */}
-            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingVertical: 8, paddingBottom: 12 }}>
+            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: isWebSplitList ? 8 : 16, paddingVertical: 8, paddingBottom: 12 }}>
               <FlatList
                 horizontal
                 data={quickFilters}
@@ -512,7 +517,7 @@ export default function PropertyList() {
           </View>
 
           {/* List Body */}
-          <View className="flex-1 px-2 pt-3">
+          <View className={`flex-1 pt-3 ${isWebSplitList ? "px-1" : "px-2"}`}>
             {!isMounted ? null : loading ? (
               <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
                 <FlatList
@@ -559,28 +564,27 @@ export default function PropertyList() {
         </View>
 
         {/* ── Web split-view details panel ────────────────────────── */}
-        {isWebDesktop && isListView && (
-          <>
-            <View className="w-[1px] bg-gray-200 mx-2 my-4" />
-            <View className="w-[60%] bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden mt-4 mr-4 mb-4 border border-gray-100 flex-1">
-              {selectedProperty ? (
-                <PropertyDetailsContent
-                  property={selectedProperty}
-                  onClose={() => setSelectedPropertyId(null)}
-                />
-              ) : (
-                <View className="flex-1 justify-center items-center h-full bg-slate-50/50 m-6 rounded-3xl border-2 border-dashed border-slate-200">
-                  <View className="bg-white p-6 rounded-full shadow-md shadow-slate-200/50 mb-6">
-                    <MaterialCommunityIcons name="home-search-outline" size={64} color="#94a3b8" />
-                  </View>
-                  <Text className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Explore Properties</Text>
-                  <Text className="text-base font-medium text-slate-500 mt-2 text-center max-w-md leading-relaxed">
-                    Select a property from the list to view its full details, high-quality images, and location map.
-                  </Text>
+        {isWebSplitList && (
+          <View className="w-[65%] min-w-0 shrink-0 bg-white border-l border-gray-200 overflow-hidden">
+            {selectedProperty ? (
+              <PropertyDetailsContent
+                property={selectedProperty}
+                onClose={() => setSelectedPropertyId(null)}
+              />
+            ) : (
+              <View className="flex-1 justify-center items-center h-full bg-slate-50/50 px-8">
+                <View className="bg-white p-6 rounded-full shadow-md shadow-slate-200/50 mb-6">
+                  <MaterialCommunityIcons name="home-search-outline" size={64} color="#94a3b8" />
                 </View>
-              )}
-            </View>
-          </>
+                <Text className="text-2xl font-extrabold text-slate-800 tracking-tight mb-2 text-center">
+                  Explore Properties
+                </Text>
+                <Text className="text-base font-medium text-slate-500 text-center max-w-lg leading-relaxed">
+                  Select a property from the list to view its full details, high-quality images, and location map.
+                </Text>
+              </View>
+            )}
+          </View>
         )}
       </View>
 

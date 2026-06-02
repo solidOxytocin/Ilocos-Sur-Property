@@ -1,5 +1,19 @@
-import React, { useState } from "react";
-import { Image, Text, TouchableOpacity, View, ScrollView, Modal, Linking, Platform, useWindowDimensions } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  Modal,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
+import { copyToClipboard } from "@/app/lib/copy-to-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DetailsHeader from "./detailsHeader";
 import Pill from "../../generics/components/pill";
@@ -17,15 +31,30 @@ interface PropertyDetailsContentProps {
   onClose?: () => void;
 }
 
+const AGENT_EMAIL = "ilocossurproperty@gmail.com";
+const CAROUSEL_AUTO_SLIDE_MS = 4000;
+
+function formatInquiryPrice(price: number): string {
+  if (price >= 1_000_000) return `₱${(price / 1_000_000).toFixed(1)}M`;
+  if (price >= 1_000) return `₱${(price / 1_000).toFixed(0)}K`;
+  return `₱${price.toLocaleString()}`;
+}
+
 export default function PropertyDetailsContent({ property, onClose }: PropertyDetailsContentProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
+  const emailCopiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inquirySheetY = useRef(new Animated.Value(480)).current;
   const { width: screenWidth } = useWindowDimensions();
 
   const isSold = property?.status?.toUpperCase() === "SOLD";
   const isDesktopLayout = Platform.OS === "web" && screenWidth >= 1024;
-  const heroImageHeight = isDesktopLayout ? (onClose ? 300 : 400) : 288;
+  const isSplitPanel = Boolean(onClose);
+  const useSidebarLayout = isDesktopLayout && !isSplitPanel;
+  const contentWidthClass = isSplitPanel ? "w-full" : "w-full max-w-7xl mx-auto";
+  const heroImageHeight = isSplitPanel ? 280 : isDesktopLayout ? 400 : 288;
 
   const propertyAddress = property?.location?.address ? `${property.location.address}, ` : "";
   const propertyBarangay = property?.location?.barangay ? `${property.location.barangay}, ` : "";
@@ -40,18 +69,59 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
   const subjectLocation = [property?.location?.barangay, property?.location?.city].filter(Boolean).join(", ");
   const emailSubject = `Ilocos Sur Property${subjectLocation ? ` : ${subjectLocation}` : ""}`;
+  const inquiryPropertySummary = [
+    property?.location?.city,
+    property?.location?.barangay,
+    property?.price != null ? formatInquiryPrice(property.price) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const openGmail = () => {
     if (Platform.OS === "web") {
       Linking.openURL(
-        `https://mail.google.com/mail/?view=cm&fs=1&to=ilocossurproperty@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
+        `https://mail.google.com/mail/?view=cm&fs=1&to=${AGENT_EMAIL}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
       );
     } else {
       Linking.openURL(
-        `mailto:ilocossurproperty@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
+        `mailto:${AGENT_EMAIL}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(messageBody)}`
       );
     }
   };
+
+  const handleCopyEmail = async () => {
+    try {
+      await copyToClipboard(AGENT_EMAIL);
+      setEmailCopied(true);
+      if (emailCopiedTimeoutRef.current) clearTimeout(emailCopiedTimeoutRef.current);
+      emailCopiedTimeoutRef.current = setTimeout(() => setEmailCopied(false), 2000);
+    } catch {
+      setEmailCopied(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (emailCopiedTimeoutRef.current) clearTimeout(emailCopiedTimeoutRef.current);
+    };
+  }, []);
+
+  const closeInquiryModal = useCallback(() => {
+    setModalVisible(false);
+    inquirySheetY.setValue(480);
+  }, [inquirySheetY]);
+
+  useEffect(() => {
+    if (!modalVisible) return;
+    const slideOffset = isDesktopLayout ? 32 : 480;
+    inquirySheetY.setValue(slideOffset);
+    Animated.spring(inquirySheetY, {
+      toValue: 0,
+      useNativeDriver: true,
+      damping: 22,
+      stiffness: 220,
+    }).start();
+  }, [modalVisible, inquirySheetY, isDesktopLayout]);
 
   const openFB = () => Linking.openURL("https://www.facebook.com/people/Ilocos-Sur-Property/61589026535906/");
   const openInstagram = () => Linking.openURL("https://www.instagram.com/ilocossurproperty/");
@@ -73,6 +143,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   };
 
   const mediaCount = property?.media?.length ?? 0;
+  const activeSlideRef = useRef(0);
   const lightboxPrev = () => {
     const next = (lightboxIndex - 1 + mediaCount) % mediaCount;
     setLightboxIndex(next);
@@ -105,6 +176,62 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
     }
   };
 
+  const scrollCarouselTo = useCallback(
+    (index: number, animated: boolean) => {
+      if (containerWidth <= 0 || mediaCount <= 0) return;
+      const safeIndex = Math.max(0, Math.min(index, mediaCount - 1));
+      const x = safeIndex * containerWidth;
+
+      if (Platform.OS === "web") {
+        const node = getDomScrollNode();
+        if (node) {
+          if (animated && typeof node.scrollTo === "function") {
+            node.scrollTo({ left: x, behavior: "smooth" });
+          } else {
+            node.scrollLeft = x;
+          }
+        } else {
+          (carouselScrollRef.current as any)?.scrollTo?.({ x, animated });
+        }
+      } else {
+        carouselScrollRef.current?.scrollTo({ x, animated });
+      }
+
+      currentScrollX.current = x;
+      activeSlideRef.current = safeIndex;
+      setActiveSlide(safeIndex);
+    },
+    [containerWidth, mediaCount]
+  );
+
+  useEffect(() => {
+    activeSlideRef.current = activeSlide;
+  }, [activeSlide]);
+
+  useEffect(() => {
+    activeSlideRef.current = 0;
+    setActiveSlide(0);
+    currentScrollX.current = 0;
+  }, [property?.id]);
+
+  useEffect(() => {
+    if (containerWidth > 0 && mediaCount > 0) {
+      scrollCarouselTo(activeSlideRef.current, false);
+    }
+  }, [property?.id, containerWidth, mediaCount, scrollCarouselTo]);
+
+  useEffect(() => {
+    if (mediaCount <= 1 || containerWidth <= 0 || lightboxVisible) return;
+
+    const interval = setInterval(() => {
+      if (isDragging.current) return;
+      const next = (activeSlideRef.current + 1) % mediaCount;
+      scrollCarouselTo(next, true);
+    }, CAROUSEL_AUTO_SLIDE_MS);
+
+    return () => clearInterval(interval);
+  }, [mediaCount, containerWidth, lightboxVisible, scrollCarouselTo]);
+
   // Props spread onto a wrapper View only on web
   const webWrapperProps: any =
     Platform.OS === "web"
@@ -135,10 +262,9 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
             if (Math.abs(delta) > 40 && containerWidth > 0) {
               const dir = delta > 0 ? 1 : -1;
               const next = Math.max(0, Math.min(mediaCount - 1, activeSlide + dir));
-              setActiveSlide(next);
-              (carouselScrollRef.current as any)?.scrollTo?.({ x: next * containerWidth, animated: true });
+              scrollCarouselTo(next, true);
             } else {
-              (carouselScrollRef.current as any)?.scrollTo?.({ x: activeSlide * containerWidth, animated: true });
+              scrollCarouselTo(activeSlide, true);
             }
           },
           onMouseLeave: (e: any) => {
@@ -148,10 +274,9 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
             if (dragMoved.current && Math.abs(delta) > 40 && containerWidth > 0) {
               const dir = delta > 0 ? 1 : -1;
               const next = Math.max(0, Math.min(mediaCount - 1, activeSlide + dir));
-              setActiveSlide(next);
-              (carouselScrollRef.current as any)?.scrollTo?.({ x: next * containerWidth, animated: true });
+              scrollCarouselTo(next, true);
             } else {
-              (carouselScrollRef.current as any)?.scrollTo?.({ x: activeSlide * containerWidth, animated: true });
+              scrollCarouselTo(activeSlide, true);
             }
           },
           style: { cursor: "grab", userSelect: "none" } as any,
@@ -165,12 +290,12 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto" : ""}>
+        <View className={contentWidthClass}>
           <DetailsHeader properties={property} onClose={onClose} />
         </View>
 
         {/* Image Carousel */}
-        <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mt-6" : "px-5 mt-5"}>
+        <View className={isSplitPanel ? "w-full px-4 mt-4" : isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mt-6" : "px-5 mt-5"}>
           <View
             className="shadow-lg shadow-gray-300 rounded-[2rem] bg-gray-100 overflow-hidden relative"
             onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
@@ -304,15 +429,23 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
           </View>
         </View>
 
-        <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mt-8 mb-12 flex-row gap-8 items-start" : "px-5 mt-6 mb-8 gap-6"}>
+        <View
+          className={
+            useSidebarLayout
+              ? "w-full max-w-7xl mx-auto px-5 mt-8 mb-12 flex-row gap-8 items-start"
+              : isSplitPanel
+              ? "w-full px-4 mt-5 mb-8 gap-5"
+              : "px-5 mt-6 mb-8 gap-6"
+          }
+        >
           {/* Left Column for Full Screen Web / Only Column for others */}
-          <View className={isDesktopLayout ? "flex-[0.65] gap-6" : "gap-6 w-full"}>
+          <View className={useSidebarLayout ? "flex-[0.65] gap-6" : "gap-6 w-full"}>
             
             {/* Title & Price */}
             <View className="flex-row justify-between items-start flex-wrap gap-4">
               <View className="flex-1 min-w-[200px]">
-                {!onClose ? (
-                  <View className="flex-row gap-2 mb-2">
+                {(!useSidebarLayout || !onClose) && (
+                  <View className="flex-row gap-2 mb-2 flex-wrap">
                     <Pill
                       text={property?.type?.toUpperCase() || "PROPERTY"}
                       icon="home-city"
@@ -334,8 +467,6 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                       }
                     />
                   </View>
-                ) : (
-                  <View />
                 )}
 
                 <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
@@ -345,9 +476,9 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                   {property?.location.barangay}, {property?.location.city}
                 </Text>
               </View>
-              {!isDesktopLayout && (
-                <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                  <Text className="text-xl font-bold text-blue-700">
+              {!useSidebarLayout && (
+                <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 shrink-0">
+                  <Text className={`font-bold text-blue-700 ${isSplitPanel ? "text-2xl" : "text-xl"}`}>
                     &#x20B1;{property?.price.toLocaleString()}
                   </Text>
                 </View>
@@ -453,7 +584,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
           </View>
 
           {/* Right Column (Sticky Sidebar) for Full Screen Web */}
-          {isDesktopLayout && (
+          {useSidebarLayout && (
             <View className="flex-[0.35] w-full">
               <View
                 className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-gray-200"
@@ -491,7 +622,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
         {/* MAPS - Full Width */}
         {property?.location?.coordinates && (
-          <View className={isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mb-12" : "px-5 mb-8"}>
+          <View className={isSplitPanel ? "w-full px-4 mb-8" : isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mb-12" : "px-5 mb-8"}>
             <PropertyMapView
               coordinates={property.location.coordinates}
               boundaries={property.location.boundaries}
@@ -502,7 +633,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
       </ScrollView>
 
       {/* Sticky Inquire Button (Hidden on Full Screen Web) */}
-      {!isDesktopLayout && (
+      {!useSidebarLayout && (
         <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
           <TouchableOpacity
             className="bg-blue-600 rounded-xl py-3.5 shadow-md shadow-blue-200 flex-row justify-center items-center gap-2 hover:bg-blue-700 transition-colors"
@@ -642,78 +773,208 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
 
       {/* ── Inquiry Modal ───────────────────────────────────────────────── */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={closeInquiryModal}
       >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-[32px] p-6 shadow-xl w-full max-w-5xl mx-auto relative">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-extrabold text-gray-800">Contact Agent</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)} className="bg-gray-100 p-2 rounded-full">
-                <MaterialCommunityIcons name="close" size={20} color="#4b5563" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
-              {/* <Text className="text-sm font-bold text-blue-800 mb-1">Clark Adam Arconado</Text> */}
-              <Text className="text-xs text-blue-600 mb-1">Email: ilocossurproperty@gmail.com</Text>
-              {/* <Text className="text-xs text-blue-600">Mobile: 09261849580</Text> */}
-            </View>
-
-            <Text className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
-              Send a message via
-            </Text>
-
-            <View className="gap-3 mb-6">
-              {Platform.OS !== "web" && (
-                <TouchableOpacity
-                  onPress={openMobile}
-                  className="flex-row items-center bg-gray-50 p-4 rounded-xl border border-gray-200"
-                  activeOpacity={0.7}
-                >
-                  <View className="bg-green-100 p-2.5 rounded-full mr-4">
-                    <MaterialCommunityIcons name="message-text" size={22} color="#16a34a" />
-                  </View>
-                  <Text className="text-base font-semibold text-gray-800">SMS / Messaging App</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                onPress={openGmail}
-                className="flex-row items-center bg-gray-50 p-4 rounded-xl border border-gray-200"
-                activeOpacity={0.7}
+        <View className={`flex-1 ${isDesktopLayout ? "justify-center items-center" : "justify-end"}`}>
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            className="bg-black/50"
+            onPress={closeInquiryModal}
+            accessibilityRole="button"
+            accessibilityLabel="Close contact dialog"
+          />
+          <Animated.View
+            className={`w-full mx-auto ${isDesktopLayout ? "max-w-md px-4" : "max-w-lg px-3"}`}
+            style={{ transform: [{ translateY: inquirySheetY }] }}
+          >
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <View
+                className={`bg-white shadow-xl w-full relative ${
+                  isDesktopLayout ? "rounded-2xl p-4" : "rounded-t-2xl p-4 pb-5"
+                }`}
               >
-                <View className="bg-red-100 p-2.5 rounded-full mr-4">
-                  <MaterialCommunityIcons name="gmail" size={22} color="#ea4335" />
-                </View>
-                <Text className="text-base font-semibold text-gray-800">Gmail</Text>
-              </TouchableOpacity>
+                {isDesktopLayout ? (
+                  <>
+                    <View className="flex-row justify-between items-start mb-1">
+                      <View className="flex-1 pr-2">
+                        <Text className="text-lg font-extrabold text-gray-900">
+                          Inquire about this property
+                        </Text>
+                        {inquiryPropertySummary ? (
+                          <Text className="text-sm text-gray-500 mt-1" numberOfLines={2}>
+                            {inquiryPropertySummary}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <TouchableOpacity
+                        onPress={closeInquiryModal}
+                        className="bg-gray-100 p-1.5 rounded-full"
+                        accessibilityLabel="Close inquire dialog"
+                      >
+                        <MaterialCommunityIcons name="close" size={18} color="#4b5563" />
+                      </TouchableOpacity>
+                    </View>
 
-              <TouchableOpacity
-                onPress={openFB}
-                className="flex-row items-center bg-gray-50 p-4 rounded-xl border border-gray-200"
-                activeOpacity={0.7}
-              >
-                <View className="bg-blue-100 p-2.5 rounded-full mr-4">
-                  <MaterialCommunityIcons name="facebook" size={22} color="#1877f2" />
-                </View>
-                <Text className="text-base font-semibold text-gray-800">Facebook</Text>
-              </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={openGmail}
+                      activeOpacity={0.85}
+                      className="bg-blue-600 rounded-xl py-3.5 mt-4 mb-2 flex-row justify-center items-center gap-2 shadow-md shadow-blue-200"
+                      // @ts-ignore — web pointer cursor
+                      style={Platform.OS === "web" ? ({ cursor: "pointer" } as const) : undefined}
+                      accessibilityRole="button"
+                      accessibilityLabel="Email agent about this property"
+                    >
+                      <MaterialCommunityIcons name="email-fast" size={22} color="white" />
+                      <Text className="text-base font-bold text-white">Email agent</Text>
+                    </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={openInstagram}
-                className="flex-row items-center bg-gray-50 p-4 rounded-xl border border-gray-200"
-                activeOpacity={0.7}
-              >
-                <View className="bg-pink-100 p-2.5 rounded-full mr-4">
-                  <MaterialCommunityIcons name="instagram" size={22} color="#e1306c" />
-                </View>
-                <Text className="text-base font-semibold text-gray-800">Instagram</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+                    <Text className="text-xs text-gray-400 text-center mb-4">
+                      We usually reply within 24 hours.
+                    </Text>
+
+                    <View className="flex-row items-center mb-4">
+                      <View className="flex-1 h-px bg-gray-200" />
+                      <Text className="text-xs font-medium text-gray-400 px-3">Or</Text>
+                      <View className="flex-1 h-px bg-gray-200" />
+                    </View>
+
+                    <View className="flex-row items-center gap-2">
+                      <TouchableOpacity
+                        onPress={handleCopyEmail}
+                        activeOpacity={0.75}
+                        className="flex-1 min-w-0 flex-row items-center bg-gray-50 py-2.5 px-3 rounded-lg border border-gray-200"
+                        // @ts-ignore — web pointer cursor
+                        style={Platform.OS === "web" ? ({ cursor: "pointer" } as const) : undefined}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Copy email ${AGENT_EMAIL}`}
+                      >
+                        <MaterialCommunityIcons
+                          name={emailCopied ? "check" : "content-copy"}
+                          size={18}
+                          color={emailCopied ? "#16a34a" : "#6b7280"}
+                        />
+                        <Text className="text-xs font-medium text-gray-600 ml-2 flex-1" numberOfLines={1}>
+                          {emailCopied ? "Copied!" : AGENT_EMAIL}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={openFB}
+                        activeOpacity={0.7}
+                        className="p-2.5 bg-gray-50 rounded-lg border border-gray-200"
+                        // @ts-ignore
+                        style={Platform.OS === "web" ? ({ cursor: "pointer" } as const) : undefined}
+                        accessibilityLabel="Message on Facebook"
+                      >
+                        <MaterialCommunityIcons name="facebook" size={22} color="#1877f2" />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={openInstagram}
+                        activeOpacity={0.7}
+                        className="p-2.5 bg-gray-50 rounded-lg border border-gray-200"
+                        // @ts-ignore
+                        style={Platform.OS === "web" ? ({ cursor: "pointer" } as const) : undefined}
+                        accessibilityLabel="Message on Instagram"
+                      >
+                        <MaterialCommunityIcons name="instagram" size={22} color="#e1306c" />
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View className="flex-row justify-between items-center mb-3">
+                      <Text className="text-lg font-extrabold text-gray-800">Contact Agent</Text>
+                      <TouchableOpacity onPress={closeInquiryModal} className="bg-gray-100 p-1.5 rounded-full">
+                        <MaterialCommunityIcons name="close" size={18} color="#4b5563" />
+                      </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={handleCopyEmail}
+                      activeOpacity={0.75}
+                      className="bg-blue-50 px-3 py-2.5 rounded-xl mb-3 border border-blue-200 flex-row items-center"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Copy email ${AGENT_EMAIL}`}
+                      accessibilityHint="Copies the agent email to your clipboard"
+                    >
+                      <View className="flex-1 min-w-0 pr-2">
+                        <Text className="text-[10px] font-semibold text-blue-800 uppercase tracking-wide">
+                          Email
+                        </Text>
+                        <Text className="text-sm font-bold text-blue-700" numberOfLines={1}>
+                          {AGENT_EMAIL}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center shrink-0">
+                        <Text
+                          className={`text-[10px] mr-1.5 ${
+                            emailCopied ? "text-green-600 font-semibold" : "text-blue-500"
+                          }`}
+                        >
+                          {emailCopied ? "Copied" : "Copy"}
+                        </Text>
+                        <View className="bg-white p-1.5 rounded-full border border-blue-200">
+                          <MaterialCommunityIcons
+                            name={emailCopied ? "check" : "content-copy"}
+                            size={16}
+                            color={emailCopied ? "#16a34a" : "#2563eb"}
+                          />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+
+                    <Text className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                      Send a message via
+                    </Text>
+
+                    <View className="flex-row flex-wrap gap-2">
+                      {Platform.OS !== "web" && (
+                        <TouchableOpacity
+                          onPress={openMobile}
+                          className="flex-row items-center bg-gray-50 py-2 px-3 rounded-lg border border-gray-200"
+                          activeOpacity={0.7}
+                        >
+                          <MaterialCommunityIcons name="message-text" size={18} color="#16a34a" />
+                          <Text className="text-sm font-semibold text-gray-800 ml-2">SMS</Text>
+                        </TouchableOpacity>
+                      )}
+
+                      <TouchableOpacity
+                        onPress={openGmail}
+                        className="flex-row items-center bg-gray-50 py-2 px-3 rounded-lg border border-gray-200"
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons name="gmail" size={18} color="#ea4335" />
+                        <Text className="text-sm font-semibold text-gray-800 ml-2">Gmail</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={openFB}
+                        className="flex-row items-center bg-gray-50 py-2 px-3 rounded-lg border border-gray-200"
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons name="facebook" size={18} color="#1877f2" />
+                        <Text className="text-sm font-semibold text-gray-800 ml-2">Facebook</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={openInstagram}
+                        className="flex-row items-center bg-gray-50 py-2 px-3 rounded-lg border border-gray-200"
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons name="instagram" size={18} color="#e1306c" />
+                        <Text className="text-sm font-semibold text-gray-800 ml-2">Instagram</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </View>
+            </Pressable>
+          </Animated.View>
         </View>
       </Modal>
     </View>
