@@ -11,6 +11,8 @@ interface SearchAndFiltersProps {
   setListView: (isListView: boolean) => void;
   onOpenFilters: () => void;
   hasActiveFilters: boolean;
+  /** Stack controls for narrow web split-view list column. */
+  compact?: boolean;
 }
 
 export function SearchAndFilters({
@@ -20,6 +22,7 @@ export function SearchAndFilters({
   setListView,
   onOpenFilters,
   hasActiveFilters,
+  compact = false,
 }: SearchAndFiltersProps) {
   const { width } = useWindowDimensions();
   const isGrid = !isListView;
@@ -27,8 +30,14 @@ export function SearchAndFilters({
   const isWebGrid = isWeb && isGrid;
   
   return (
-    <View className="bg-blue-700 shadow-lg px-4 py-4">
-      <View className={`flex-row items-center w-full ${isWebGrid ? 'justify-center max-w-6xl mx-auto' : ''}`}>
+    <View className={`bg-blue-700 shadow-lg ${compact ? "px-2 py-3" : "px-4 py-4"}`}>
+      <View
+        className={
+          compact
+            ? "w-full gap-2"
+            : `flex-row items-center w-full ${isWebGrid ? "justify-center max-w-6xl mx-auto" : ""}`
+        }
+      >
         
         {isWebGrid && (
           <Pressable onPress={() => router.push("/")}>
@@ -44,31 +53,35 @@ export function SearchAndFilters({
         )}
 
         <TextInput
-          className={`px-4 py-3 mr-3 rounded-xl flex-1 border border-white bg-white text-gray-900 ${isWebGrid ? 'max-w-2xl mx-4' : ''}`}
+          className={`rounded-xl flex-1 border border-white bg-white text-gray-900 ${
+            compact ? "px-3 py-2.5 text-sm w-full" : `px-4 py-3 mr-3 ${isWebGrid ? "max-w-2xl mx-4" : ""}`
+          }`}
           placeholder="Search properties..."
           placeholderTextColor="#9ca3af"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
 
-        <Pressable 
-          onPress={onOpenFilters} 
-          className="h-12 w-12 items-center justify-center rounded-xl mr-2 relative bg-white/20"
-          style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-        >
-          <Feather name="filter" color="#fff" size={20} />
-          {hasActiveFilters && (
+        <View className={compact ? "flex-row items-center justify-end gap-2" : "flex-row items-center"}>
+          <Pressable
+            onPress={onOpenFilters}
+            className={`${compact ? "h-10 w-10" : "h-12 w-12 mr-2"} items-center justify-center rounded-xl relative bg-white/20`}
+            style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+          >
+            <Feather name="filter" color="#fff" size={compact ? 18 : 20} />
+            {hasActiveFilters && (
               <View className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-blue-700" />
-          )}
-        </Pressable>
+            )}
+          </Pressable>
 
-        <Pressable
-          className="h-12 w-12 items-center justify-center rounded-xl bg-white/20"
-          style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-          onPress={() => setListView(!isListView)}
-        >
-          <Feather name={!isListView ? "list" : "grid"} color="#fff" size={20} />
-        </Pressable>
+          <Pressable
+            className={`${compact ? "h-10 w-10" : "h-12 w-12"} items-center justify-center rounded-xl bg-white/20`}
+            style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+            onPress={() => setListView(!isListView)}
+          >
+            <Feather name={!isListView ? "list" : "grid"} color="#fff" size={compact ? 18 : 20} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
