@@ -56,13 +56,6 @@ function PropertyCard({ property }: { property: any }) {
         <View style={[styles.typePill, { backgroundColor: typeColor }]}>
           <Text style={styles.typePillText}>{property.type?.toUpperCase()}</Text>
         </View>
-        {/* Status dot */}
-        <View
-          style={[
-            styles.statusDot,
-            { backgroundColor: property.status === "available" ? "#22c55e" : "#f59e0b" },
-          ]}
-        />
       </View>
 
       {/* Info */}
@@ -268,16 +261,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.8,
-  },
-  statusDot: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: "#fff",
   },
   cardBody: {
     padding: 16,

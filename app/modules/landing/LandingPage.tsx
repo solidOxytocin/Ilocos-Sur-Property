@@ -1,12 +1,62 @@
-import React from "react";
-import { ScrollView, StyleSheet, View, Platform } from "react-native";
+import React, { useCallback, useEffect, useRef } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Platform,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
 import HeroSection from "./components/HeroSection";
 import FeaturedPropertiesSection from "./components/FeaturedPropertiesSection";
 import WhyChooseUsSection from "./components/WhyChooseUsSection";
 import LocationHighlightsSection from "./components/LocationHighlightsSection";
 import LandingFooter from "./components/LandingFooter";
+import { getLandingScrollY, setLandingScrollY } from "./landingScrollState";
 
 export default function LandingPage() {
+  const scrollRef = useRef<ScrollView>(null);
+  const savedScrollY = useRef(getLandingScrollY());
+  /** Scroll offset to restore when returning; fixed for this mount until user scrolls. */
+  const restoreTargetY = useRef(savedScrollY.current);
+  const shouldAutoRestore = useRef(restoreTargetY.current > 0);
+
+  const restoreScroll = useCallback(() => {
+    if (!shouldAutoRestore.current) return;
+    const y = restoreTargetY.current;
+    if (y <= 0) return;
+    scrollRef.current?.scrollTo({ y, animated: false });
+  }, []);
+
+  const persistScrollOffset = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = event.nativeEvent.contentOffset.y;
+    savedScrollY.current = y;
+    setLandingScrollY(y);
+    if (
+      shouldAutoRestore.current &&
+      restoreTargetY.current > 0 &&
+      Math.abs(y - restoreTargetY.current) > 48
+    ) {
+      shouldAutoRestore.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(restoreScroll);
+    const stopAutoRestore = setTimeout(() => {
+      shouldAutoRestore.current = false;
+    }, 5000);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(stopAutoRestore);
+      setLandingScrollY(savedScrollY.current);
+    };
+  }, [restoreScroll]);
+
+  const handleContentSizeChange = useCallback(() => {
+    restoreScroll();
+  }, [restoreScroll]);
+
   return (
     <View style={styles.root}>
       {Platform.OS === "web" && (
@@ -61,9 +111,15 @@ export default function LandingPage() {
         `}</style>
       )}
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={persistScrollOffset}
+        onScrollEndDrag={persistScrollOffset}
+        onMomentumScrollEnd={persistScrollOffset}
+        onContentSizeChange={handleContentSizeChange}
       >
         <HeroSection />
         <FeaturedPropertiesSection />
