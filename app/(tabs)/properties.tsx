@@ -329,10 +329,19 @@ export default function PropertyList() {
     if (Platform.OS !== "web" || !preselectedId) return;
     const numId = Number(preselectedId);
     if (!numId) return;
-    // Switch to list view so the split-panel is visible
+    if (width < 1024) return;
+    // Split-panel list view is desktop-only
     setIsListView(true);
     setSelectedPropertyId(numId);
-  }, [preselectedId]);
+  }, [preselectedId, width]);
+
+  // Grid-only on narrow viewports (list toggle is hidden)
+  useEffect(() => {
+    if (width < 768 && isListView) {
+      setIsListView(false);
+      setSelectedPropertyId(null);
+    }
+  }, [width, isListView]);
 
   // ── Pre-apply search query from URL param ────────────────────────────────────
   useEffect(() => {

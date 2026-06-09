@@ -1,4 +1,3 @@
-import { size } from "@/app/theme/size";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -29,27 +28,32 @@ export function SearchAndFilters({
   const isWeb = Platform.OS === "web";
   const isWebGrid = isWeb && isGrid;
   const isWebGridMobile = isWebGrid && width < 768;
+  const showListViewToggle = width >= 768;
+  const iconButtonSize = compact || isWebGridMobile ? "h-10 w-10" : "h-12 w-12";
+  const iconSize = compact || isWebGridMobile ? 18 : 20;
 
   const filterToggleButtons = (
     <View className="flex-row items-center shrink-0">
       <Pressable
         onPress={onOpenFilters}
-        className={`${compact || isWebGridMobile ? "h-10 w-10 mr-2" : "h-12 w-12 mr-2"} items-center justify-center rounded-xl relative bg-white/20`}
+        className={`${iconButtonSize} ${showListViewToggle ? "mr-2" : ""} items-center justify-center rounded-xl relative bg-white/20`}
         style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
       >
-        <Feather name="filter" color="#fff" size={compact || isWebGridMobile ? 18 : 20} />
+        <Feather name="filter" color="#fff" size={iconSize} />
         {hasActiveFilters && (
           <View className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-blue-700" />
         )}
       </Pressable>
 
-      <Pressable
-        className={`${compact || isWebGridMobile ? "h-10 w-10" : "h-12 w-12"} items-center justify-center rounded-xl bg-white/20`}
-        style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
-        onPress={() => setListView(!isListView)}
-      >
-        <Feather name={!isListView ? "list" : "grid"} color="#fff" size={compact || isWebGridMobile ? 18 : 20} />
-      </Pressable>
+      {showListViewToggle ? (
+        <Pressable
+          className={`${iconButtonSize} items-center justify-center rounded-xl bg-white/20`}
+          style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+          onPress={() => setListView(!isListView)}
+        >
+          <Feather name={!isListView ? "list" : "grid"} color="#fff" size={iconSize} />
+        </Pressable>
+      ) : null}
     </View>
   );
 
