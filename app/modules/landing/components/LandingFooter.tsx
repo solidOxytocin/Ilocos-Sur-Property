@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { isLandingMobile, landingHorizontalPadding } from "../landingBreakpoints";
 
 function FooterLink({ label, onPress }: { label: string; onPress: () => void }) {
   const [hovered, setHovered] = useState(false);
@@ -30,7 +31,8 @@ function FooterLink({ label, onPress }: { label: string; onPress: () => void }) 
 export default function LandingFooter() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isMobile = width < 700;
+  const isMobile = isLandingMobile(width);
+  const horizontalPadding = landingHorizontalPadding(width);
   const [contactModalVisible, setContactModalVisible] = useState(false);
 
   // Contact agent helpers
@@ -51,10 +53,10 @@ export default function LandingFooter() {
   return (
     <View style={styles.footer}>
       {/* Top CTA band */}
-      <View style={styles.ctaBand}>
+      <View style={[styles.ctaBand, { paddingHorizontal: horizontalPadding, paddingVertical: isMobile ? 36 : 48 }]}>
         <View style={[styles.ctaBandInner, { flexDirection: isMobile ? "column" : "row" }]}>
           <View style={styles.ctaBandText}>
-            <Text style={styles.ctaBandTitle}>
+            <Text style={[styles.ctaBandTitle, isMobile && styles.ctaBandTitleMobile]}>
               Have a property to sell?
             </Text>
             <Text style={styles.ctaBandSub}>
@@ -62,7 +64,11 @@ export default function LandingFooter() {
             </Text>
           </View>
           <Pressable
-            style={[styles.ctaBandBtn, { marginTop: isMobile ? 20 : 0, flexDirection: 'row', alignItems: 'center' }]}
+            style={[
+              styles.ctaBandBtn,
+              isMobile && styles.ctaBandBtnMobile,
+              { marginTop: isMobile ? 20 : 0, flexDirection: "row", alignItems: "center" },
+            ]}
             onPress={() => setContactModalVisible(true)}
           >
             <Text style={[styles.ctaBandBtnText, { marginRight: 8 }]}>Contact Agent</Text>
@@ -72,7 +78,7 @@ export default function LandingFooter() {
       </View>
 
       {/* Footer body */}
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingHorizontal: horizontalPadding, paddingVertical: isMobile ? 40 : 56 }]}>
         <View style={[styles.bodyInner, { flexDirection: isMobile ? "column" : "row" }]}>
           {/* Brand */}
           <View style={[styles.brandCol, { marginBottom: isMobile ? 32 : 0 }]}>
@@ -223,8 +229,6 @@ const styles = StyleSheet.create({
   },
   ctaBand: {
     backgroundColor: "#1d4ed8",
-    paddingVertical: 48,
-    paddingHorizontal: 32,
   },
   ctaBandInner: {
     maxWidth: 1100,
@@ -242,6 +246,10 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 8,
   },
+  ctaBandTitleMobile: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
   ctaBandSub: {
     color: "rgba(255,255,255,0.75)",
     fontSize: 15,
@@ -252,16 +260,18 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     cursor: "pointer" as any,
+    flexShrink: 0,
+  },
+  ctaBandBtnMobile: {
+    alignSelf: "stretch",
+    justifyContent: "center",
   },
   ctaBandBtnText: {
     color: "#1d4ed8",
     fontWeight: "700",
     fontSize: 15,
   },
-  body: {
-    paddingVertical: 56,
-    paddingHorizontal: 32,
-  },
+  body: {},
   bodyInner: {
     maxWidth: 1100,
     alignSelf: "center",

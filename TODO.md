@@ -120,17 +120,28 @@
 - [x] Add Animations(U)
 - [X] Seperate Admin Frontend to a new Project
 - [x] Add Read Me Files
-- [] Learn To Deploy
-    -[] Create prod Build
-    -[] Create an enviroment variables for prod and local   
-    -[] Learn to Deploy Backend(PostGress)
-    -[] Learn to Deploy Frontend
+- [x] Learn To Deploy
+    -[x] Create prod Build
+    -[x] Create an enviroment variables for prod and local   
+    -[x] Learn to Deploy Backend(PostGress)
+    -[x] Learn to Deploy Frontend
+- [x] Deployment
+    -Render (Backend)
+    -Verfcel (front-end)
     
 # Changes After Deployment
+- [] Handle UI Mobile Responsiveness
+- [] Handle Loading Page for Warm up of API
 - [] Add more Animation
 - [] Feature and Amenities Management (Admin)
 - [] Featured Selector (Admin)
 - [] Admin Dashboard (Statitstics)
+    - Site
+        -Visit
+        -Inquiry
+    - Property
+        -Sold
+        -Available
 - [] User Login
     -[] Can Add Favourite listing
     -[] Favourites Listing (like add to cart)
