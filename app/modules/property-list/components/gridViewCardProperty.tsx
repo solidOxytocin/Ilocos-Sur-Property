@@ -1,7 +1,6 @@
-import { size } from "@/app/theme/size";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Pill from "../../generics/components/pill";
 import {
@@ -14,6 +13,12 @@ import { Feature, Amenity, Property } from "../../../constants/mock/mock-propert
 
 interface gridViewCardPropertyProps {
   property: Property;
+}
+
+function formatGridPrice(price: number): string {
+  if (price >= 1_000_000) return `₱${(price / 1_000_000).toFixed(1)}M`;
+  if (price >= 1_000) return `₱${(price / 1_000).toFixed(0)}K`;
+  return `₱${Number(price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
 interface ItemPillComponentProps {
@@ -91,14 +96,16 @@ export default function gridViewCardProperty({
   property: property,
 }: gridViewCardPropertyProps) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isWebMobile = Platform.OS === "web" && width < 768;
   const isSold = property?.status?.toUpperCase() === "SOLD";
-  
+
   return (
     <TouchableOpacity
-      className={`relative bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem] hover:shadow-lg hover:shadow-gray-400 transition-shadow ${
+      className={`relative bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden w-full hover:shadow-lg hover:shadow-gray-400 transition-shadow ${
         isSold ? "opacity-75" : ""
       }`}
-      style={{ minHeight: 290 }}
+      style={{ minHeight: isWebMobile ? 270 : 290 }}
       activeOpacity={0.8}
       onPress={() => {
         router.push({
@@ -184,17 +191,18 @@ export default function gridViewCardProperty({
           </View>
         </View>
 
-        <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-gray-100">
-           <View className="flex-row items-center">
-             <MaterialCommunityIcons name="vector-square" size={21} color="#fb923c" />
-             <Text className="font-bold text-[14px] text-orange-600 ml-1">
+        <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-gray-100 gap-2">
+           <View className="flex-row items-center shrink-0">
+             <MaterialCommunityIcons name="vector-square" size={isWebMobile ? 18 : 21} color="#fb923c" />
+             <Text className={`font-bold text-orange-600 ml-1 ${isWebMobile ? "text-xs" : "text-[14px]"}`}>
                {property?.lotArea ? `${property.lotArea} SQM` : "N/A"}
              </Text>
            </View>
-           <Text className="font-extrabold text-base text-blue-600">
-             {property?.price != null
-               ? `₱${Number(property.price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-               : ""}
+           <Text
+             className={`font-extrabold text-blue-600 shrink ${isWebMobile ? "text-sm" : "text-base"}`}
+             numberOfLines={1}
+           >
+             {property?.price != null ? formatGridPrice(Number(property.price)) : ""}
            </Text>
         </View>
       </View>

@@ -2,7 +2,7 @@ import GridViewCardProperty from "@/app/modules/property-list/components/gridVie
 import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
 import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
 import { PropertyCardSkeleton } from "../modules/property-list/components/PropertyCardSkeleton";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,6 +24,7 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 
 const PAGE_SIZE = 12;
+const GRID_GAP = 8;
 
 type SortField = "createdAt" | "price" | "lotArea" | "city";
 type SortOrder = "asc" | "desc";
@@ -359,11 +360,41 @@ export default function PropertyList() {
     [selectedPropertyId, properties]
   );
 
-  const numColumns = isListView ? 1 : width > 1200 ? 5 : width > 1000 ? 4 : width > 800 ? 3 : 2;
+  const isWeb = Platform.OS === "web";
+  const isWebMobile = isWeb && width < 768;
+  const isWebSplitList = isWebDesktop && isListView;
+
+  const numColumns = isListView
+    ? 1
+    : width > 1200
+      ? 5
+      : width > 1000
+        ? 4
+        : width > 800
+          ? 3
+          : 2;
+
+  const gridHorizontalPadding = isWebSplitList ? 4 : isWebMobile ? 12 : 8;
+  const gridColumnWidth = useMemo(() => {
+    if (isListView) return 0;
+    const available = width - gridHorizontalPadding * 2 - GRID_GAP * (numColumns - 1);
+    return Math.floor(available / numColumns);
+  }, [width, numColumns, isListView, gridHorizontalPadding]);
+
+  const gridColumnWrapperStyle = useMemo(
+    () =>
+      !isListView && numColumns > 1
+        ? { gap: GRID_GAP, justifyContent: "flex-start" as const, alignItems: "flex-start" as const }
+        : undefined,
+    [isListView, numColumns]
+  );
+
   const skeletonCount = isListView ? 6 : Math.ceil(PAGE_SIZE / numColumns) * numColumns;
   const skeletonData = Array.from({ length: skeletonCount }, (_, i) => i);
 
-  const isWebSplitList = isWebDesktop && isListView;
+  const renderGridCell = (child: React.ReactNode) => (
+    <View style={{ width: gridColumnWidth, alignSelf: "flex-start" }}>{child}</View>
+  );
 
   const renderItem = ({ item }: { item: Property }) =>
     isListView ? (
@@ -374,7 +405,7 @@ export default function PropertyList() {
         isSelected={isWebSplitList && selectedPropertyId === item.id}
       />
     ) : (
-      <GridViewCardProperty property={item} />
+      renderGridCell(<GridViewCardProperty property={item} />)
     );
 
   const renderFooter = () => {
@@ -417,7 +448,7 @@ export default function PropertyList() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-gray-100 overflow-hidden">
       <View className="flex-1 flex-row min-h-0">
         {/* ── LEFT COLUMN (Header + List) ────────────────────────── */}
         <View className={isWebSplitList ? "w-[35%] min-w-0 shrink-0" : "flex-1 min-w-0"}>
@@ -434,14 +465,14 @@ export default function PropertyList() {
             />
 
             {/* Sort chips — one chip per field, arrow appears only when active */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: isWebSplitList ? 8 : 16, paddingVertical: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: isWebSplitList ? 8 : isWebMobile ? 12 : 16, paddingVertical: 8, minWidth: 0 }}>
               <MaterialIcons name="sort" size={16} color="#6b7280" />
-              <Text style={{ fontSize: 11, fontWeight: '500', color: '#6b7280', marginLeft: 4, marginRight: 8 }}>Sort:</Text>
+              <Text style={{ fontSize: 11, fontWeight: '500', color: '#6b7280', marginLeft: 4, marginRight: 8, flexShrink: 0 }}>Sort:</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
-                style={{ flex: 1 }}
+                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2, paddingRight: 4 }}
+                style={{ flex: 1, minWidth: 0 }}
               >
                 {SORT_FIELDS.map(({ label, field }) => {
                   const isActive = sortField === field;
@@ -489,20 +520,32 @@ export default function PropertyList() {
             </View>
 
             {/* Quick filter chips */}
-            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: isWebSplitList ? 8 : 16, paddingVertical: 8, paddingBottom: 12 }}>
+            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 8, paddingBottom: 12, minWidth: 0 }}>
               <FlatList
                 horizontal
                 data={quickFilters}
                 keyExtractor={(qf) => qf.value}
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}
+                contentContainerStyle={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 2,
+                  paddingLeft: isWebSplitList ? 8 : isWebMobile ? 12 : 16,
+                  paddingRight: isWebSplitList ? 8 : isWebMobile ? 12 : 16,
+                }}
                 renderItem={({ item: qf }) => {
                   const isActive = filters[qf.key as "type" | "status"].includes(qf.value);
                   return (
                     <Pressable
                       onPress={() => handleQuickFilterToggle(qf.key as "type" | "status", qf.value)}
                       style={[
-                        { paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, borderRadius: 999, borderWidth: 1 },
+                        {
+                          paddingHorizontal: isWebMobile ? 12 : 16,
+                          paddingVertical: 8,
+                          marginRight: 8,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                        },
                         isActive ? { backgroundColor: '#2563eb', borderColor: '#2563eb' } : { backgroundColor: '#fff', borderColor: '#d1d5db' },
                       ]}
                     >
@@ -517,17 +560,24 @@ export default function PropertyList() {
           </View>
 
           {/* List Body */}
-          <View className={`flex-1 pt-3 ${isWebSplitList ? "px-1" : "px-2"}`}>
+          <View className={`flex-1 pt-3 min-w-0 ${isWebSplitList ? "px-1" : isWebMobile ? "px-3" : "px-2"}`}>
             {!isMounted ? null : loading ? (
-              <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
+              <View className={isListView ? "flex-1 min-w-0" : "flex-1 w-full min-w-0"}>
                 <FlatList
                   key={numColumns + (isListView ? "-list-skel" : "-grid-skel")}
                   data={skeletonData}
-                  renderItem={() => <PropertyCardSkeleton viewMode={isListView ? "list" : "grid"} />}
+                  renderItem={() =>
+                    isListView ? (
+                      <PropertyCardSkeleton viewMode="list" />
+                    ) : (
+                      renderGridCell(<PropertyCardSkeleton viewMode="grid" />)
+                    )
+                  }
                   keyExtractor={(item) => `skel-${item}`}
                   numColumns={numColumns}
                   showsVerticalScrollIndicator={false}
-                  className={isListView ? "w-full" : ""}
+                  className="w-full"
+                  columnWrapperStyle={gridColumnWrapperStyle}
                 />
               </View>
             ) : fetchError ? (
@@ -545,7 +595,7 @@ export default function PropertyList() {
                 message={API_USER_MESSAGES.emptyList}
               />
             ) : (
-              <View className={isListView ? "flex-1" : "flex-1 justify-center items-center w-full"}>
+              <View className={isListView ? "flex-1 min-w-0" : "flex-1 w-full min-w-0"}>
                 <FlatList
                   key={numColumns + (isListView ? "-list" : "-grid")}
                   data={properties}
@@ -553,7 +603,8 @@ export default function PropertyList() {
                   keyExtractor={(item, index) => `${item.id}-${index}`}
                   numColumns={numColumns}
                   showsVerticalScrollIndicator={false}
-                  className={isListView ? "w-full" : ""}
+                  className="w-full"
+                  columnWrapperStyle={gridColumnWrapperStyle}
                   onEndReached={loadNextPage}
                   onEndReachedThreshold={0.4}
                   ListFooterComponent={renderFooter}

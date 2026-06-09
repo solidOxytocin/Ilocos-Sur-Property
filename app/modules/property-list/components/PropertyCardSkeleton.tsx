@@ -13,7 +13,7 @@ export function PropertyCardSkeleton({ viewMode }: PropertyCardSkeletonProps) {
   if (viewMode === "grid") {
     return (
       <View
-        className="bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden m-1 md:m-2 w-[45vw] sm:w-[46vw] md:w-[16rem]"
+        className="bg-white shadow-sm border-gray-200 border flex-col rounded-xl overflow-hidden w-full"
         style={{ minHeight: 290 }}
       >
         {/* Image Placeholder */}
