@@ -87,11 +87,9 @@ export function SearchAndFilters({
   return (
     <View className={`bg-blue-700 shadow-lg ${compact ? "px-2 py-3" : "px-4 py-4"}`}>
       <View
-        className={
-          compact
-            ? "w-full gap-2"
-            : `flex-row items-center w-full min-w-0 ${isWebGrid ? "justify-center max-w-6xl mx-auto" : ""}`
-        }
+        className={`flex-row items-center w-full min-w-0 ${
+          isWebGrid ? "justify-center max-w-6xl mx-auto" : ""
+        }`}
       >
         {isWebGrid && (
           <Pressable onPress={() => router.push("/")} className="shrink-0">
@@ -108,7 +106,7 @@ export function SearchAndFilters({
 
         <TextInput
           className={`rounded-xl flex-1 min-w-0 border border-white bg-white text-gray-900 ${
-            compact ? "px-3 py-2.5 text-sm w-full" : `px-4 py-3 mr-3 ${isWebGrid ? "max-w-2xl mx-4" : ""}`
+            compact ? "px-3 py-2.5 text-sm mr-2" : `px-4 py-3 mr-3 ${isWebGrid ? "max-w-2xl mx-4" : ""}`
           }`}
           placeholder="Search properties..."
           placeholderTextColor="#9ca3af"
