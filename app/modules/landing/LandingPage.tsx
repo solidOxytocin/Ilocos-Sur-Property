@@ -61,7 +61,7 @@ export default function LandingPage() {
     <View style={styles.root}>
       {Platform.OS === "web" && (
         <style>{`
-          html, body, #root { margin: 0; padding: 0; height: 100%; }
+          html, body, #root { margin: 0; padding: 0; height: 100%; overflow-x: hidden; }
           * { box-sizing: border-box; }
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(32px); }
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "#f8fafc",
+    overflow: "hidden",
   },
   scroll: {
     flex: 1,
