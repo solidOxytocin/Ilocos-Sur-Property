@@ -15,6 +15,7 @@ import type { Property } from "@/app/constants/mock/mock-properties";
 import { API_USER_MESSAGES } from "@/app/lib/api-result";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
 import { Skeleton } from "@/app/modules/generics/components/Skeleton";
+import { isLandingMobile, landingHorizontalPadding } from "../landingBreakpoints";
 
 const FEATURED_COUNT = 6;
 
@@ -24,7 +25,7 @@ function formatPrice(price: number): string {
   return `₱${price}`;
 }
 
-function PropertyCard({ property }: { property: any }) {
+function PropertyCard({ property, cardWidth }: { property: any; cardWidth: number }) {
   const router = useRouter();
   const firstImage = property.media?.[0]?.url ?? null;
   const typeColor =
@@ -40,7 +41,7 @@ function PropertyCard({ property }: { property: any }) {
     <Pressable
       // @ts-ignore
       className="property-card"
-      style={styles.card}
+      style={[styles.card, { width: cardWidth }]}
       onPress={() => router.push({ pathname: "/properties", params: { id: property.id } })}
     >
       {/* Image */}
@@ -78,6 +79,9 @@ function PropertyCard({ property }: { property: any }) {
 export default function FeaturedPropertiesSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const isMobile = isLandingMobile(width);
+  const horizontalPadding = landingHorizontalPadding(width);
+  const cardWidth = isMobile ? Math.min(280, width - horizontalPadding * 2 - 8) : 280;
   const [featured, setFeatured] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -102,17 +106,26 @@ export default function FeaturedPropertiesSection() {
   }, [retryKey]);
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, { paddingVertical: isMobile ? 48 : 72 }]}>
       {/* Section header */}
-      <View style={styles.sectionHeader}>
-        <View>
+      <View
+        style={[
+          styles.sectionHeader,
+          isMobile && styles.sectionHeaderMobile,
+          { paddingHorizontal: horizontalPadding },
+        ]}
+      >
+        <View style={isMobile ? styles.sectionHeaderTextMobile : undefined}>
           <Text style={styles.sectionEyebrow}>HAND-PICKED LISTINGS</Text>
-          <Text style={styles.sectionTitle}>Featured Properties</Text>
+          <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>Featured Properties</Text>
           <Text style={styles.sectionSubtitle}>
             Top picks from across Ilocos Sur — updated regularly.
           </Text>
         </View>
-        <Pressable style={styles.viewAllBtn} onPress={() => router.push("/properties")}>
+        <Pressable
+          style={[styles.viewAllBtn, isMobile && styles.viewAllBtnMobile]}
+          onPress={() => router.push("/properties")}
+        >
           <Text style={styles.viewAllText}>View All →</Text>
         </Pressable>
       </View>
@@ -122,10 +135,10 @@ export default function FeaturedPropertiesSection() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardRow}
+          contentContainerStyle={[styles.cardRow, { paddingHorizontal: horizontalPadding }]}
         >
           {Array.from({ length: FEATURED_COUNT }).map((_, i) => (
-            <View key={i} style={styles.card}>
+            <View key={i} style={[styles.card, { width: cardWidth }]}>
               <View style={styles.cardImageWrap}>
                 <Skeleton className="w-full h-full rounded-none" />
               </View>
@@ -157,10 +170,10 @@ export default function FeaturedPropertiesSection() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardRow}
+          contentContainerStyle={[styles.cardRow, { paddingHorizontal: horizontalPadding }]}
         >
           {featured.map((property) => (
-            <PropertyCard key={property.id} property={property} />
+            <PropertyCard key={property.id} property={property} cardWidth={cardWidth} />
           ))}
         </ScrollView>
       )}
@@ -171,8 +184,7 @@ export default function FeaturedPropertiesSection() {
 const styles = StyleSheet.create({
   section: {
     backgroundColor: "#f8fafc",
-    paddingVertical: 72,
-    paddingHorizontal: 32,
+    overflow: "hidden",
   },
   sectionHeader: {
     flexDirection: "row",
@@ -182,6 +194,14 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     alignSelf: "center",
     width: "100%",
+    gap: 16,
+  },
+  sectionHeaderMobile: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  sectionHeaderTextMobile: {
+    marginBottom: 4,
   },
   sectionEyebrow: {
     fontSize: 11,
@@ -196,6 +216,9 @@ const styles = StyleSheet.create({
     color: "#0f172a",
     marginBottom: 6,
   },
+  sectionTitleMobile: {
+    fontSize: 26,
+  },
   sectionSubtitle: {
     fontSize: 15,
     color: "#64748b",
@@ -207,6 +230,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     cursor: "pointer" as any,
+    flexShrink: 0,
+  },
+  viewAllBtnMobile: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    marginTop: 4,
   },
   viewAllText: {
     color: "#ffffff",
@@ -214,12 +243,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   cardRow: {
-    paddingHorizontal: 0,
     paddingBottom: 8,
-    gap: 20,
+    gap: 16,
   },
   card: {
-    width: 280,
     backgroundColor: "#ffffff",
     borderRadius: 16,
     overflow: "hidden",

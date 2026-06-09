@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getCityPropertyCounts } from "@/app/service/property-service";
+import { isLandingMobile, landingHorizontalPadding } from "../landingBreakpoints";
 
 /** Format a raw number into a compact display string, e.g. 15 → "15", 1500 → "1.5K+" */
 function formatStat(n: number): string {
@@ -20,7 +21,8 @@ function formatStat(n: number): string {
 export default function HeroSection() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
-  const isMobile = width < 768;
+  const isMobile = isLandingMobile(width);
+  const horizontalPadding = landingHorizontalPadding(width);
 
   const [totalListings, setTotalListings] = useState<number | null>(null);
   const [totalTowns, setTotalTowns] = useState<number | null>(null);
@@ -67,7 +69,15 @@ export default function HeroSection() {
       <View style={styles.gradientOverlayTop} pointerEvents="none" />
 
       {/* Content */}
-      <View style={[styles.content, { paddingHorizontal: isMobile ? 24 : 64 }]}>
+      <View
+        style={[
+          styles.content,
+          {
+            paddingHorizontal: horizontalPadding,
+            paddingVertical: isMobile ? 56 : 80,
+          },
+        ]}
+      >
         {/* Eyebrow label */}
         <View
           // @ts-ignore
@@ -93,7 +103,11 @@ export default function HeroSection() {
         <Text
           style={[
             styles.headline,
-            { fontSize: isMobile ? 34 : 62 },
+            {
+              fontSize: isMobile ? 32 : 62,
+              lineHeight: isMobile ? 38 : 68,
+              letterSpacing: isMobile ? -0.5 : -1,
+            },
             // @ts-ignore
             {
               animationName: "fadeInUp",
@@ -149,6 +163,7 @@ export default function HeroSection() {
         <View
           style={[
             styles.statsRow,
+            isMobile ? styles.statsRowMobile : styles.statsRowDesktop,
             // @ts-ignore
             {
               animationName: "fadeInUp",
@@ -169,11 +184,16 @@ export default function HeroSection() {
               label: "Towns Covered",
             },
             { value: "100%", label: "Verified" },
-          ].map((stat) => (
-            <View key={stat.label} style={styles.statItem}>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
+          ].map((stat, index, arr) => (
+            <React.Fragment key={stat.label}>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, isMobile && styles.statValueMobile]}>{stat.value}</Text>
+                <Text style={[styles.statLabel, isMobile && styles.statLabelMobile]}>{stat.label}</Text>
+              </View>
+              {index < arr.length - 1 ? (
+                <View style={[styles.statDivider, isMobile && styles.statDividerMobile]} />
+              ) : null}
+            </React.Fragment>
           ))}
         </View>
         {statsError ? (
@@ -198,6 +218,7 @@ export default function HeroSection() {
         <View
           style={[
             styles.ctaRow,
+            isMobile && styles.ctaRowMobile,
             // @ts-ignore
             {
               animationName: "fadeInUp",
@@ -211,7 +232,7 @@ export default function HeroSection() {
           <Pressable
             // @ts-ignore
             className="hero-cta-secondary"
-            style={styles.ctaSecondary}
+            style={[styles.ctaSecondary, isMobile && styles.ctaSecondaryMobile]}
             onPress={() => router.push("/properties")}
           >
             <Text style={styles.ctaSecondaryText}>Explore Listings →</Text>
@@ -270,8 +291,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: "center",
-    paddingVertical: 80,
-    paddingHorizontal: 64,
     maxWidth: 960,
     width: "100%",
     alignSelf: "center",
@@ -295,6 +314,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 1.5,
     textTransform: "uppercase",
+    flexShrink: 1,
   },
   headline: {
     color: "#ffffff",
@@ -314,17 +334,41 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: "row",
+    alignSelf: "flex-start",
+    alignItems: "center",
     marginBottom: 36,
-    gap: 32,
+  },
+  statsRowDesktop: {
+    gap: 0,
+  },
+  statsRowMobile: {
+    flexWrap: "wrap",
+    marginBottom: 28,
+    maxWidth: "100%",
   },
   statItem: {
     alignItems: "flex-start",
+    flexShrink: 0,
+  },
+  statDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    marginHorizontal: 24,
+  },
+  statDividerMobile: {
+    height: 28,
+    marginHorizontal: 12,
   },
   statValue: {
     color: "#ffffff",
     fontSize: 26,
     fontWeight: "800",
     lineHeight: 30,
+  },
+  statValueMobile: {
+    fontSize: 22,
+    lineHeight: 26,
   },
   statLabel: {
     color: "rgba(255,255,255,0.65)",
@@ -333,8 +377,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 2,
   },
+  statLabelMobile: {
+    fontSize: 11,
+    marginTop: 1,
+  },
   ctaRow: {
     alignItems: "flex-start",
+    width: "100%",
+  },
+  ctaRowMobile: {
+    alignItems: "stretch",
   },
   ctaPrimary: {
     backgroundColor: "#1d4ed8",
@@ -361,6 +413,10 @@ const styles = StyleSheet.create({
     transitionDuration: "200ms" as any,
     transitionProperty: "transform, background" as any,
     cursor: "pointer" as any,
+  },
+  ctaSecondaryMobile: {
+    width: "100%",
+    alignItems: "center",
   },
   ctaSecondaryText: {
     color: "#ffffff",

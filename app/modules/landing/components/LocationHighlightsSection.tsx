@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { getCityPropertyCounts } from "@/app/service/property-service";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
 import { Skeleton } from "@/app/modules/generics/components/Skeleton";
+import { isLandingMobile, isLandingTablet, landingHorizontalPadding } from "../landingBreakpoints";
 
 // Static definition of the towns we want to showcase.
 // "cityKey" must match the city name in the database / mock data exactly.
@@ -112,8 +113,9 @@ function LocationCard({
 export default function LocationHighlightsSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isMobile = width < 640;
-  const isTablet = width >= 640 && width < 1050;
+  const isMobile = isLandingMobile(width);
+  const isTablet = isLandingTablet(width);
+  const horizontalPadding = landingHorizontalPadding(width);
 
   const [cityCounts, setCityCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -139,7 +141,7 @@ export default function LocationHighlightsSection() {
   }, [retryKey]);
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, { paddingHorizontal: horizontalPadding, paddingVertical: isMobile ? 56 : 80 }]}>
       {/* Decorative blob */}
       <View style={styles.blob} />
 
@@ -147,7 +149,7 @@ export default function LocationHighlightsSection() {
         {/* Section heading */}
         <View style={styles.headingWrap}>
           <Text style={styles.eyebrow}>EXPLORE BY LOCATION</Text>
-          <Text style={styles.title}>Top Destinations in Ilocos Sur</Text>
+          <Text style={[styles.title, isMobile && styles.titleMobile]}>Top Destinations in Ilocos Sur</Text>
           <Text style={styles.subtitle}>
             From the heritage streets of Vigan to the coastal shores of Narvacan —
             find your perfect spot anywhere in the province.
@@ -191,7 +193,7 @@ export default function LocationHighlightsSection() {
             {loading ? "—" : Object.keys(cityCounts).length} municipalities.
           </Text>
           <Pressable
-            style={styles.ctaBtn}
+            style={[styles.ctaBtn, isMobile && styles.ctaBtnMobile]}
             onPress={() => router.push("/properties")}
           >
             <Text style={styles.ctaBtnText}>View All Locations →</Text>
@@ -205,8 +207,6 @@ export default function LocationHighlightsSection() {
 const styles = StyleSheet.create({
   section: {
     backgroundColor: "#f8fafc",
-    paddingVertical: 80,
-    paddingHorizontal: 32,
     position: "relative",
     overflow: "hidden",
   },
@@ -242,6 +242,10 @@ const styles = StyleSheet.create({
     color: "#0f172a",
     textAlign: "center",
     marginBottom: 14,
+  },
+  titleMobile: {
+    fontSize: 26,
+    lineHeight: 32,
   },
   subtitle: {
     fontSize: 15,
@@ -326,6 +330,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     cursor: "pointer" as any,
+  },
+  ctaBtnMobile: {
+    alignSelf: "stretch",
+    alignItems: "center",
   },
   ctaBtnText: {
     color: "#1d4ed8",

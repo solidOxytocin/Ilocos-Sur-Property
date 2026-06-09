@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
+import { isLandingMobile, isLandingTablet, landingHorizontalPadding } from "../landingBreakpoints";
 
 const FEATURES = [
   {
@@ -38,13 +39,12 @@ const FEATURES = [
 
 export default function WhyChooseUsSection() {
   const { width } = useWindowDimensions();
-  const isMobile = width < 700;
-  const isTablet = width >= 700 && width < 1050;
-
-  const columns = isMobile ? 1 : isTablet ? 2 : 4;
+  const isMobile = isLandingMobile(width);
+  const isTablet = isLandingTablet(width);
+  const horizontalPadding = landingHorizontalPadding(width);
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, { paddingHorizontal: horizontalPadding, paddingVertical: isMobile ? 56 : 80 }]}>
       {/* Background accent */}
       <View style={styles.bgAccent} />
 
@@ -52,7 +52,9 @@ export default function WhyChooseUsSection() {
         {/* Section heading */}
         <View style={styles.headingWrap}>
           <Text style={styles.eyebrow}>WHY CHOOSE US</Text>
-          <Text style={styles.title}>Everything You Need,{"\n"}In One Place</Text>
+          <Text style={[styles.title, isMobile && styles.titleMobile]}>
+            Everything You Need,{"\n"}In One Place
+          </Text>
           <Text style={styles.subtitle}>
             We've built the most complete property discovery platform for Ilocos Sur —
             designed for buyers, sellers, and renters alike.
@@ -100,8 +102,6 @@ export default function WhyChooseUsSection() {
 const styles = StyleSheet.create({
   section: {
     backgroundColor: "#fff",
-    paddingVertical: 80,
-    paddingHorizontal: 32,
     position: "relative",
     overflow: "hidden",
   },
@@ -137,6 +137,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 44,
     marginBottom: 16,
+  },
+  titleMobile: {
+    fontSize: 28,
+    lineHeight: 34,
   },
   subtitle: {
     fontSize: 16,
