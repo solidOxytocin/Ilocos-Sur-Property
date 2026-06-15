@@ -108,10 +108,7 @@ export default function gridViewCardProperty({
       style={{ minHeight: isWebMobile ? 270 : 290 }}
       activeOpacity={0.8}
       onPress={() => {
-        router.push({
-          pathname: "/details",
-          params: { id: property.id },
-        });
+        router.push(`/details/${property.id}`);
       }}
     >
       {/* Image Preview */}

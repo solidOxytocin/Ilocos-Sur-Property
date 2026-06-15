@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { useRouter } from "expo-router";
+import SeoHead from "./lib/SeoHead";
 import PropertyList from "./(tabs)/properties";
 
 /**
@@ -18,5 +19,14 @@ export default function PropertiesPage() {
 
   if (Platform.OS !== "web") return null;
 
-  return <PropertyList />;
+  return (
+    <>
+      <SeoHead
+        title="Browse Properties"
+        description="Search and filter houses, lots, condos, and commercial listings across Ilocos Sur. Filter by city, price, type, and amenities."
+        path="/properties"
+      />
+      <PropertyList />
+    </>
+  );
 }

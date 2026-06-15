@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { useRouter } from "expo-router";
+import SeoHead from "./lib/SeoHead";
+import { organizationJsonLd, SITE, websiteJsonLd } from "./constants/seo";
 import LandingPage from "./modules/landing/LandingPage";
 
 export default function Index() {
@@ -16,5 +18,14 @@ export default function Index() {
     return null;
   }
 
-  return <LandingPage />;
+  return (
+    <>
+      <SeoHead
+        description={SITE.description}
+        path="/"
+        jsonLd={[organizationJsonLd(), websiteJsonLd()]}
+      />
+      <LandingPage />
+    </>
+  );
 }

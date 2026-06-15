@@ -370,7 +370,7 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={property.id}
                     activeOpacity={0.85}
-                    onPress={() => router.push({ pathname: "/details", params: { id: property.id } })}
+                    onPress={() => router.push(`/details/${property.id}`)}
                     style={{
                       width: 200,
                       backgroundColor: "#fff",

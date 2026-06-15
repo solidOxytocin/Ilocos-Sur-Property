@@ -107,10 +107,7 @@ export function ListViewCardProperty({
     if (onPress) {
       onPress();
     } else {
-      router.push({
-        pathname: "/details",
-        params: { id: property.id },
-      });
+      router.push(`/details/${property.id}`);
     }
   };
 

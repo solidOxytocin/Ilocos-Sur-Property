@@ -4,7 +4,7 @@
 // is embedded into AndroidManifest.xml — NOT the literal string "process.env...".
 
 export default {
-  name: "",
+  name: "Ilocos Sur Property",
   slug: "ilocos_sur_property",
   version: "1.0.1",
   orientation: "portrait",
@@ -64,7 +64,9 @@ export default {
     reactCompiler: true,
   },
   extra: {
-    router: {},
+    router: {
+      origin: process.env.EXPO_PUBLIC_SITE_URL,
+    },
     eas: {
       projectId: "859603f1-96ae-4fed-8da0-549418f14604",
     },
