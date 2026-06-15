@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getPropertiesPaginated, propertyListFromPaginatedOk } from "@/app/service/property-service";
-import type { Property } from "@/app/constants/mock/mock-properties";
+import { formatPropertyType, isHouseAndLotType, normalizePropertyTypeKey } from "@/app/lib/property-type";
 import { API_USER_MESSAGES } from "@/app/lib/api-result";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
 import { Skeleton } from "@/app/modules/generics/components/Skeleton";
@@ -29,11 +29,11 @@ function PropertyCard({ property, cardWidth }: { property: any; cardWidth: numbe
   const router = useRouter();
   const firstImage = property.media?.[0]?.url ?? null;
   const typeColor =
-    property.type === "house"
+    isHouseAndLotType(property.type)
       ? "#1d4ed8"
-      : property.type === "lot"
+      : normalizePropertyTypeKey(property.type) === "LOT"
       ? "#059669"
-      : property.type === "condo"
+      : normalizePropertyTypeKey(property.type) === "CONDO"
       ? "#7c3aed"
       : "#d97706";
 
@@ -55,7 +55,7 @@ function PropertyCard({ property, cardWidth }: { property: any; cardWidth: numbe
         )}
         {/* Type pill */}
         <View style={[styles.typePill, { backgroundColor: typeColor }]}>
-          <Text style={styles.typePillText}>{property.type?.toUpperCase()}</Text>
+          <Text style={styles.typePillText}>{formatPropertyType(property.type)}</Text>
         </View>
       </View>
 

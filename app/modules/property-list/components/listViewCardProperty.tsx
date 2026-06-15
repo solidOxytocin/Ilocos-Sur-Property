@@ -12,6 +12,7 @@ import {
   MORE_ICON_KEY,
 } from "../constants/material-icon-names";
 import { Feature, Amenity, Property } from "../../../constants/mock/mock-properties";
+import { formatPropertyType } from "@/app/lib/property-type";
 
 interface ListViewCardPropertyProps {
   property: Property;
@@ -152,7 +153,7 @@ export function ListViewCardProperty({
         {/* Bottom Left: Property Type */}
         <View className={`absolute ${compact ? "bottom-2 left-2" : "bottom-3 left-3"}`}>
           <Pill 
-            text={property?.type?.toUpperCase() || "PROPERTY"} 
+            text={formatPropertyType(property?.type)} 
             icon="home-city" 
             iconSize={compact ? 12 : 14} 
             textSize="text-xs" 

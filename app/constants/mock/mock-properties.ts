@@ -38,7 +38,7 @@ export type Property = {
   features: Feature[];
   amenities: Amenity[];
   media: Media[];
-  type: "lot" | "house" | "condo" | "commercial";
+  type: "lot" | "house_and_lot" | "condo" | "commercial";
   status: "available" | "sold" | "reserved";
   price: number;
   lotArea?: number | null;
@@ -165,7 +165,7 @@ export const mockProperties: Property[] = [
   {
     id: 3,
     title: "Heritage House in Vigan",
-    type: "house",
+    type: "house_and_lot",
     status: "sold",
     price: 8500000,
     createdAt: "2025-12-01",
@@ -316,7 +316,7 @@ export const mockProperties: Property[] = [
   {
     id: 7,
     title: "Modern Family Home in Santa",
-    type: "house",
+    type: "house_and_lot",
     status: "available",
     price: 7200000,
     createdAt: "2026-02-01",
@@ -499,7 +499,7 @@ export const mockProperties: Property[] = [
   {
     id: 12,
     title: "3BR House & Lot – Tagudin",
-    type: "house",
+    type: "house_and_lot",
     status: "available",
     price: 5600000,
     createdAt: "2026-03-05",
@@ -574,7 +574,7 @@ export const mockProperties: Property[] = [
   {
     id: 14,
     title: "Townhouse in Caoayan",
-    type: "house",
+    type: "house_and_lot",
     status: "available",
     price: 4800000,
     createdAt: "2026-03-10",
@@ -760,7 +760,7 @@ export const mockProperties: Property[] = [
   {
     id: 19,
     title: "5BR Executive Home – Vigan City",
-    type: "house",
+    type: "house_and_lot",
     status: "available",
     price: 22000000,
     createdAt: "2026-03-22",
@@ -905,7 +905,7 @@ export const mockProperties: Property[] = [
   {
     id: 23,
     title: "4BR House with Pool – Sta. Catalina",
-    type: "house",
+    type: "house_and_lot",
     status: "available",
     price: 11000000,
     createdAt: "2026-03-30",
@@ -980,7 +980,7 @@ export const mockProperties: Property[] = [
   {
     id: 25,
     title: "2-Storey House in Bantay",
-    type: "house",
+    type: "house_and_lot",
     status: "sold",
     price: 6900000,
     createdAt: "2025-11-15",
@@ -1102,7 +1102,7 @@ export const mockProperties: Property[] = [
   {
     id: 28,
     title: "Bungalow House – Santa Maria",
-    type: "house",
+    type: "house_and_lot",
     status: "reserved",
     price: 3900000,
     createdAt: "2026-04-04",
@@ -1177,7 +1177,7 @@ export const mockProperties: Property[] = [
   {
     id: 30,
     title: "Restored Heritage Bahay na Bato – Vigan",
-    type: "house",
+    type: "house_and_lot",
     status: "available",
     price: 35000000,
     createdAt: "2026-04-06",

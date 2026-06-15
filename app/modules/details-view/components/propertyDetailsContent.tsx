@@ -23,6 +23,7 @@ import {
   AMENITY_ICONS,
 } from "../../property-list/constants/material-icon-names";
 import { Property } from "../../../constants/mock/mock-properties";
+import { formatPropertyType } from "@/app/lib/property-type";
 import { size } from "../../../theme/size";
 import PropertyMapView from "./propertyMapView";
 
@@ -447,7 +448,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 {(!useSidebarLayout || !onClose) && (
                   <View className="flex-row gap-2 mb-2 flex-wrap">
                     <Pill
-                      text={property?.type?.toUpperCase() || "PROPERTY"}
+                      text={formatPropertyType(property?.type)}
                       icon="home-city"
                       iconSize={14}
                       textSize="text-xs"

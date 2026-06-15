@@ -1,4 +1,5 @@
 import GridViewCardProperty from "@/app/modules/property-list/components/gridViewCardProperty";
+import { propertyTypeMatches } from "@/app/lib/property-type";
 import ListViewCardProperty from "@/app/modules/property-list/components/listViewCardProperty";
 import SearchAndFilters from "@/app/modules/property-list/components/searchAndFilters";
 import { PropertyCardSkeleton } from "../modules/property-list/components/PropertyCardSkeleton";
@@ -138,7 +139,7 @@ export default function PropertyList() {
 
   const quickFilters = [
     { label: "Available", key: "status", value: "AVAILABLE" },
-    { label: "House",     key: "type",   value: "HOUSE" },
+    { label: "House & Lot", key: "type",   value: "HOUSE_AND_LOT" },
     { label: "Lot",       key: "type",   value: "LOT" },
     { label: "Condo",     key: "type",   value: "CONDO" },
     { label: "Commercial",key: "type",   value: "COMMERCIAL" },
@@ -200,7 +201,7 @@ export default function PropertyList() {
       if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
         // Apply client-side filter + sort on mock data
         let filtered = mockProperties.filter((p) => {
-          if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
+          if (filters.type.length > 0 && !filters.type.some((t) => propertyTypeMatches(p.type, t))) return false;
           if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
           if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
           if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;
@@ -267,7 +268,7 @@ export default function PropertyList() {
     if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
       // slice next page from already-sorted mock
       let filtered = mockProperties.filter((p) => {
-        if (filters.type.length > 0 && !filters.type.map(t => t.toLowerCase()).includes(p.type)) return false;
+        if (filters.type.length > 0 && !filters.type.some((t) => propertyTypeMatches(p.type, t))) return false;
         if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
         if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
         if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;

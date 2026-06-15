@@ -7,6 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Dropdown } from 'react-native-element-dropdown';
 import { getPropertyBounds } from '@/app/service/property-service';
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS } from '@/app/lib/property-type';
 
 export interface FilterState {
   type: string[];
@@ -307,7 +308,7 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
     return parseFloat(c);
   };
 
-  const propertyTypes = ['LOT', 'HOUSE', 'CONDO', 'COMMERCIAL'];
+  const propertyTypes = [...PROPERTY_TYPES];
   const statusOptions = ['AVAILABLE', 'SOLD', 'RESERVED'];
 
   const modalContent = (
@@ -501,7 +502,7 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
             {propertyTypes.map((t) => (
               <Pressable key={t} onPress={() => toggle('type', t)}
                 className={`px-4 py-2 rounded-full border ${localFilters.type.includes(t) ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`}>
-                <Text className={localFilters.type.includes(t) ? 'text-white font-medium' : 'text-gray-600'}>{t}</Text>
+                <Text className={localFilters.type.includes(t) ? 'text-white font-medium' : 'text-gray-600'}>{PROPERTY_TYPE_LABELS[t]}</Text>
               </Pressable>
             ))}
           </View>

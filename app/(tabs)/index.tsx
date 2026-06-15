@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { formatPropertyType, isHouseAndLotType, normalizePropertyTypeKey } from "@/app/lib/property-type";
 import {
   View,
   Text,
@@ -90,7 +90,7 @@ export default function HomeScreen() {
   const openInstagram = () => Linking.openURL("https://www.instagram.com/ilocossurproperty/");
 
   const quickActions = [
-    { label: "House", icon: "home-outline", type: "HOUSE", color: "#3b82f6", bg: "#eff6ff" },
+    { label: "House & Lot", icon: "home-outline", type: "HOUSE_AND_LOT", color: "#3b82f6", bg: "#eff6ff" },
     { label: "Lot Only", icon: "map-outline", type: "LOT", color: "#10b981", bg: "#ecfdf5" },
     { label: "Condo", icon: "domain", type: "CONDO", color: "#f59e0b", bg: "#fffbeb" },
     { label: "Commercial", icon: "storefront-outline", type: "COMMERCIAL", color: "#8b5cf6", bg: "#f5f3ff" },
@@ -357,9 +357,9 @@ export default function HomeScreen() {
               {featuredProperties.map((property) => {
                 const firstImage = property.media?.[0]?.url ?? null;
                 const typeColor =
-                  property.type === "house" ? "#1d4ed8"
-                  : property.type === "lot" ? "#059669"
-                  : property.type === "condo" ? "#7c3aed"
+                  isHouseAndLotType(property.type) ? "#1d4ed8"
+                  : normalizePropertyTypeKey(property.type) === "LOT" ? "#059669"
+                  : normalizePropertyTypeKey(property.type) === "CONDO" ? "#7c3aed"
                   : "#d97706";
                 const isSold = property.status?.toUpperCase() === "SOLD";
                 const formatPrice = (p: number) =>
@@ -402,7 +402,7 @@ export default function HomeScreen() {
                         paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
                       }}>
                         <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700" }}>
-                          {property.type?.toUpperCase()}
+                          {formatPropertyType(property.type)}
                         </Text>
                       </View>
                       <View style={{

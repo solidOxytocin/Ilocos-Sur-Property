@@ -104,7 +104,7 @@ export default function LandingFooter() {
                   { label: "All Properties",  params: {} },
                   { label: "For Sale",        params: { status: "AVAILABLE" } },
                   { label: "Lots",            params: { type: "LOT" } },
-                  { label: "Houses",          params: { type: "HOUSE" } },
+                  { label: "House & Lot",     params: { type: "HOUSE_AND_LOT" } },
                   { label: "Commercial",      params: { type: "COMMERCIAL" } },
                 ] as { label: string; params: Record<string, string> }[]).map(({ label, params }) => (
                   <FooterLink

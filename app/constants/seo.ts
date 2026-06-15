@@ -1,4 +1,5 @@
 import type { Property } from "./mock/mock-properties";
+import { formatPropertyType } from "../lib/property-type";
 
 export const SITE = {
   name: "Ilocos Sur Property",
@@ -39,7 +40,7 @@ function capitalize(value: string): string {
 
 export function propertySeoDescription(property: Property): string {
   const city = property.location?.city;
-  const type = capitalize(property.type);
+  const type = formatPropertyType(property.type);
   const price = formatPrice(property.price);
   const location = [property.location?.barangay, city, "Ilocos Sur"].filter(Boolean).join(", ");
   const status = capitalize(property.status);

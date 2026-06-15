@@ -10,6 +10,7 @@ import {
   MORE_ICON_KEY,
 } from "../constants/material-icon-names";
 import { Feature, Amenity, Property } from "../../../constants/mock/mock-properties";
+import { formatPropertyType } from "@/app/lib/property-type";
 
 interface gridViewCardPropertyProps {
   property: Property;
@@ -142,7 +143,7 @@ export default function gridViewCardProperty({
         {/* Property type at bottom left */}
         <View className="absolute bottom-2 left-1">
            <Pill 
-                text={property?.type?.toUpperCase() || "PROPERTY"} 
+                text={formatPropertyType(property?.type)} 
                 icon="home-city" 
                 iconSize={10} 
                 textSize="text-[10px]" 
