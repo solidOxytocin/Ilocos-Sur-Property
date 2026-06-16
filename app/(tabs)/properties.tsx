@@ -115,7 +115,7 @@ export default function PropertyList() {
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: 0, city: "", barangay: "", minArea: 0, maxArea: 0,
+    type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: 0, province: "", city: "", barangay: "", minArea: 0, maxArea: 0,
   });
   // Track the absolute bounds so we can skip sending max values that equal the ceiling
   const [filterBounds, setFilterBounds] = useState({ maxPrice: 0, maxLotArea: 0 });
@@ -128,7 +128,7 @@ export default function PropertyList() {
 
   const hasActiveFilters = useMemo(
     () =>
-      filters.type.length > 0 || filters.status.length > 0 || filters.city !== "" || filters.barangay !== "" ||
+      filters.type.length > 0 || filters.status.length > 0 || filters.province !== "" || filters.city !== "" || filters.barangay !== "" ||
       filters.features.length > 0 || filters.amenities.length > 0 ||
       filters.minPrice > 0 ||
       (filters.maxPrice > 0 && (filterBounds.maxPrice === 0 || filters.maxPrice < filterBounds.maxPrice)) ||
@@ -168,6 +168,7 @@ export default function PropertyList() {
     if (filters.status.length > 0)   f.status   = filters.status;
     if (filters.features.length > 0) f.features = filters.features;
     if (filters.amenities.length > 0) f.amenities = filters.amenities;
+    if (filters.province)           f.province = filters.province;
     if (filters.city)                f.city     = filters.city;
     if (filters.barangay)            f.barangay = filters.barangay;
     if (filters.minPrice > 0)        f.minPrice = filters.minPrice;
@@ -203,6 +204,7 @@ export default function PropertyList() {
         let filtered = mockProperties.filter((p) => {
           if (filters.type.length > 0 && !filters.type.some((t) => propertyTypeMatches(p.type, t))) return false;
           if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
+          if (filters.province && p.location?.province?.toLowerCase() !== filters.province.toLowerCase()) return false;
           if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
           if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;
           if (filters.minPrice > 0 && p.price < filters.minPrice) return false;

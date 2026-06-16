@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Dropdown } from 'react-native-element-dropdown';
 import { getPropertyBounds } from '@/app/service/property-service';
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS } from '@/app/lib/property-type';
+import { PROVINCES, getBarangaysForCity, getCitiesForProvince } from '@/app/constants/locations';
 
 export interface FilterState {
   type: string[];
@@ -16,6 +17,7 @@ export interface FilterState {
   amenities: string[];
   minPrice: number;
   maxPrice: number;
+  province: string;
   city: string;
   barangay: string;
   minArea: number;
@@ -28,41 +30,6 @@ interface FilterModalProps {
   filters: FilterState;
   setFilters: (filters: FilterState) => void;
 }
-
-const ILOCOS_SUR_LOCATIONS: Record<string, string[]> = {
-  "Alilem": ["Alilem Daya", "Amilongan", "Anaao", "Apang", "Apaya", "Batbato", "Daddaay", "Dalawa", "Kiat"],
-  "Banayoyo": ["Bagbagotot", "Banbanaal", "Cabaritan", "Elefante", "Guardia", "Lintic", "Montero", "Nagyubuyuban", "Pila", "Poblacion", "Surong", "Valenzuela", "Villaluz"],
-  "Bantay": ["Aggay", "An-annam", "Balaleng", "Banaoang", "Bulag", "Buquig", "Cabalangegan", "Cabaroan", "Cabuscabusan", "Capangpangan", "Guimod", "Lingsat", "Malingeb", "Mira", "Ora", "Paing", "Puspus", "Quimmarayan", "Sagneb", "Sagpat", "San Isidro", "San Julian", "San Mariano", "San Martin", "San Vicente", "Taleb", "Tay-ac"],
-  "Burgos": ["Amguid", "Balingaoan", "Banay", "Bessang", "Cabaritan", "Calingayan", "Dalig", "Dallang", "Dayawen", "Dirita", "Guang-guang", "Linao", "Luna", "Lucaban", "Macaoayan", "Mambug", "Mandirig", "Nagpanaoan", "Paday", "Pagangpang", "Patar", "San Vicente", "Sardeng", "Subadi Norte", "Subadi Sur", "Taliao"],
-  "Cabugao": ["Alinaay", "Aragan", "Arnap", "Baclig", "Bato", "Bonifacio", "Bungro", "Cacadiran", "Caellayan", "Carusipan", "Catucdaan", "Cuancabal", "Cuantacla", "Daclapan", "Dardarat", "Lipit", "Marcos", "Margaay", "Nagsincaoan", "Namruangan", "Pila", "Pug-os", "Quezon", "Reppaac", "Rizal", "Sabang", "Sagayaden", "Salapasap", "Salomague", "Sisam", "Turod"],
-  "Candon City": ["Allangigan 1st", "Allangigan 2nd", "Amboy", "Ayudante", "Bagani Campo", "Bagani Gabor", "Bagani Macalig", "Bagani Tocgo", "Bagani Ubbog", "Bagar", "Balingaoan", "Bugarin", "Calaoa-an", "Calongbuyan", "Caterman", "Cubcubbuot", "Darapidap", "Langlangca 1st", "Langlangca 2nd", "Oaig-Daya", "Palacapac", "Paras", "Parioc 1st", "Parioc 2nd", "Patpata 1st", "Patpata 2nd", "Paypayad", "San Agustin", "San Andres", "San Antonio", "San Isidro", "San Jose", "San Juan", "San Nicolas", "San Pedro", "Santo Tomas", "Tablac", "Talogtog", "Tamurong 1st", "Tamurong 2nd", "Villarica"],
-  "Caoayan": ["Anonang Mayor", "Anonang Menor", "Baggoc", "Callaguip", "Caparacadan", "Fuerte", "Don Alejandro Quirolgico", "Don Dimas Querubin", "Don Lorenzo Querubin", "Manangat", "Naguilian", "Nansuagao", "Puro", "Tamurong", "Villamar", "Don Lino Abaya", "Pantay-Quitiquit"],
-  "Cervantes": ["Aluling", "Comillas North", "Comillas South", "Concepcion", "Dinwede", "Malaya", "Pilipil", "Remedios", "Rosario", "San Juan", "San Luis", "Santa Clara", "Tagudin"],
-  "Galimuyod": ["Abaya", "Baracbac", "Borobor", "Buyog", "Caliao", "Calimugtong", "Guimod", "Mckinley", "Nagsingcaoan", "Oaig-Daya", "Pagangpang", "Patac", "Poblacion", "San Vicente"],
-  "Gregorio del Pilar": ["Alfonso", "Bussot", "Concepcion", "Doldol", "Mabatano", "Poblacion Norte", "Poblacion Sur"],
-  "Lidlidda": ["Banucal", "Bequi-Walin", "Bugui", "Calungbuyan", "Caminawit", "Carcarabasa", "Labut", "Poblacion Norte", "Poblacion Sur", "San Vicente", "Suysuyan"],
-  "Magsingal": ["Alangan", "Bacar", "Bato", "Bucarot", "Cabaroan", "Camarao", "Caraisan", "Dacutan", "Labut", "Maas-asin", "Macatcatud", "Maratudo", "Miramar", "Namarabar", "Napasan", "Puro", "Purok-a-dakkel", "Purok-a-bassit", "San Basilio", "San Clemente", "San Julian", "San Lucas", "San Ramon", "San Vicente", "Santa Monica", "Sarsaracat"],
-  "Narvacan": ["Abuot", "Aquib", "Banglayan", "Blockhouse", "Bulanos", "Cadacad", "Cagayungan", "Camarao", "Casilian", "Codoog", "Dasay", "Dinalaoan", "Estancia", "Lanipao", "Lungog", "Margaay", "Marozo", "Nanguneg", "Orence", "Pantoc", "Paratong", "Parparia", "Quinarayan", "Rivadavia", "San Antonio", "San Jose", "San Pablo", "San Pedro", "Santa Lucia", "Sarmingan", "Sucoc", "Sulvec", "Turod"],
-  "Quirino": ["Banoen", "Cayus", "Lamag", "Legleg", "Malideg", "Namitpit", "Patiacan", "Poblacion", "Suagayan"],
-  "Salcedo": ["Baybayading", "Boguisil", "Calaoa-an", "Culiong", "Dinaratan", "Kaliwakiw", "Lucbuban", "Madansong", "Maligcong", "Miliang", "Poblacion", "Sagneb", "San Gaspar", "San Juan", "San Roque", "Sibut", "Tagita"],
-  "San Emilio": ["Cabaroan", "Cancio", "Lancuas", "Matindeg", "Poblacion", "San Juan", "Sibsibbu", "Tiagan"],
-  "San Ildefonso": ["Arnap", "Bahet", "Beling", "Bungro", "Busiing Sur", "Busiing Norte", "Gongogong", "Iboy", "Kinamantirisan", "Otol", "Poblacion", "Pudoc", "Sagsagat", "Sagat", "Tuya-a"],
-  "San Juan": ["Asilang", "Bacsil", "Baliw", "Banneng", "Bao-ing", "Barbaran", "Camangaan", "Camindoroan", "Caronoan", "Darao", "Daramuang", "Guimod Norte", "Guimod Sur", "Immayos Norte", "Immayos Sur", "Labnig", "Lapting", "Lira", "Malamin", "Muraya", "Nagsabaran", "Nagsupotan", "Pandayan", "Refaro", "Resurreccion", "Sabangan", "San Isidro", "Saoang", "Solotsolot", "Sunggiam", "Surila"],
-  "San Vicente": ["Bantaoay", "Bayubay Norte", "Bayubay Sur", "Lubong", "Pudoc", "San Sebastian"],
-  "Santa": ["Ampandula", "Banaoang", "Basug", "Bucalag", "Cabangaran", "Calungboyan", "Casiber", "Dammay", "Labut Norte", "Labut Sur", "Mabilbila Norte", "Mabilbila Sur", "Magsaysay District", "Manueva", "Marcos District", "Nagpanaoan", "Namalangan", "Oribi", "Pasungol", "Quezon District", "Quirino District", "Rancho", "Rizal District", "Sacuyya Norte", "Sacuyya Sur", "San Jose"],
-  "Santa Catalina": ["Cabittaogan", "Cabuloan", "Calongbuyan", "Namnama", "Paratong", "Poblacion", "Pangada", "Subec", "Tamurong"],
-  "Santa Cruz": ["Amarao", "Babayoan", "Bacsayan", "Banay", "Bato", "Buliclic", "Calingayan", "Capanikian", "Casilian", "Daligan", "Mambug", "Mantaya", "Poblacion", "Sagapan", "San Antonio", "San Jose", "San Pedro", "Sevilla", "Sidaoen"],
-  "Santa Lucia": ["Alincaoeg", "Angkileng", "Ayaoan", "Banbanaba", "Bantoc", "Bao-as", "Barangay I", "Barangay II", "Barangay III", "Bawani", "Buliclic", "Burgos", "Cabaritan", "Catayagan", "Conconig", "Cuartel", "Damacuag", "Lubong", "Lumbang", "Marcos", "Nagtocaoc", "Namnama", "Palali", "Paratong", "Pias", "Rondalla", "Sabuanan", "San Juan", "San Pedro", "Suagayan", "Valdefuente", "Vigan"],
-  "Santa Maria": ["Ag-agrao", "Ampandula", "Babangot", "Baliw Daya", "Baliw Laud", "Bia-o", "Bulbulala", "Cabaroan", "Danuman East", "Danuman West", "Donghol", "Gusing", "Laslasong Norte", "Laslasong Sur", "Laslasong West", "Lesseb", "Lingsat", "Lubong", "Macatcatud", "Maynganay Norte", "Maynganay Sur", "Nagsayaoan", "Nalidaoan", "Nutia", "Pacang", "Parioc 1st", "Parioc 2nd", "Penned", "Poblacion Norte", "Poblacion Sur", "San Alejandro", "San Gelacio", "San Pedro", "Silag", "Suso", "Tangaoan"],
-  "Santiago": ["Al-alinao Norte", "Al-alinao Sur", "Ambugat", "Bayo", "Bigbiga", "Binacud", "Bucyao", "Bulbulala", "Buso-buso", "Butol", "Caburao", "Danuman East", "Danuman West", "Dinwede East", "Dinwede West", "Gabay", "Imus", "Lang-ayan", "Mambug", "Olo-olo Norte", "Olo-olo Sur", "Poblacion Norte", "Poblacion Sur", "Sabanen", "Salcedo", "San Jose", "San Roque", "San Vicente", "Ubbog"],
-  "Santo Domingo": ["Binalayangan", "Borobor", "Cabigbigaan", "Cabusligan", "Calay-ab", "Camragan", "Casili", "Flora", "Lagatit", "Laoingen", "Lussoc", "Nalasin", "Nagbettedan", "Naglaoa-an", "Pangalisan", "Panay", "Pussuac", "Quimmarayan", "San Pablo", "Santa Clara", "Suksukit", "Suso", "Vacunero"],
-  "Sigay": ["Abquilan", "Mabileg", "Poblacion", "San Elias"],
-  "Sinait": ["Aguing", "Ballaigui", "Baracbac", "Barikir", "Battao", "Cabaritan", "Cabisilan", "Calanutian", "Calingayan", "Concepcion", "Dean Leopoldo Yabes", "Dadao", "Dadalaquiten Norte", "Dadalaquiten Sur", "Duyay-ayat", "Jordan", "Katipunan", "Macabiag", "Magsaysay", "Marnay", "Masical", "Nagbalioartian", "Nagcullooban", "Naglumpa-an", "Nagmullocan", "Namnama", "Pacis", "Paratong", "Poblacion", "Purag", "Quibit-quibit", "Quimmallogong", "Ricudo", "Sabangan", "Sallacapo", "Santa Cruz", "Sapriana", "Tapao", "Teppeng", "Tubigay", "Ubbog"],
-  "Sugpon": ["Balbalayang", "Bangabanga", "Danac", "Pangotan", "Poblacion", "Uguid"],
-  "Suyo": ["Baringcucurong", "Cabcaburao", "Man-atong", "Patoc-ao", "Poblacion", "Suyo Proper", "Urzadan", "Uso"],
-  "Tagudin": ["Ag-aguman", "Al-alinao", "Ambalayat", "Baracbac", "Bariw", "Baroro", "Basca", "Bitalag", "Borono", "Bucao", "Cabaniguan", "Cabaroan", "Caburlaoan", "Cantoria", "Concepcion", "Dada Norte", "Dada Sur", "Del Pilar", "Farig", "Gari Norte", "Gari Sur", "Las-ud", "Lapting", "Libtong", "Lubnac", "Magsaysay", "Malacañang", "Mariposa", "Miguel", "Padua", "Pallogan", "Paratong", "Quirino", "Rizal", "Salcedo", "San Antonio", "San Isidro", "San Juan", "San Jose", "San Rafael", "San Vicente", "Sarmingan", "Tambidao", "Tampugo", "Tarangotong"],
-  "Vigan City": ["Ayusan Norte", "Ayusan Sur", "Barangay I", "Barangay II", "Barangay III", "Barangay IV", "Barangay V", "Barangay VI", "Barraca", "Beddeng Laud", "Beddeng Daya", "Bongtolan", "Bulala", "Cabalangegan", "Cabaroan Daya", "Cabaroan Laud", "Camangaan", "Capangpangan", "Mindoro", "Nagsangalan", "Pantay Daya", "Pantay Fatima", "Pantay Laud", "Paoa", "Paratong", "Pong-ol", "Purok-a-bassit", "Purok-a-dakkel", "Raois", "Rugsuanan", "Salindeg", "San Jose", "San Julian Norte", "San Julian Sur", "San Pedro", "Santa Elena", "Tamag"]
-};
 
 const FILTER_FEATURES: { key: string; name: string; icon: string }[] = [
   { key: 'road',        name: 'Main Road',      icon: 'road-variant' },
@@ -292,7 +259,7 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
     });
 
   const clearFilters = () =>
-    setLocalFilters({ type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: bounds.maxPrice, city: '', barangay: '', minArea: 0, maxArea: bounds.maxLotArea });
+    setLocalFilters({ type: [], status: [], features: [], amenities: [], minPrice: 0, maxPrice: bounds.maxPrice, province: '', city: '', barangay: '', minArea: 0, maxArea: bounds.maxLotArea });
 
   const handleApply = () => { setFilters(localFilters); onClose(); };
 
@@ -310,6 +277,10 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
 
   const propertyTypes = [...PROPERTY_TYPES];
   const statusOptions = ['AVAILABLE', 'SOLD', 'RESERVED'];
+  const cityOptions = localFilters.province ? getCitiesForProvince(localFilters.province) : [];
+  const barangayOptions = localFilters.province && localFilters.city
+    ? getBarangaysForCity(localFilters.province, localFilters.city)
+    : [];
 
   const modalContent = (
     <View style={[
@@ -328,18 +299,51 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 16 }} showsVerticalScrollIndicator={false}>
 
-        {/* City & Barangay */}
-        <View className="mb-6 flex-row" style={{ gap: 16 }}>
+        {/* Province, City & Barangay */}
+        <View className="mb-6">
+          <Text className="text-base font-semibold text-gray-700 mb-3">Province</Text>
+          <Dropdown
+            style={{
+              height: 50,
+              backgroundColor: '#ffffff',
+              borderColor: '#d1d5db',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 16,
+              marginBottom: 16,
+            }}
+            placeholderStyle={{ color: '#6b7280', fontSize: 15 }}
+            selectedTextStyle={{ color: '#374151', fontSize: 15 }}
+            iconStyle={{ width: 22, height: 22, tintColor: '#6b7280' }}
+            data={[
+              { label: 'All Provinces', value: '' },
+              ...PROVINCES.map((p) => ({ label: p, value: p })),
+            ]}
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="All Provinces"
+            value={localFilters.province}
+            onChange={(item) => {
+              setLocalFilters({ ...localFilters, province: item.value, city: '', barangay: '' });
+            }}
+            containerStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderRadius: 8, overflow: 'hidden' }}
+            itemTextStyle={{ color: '#374151' }}
+            activeColor={'#f3f4f6'}
+          />
+
+          <View className="flex-row" style={{ gap: 16 }}>
           <View style={{ flex: 1 }}>
             <Text className="text-base font-semibold text-gray-700 mb-3">City / Municipality</Text>
             <Dropdown
               style={{
                   height: 50,
-                  backgroundColor: '#ffffff',
+                  backgroundColor: !localFilters.province ? '#f3f4f6' : '#ffffff',
                   borderColor: '#d1d5db',
                   borderWidth: 1,
                   borderRadius: 8,
                   paddingHorizontal: 16,
+                  opacity: !localFilters.province ? 0.7 : 1,
               }}
               placeholderStyle={{ color: '#6b7280', fontSize: 15 }}
               selectedTextStyle={{ color: '#374151', fontSize: 15 }}
@@ -354,18 +358,19 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
               iconStyle={{ width: 22, height: 22, tintColor: '#6b7280' }}
               data={[
                 { label: 'All Cities', value: '' },
-                ...Object.keys(ILOCOS_SUR_LOCATIONS).sort().map(c => ({ label: c, value: c }))
+                ...cityOptions.map(c => ({ label: c, value: c }))
               ]}
               search
               maxHeight={300}
               labelField="label"
               valueField="value"
-              placeholder="All Cities"
+              placeholder={localFilters.province ? 'All Cities' : 'Select Province First'}
               searchPlaceholder="Search city..."
               value={localFilters.city}
               onChange={item => {
                   setLocalFilters({ ...localFilters, city: item.value, barangay: '' });
               }}
+              disable={!localFilters.province}
               containerStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderRadius: 8, overflow: 'hidden' }}
               itemTextStyle={{ color: '#374151' }}
               activeColor={'#f3f4f6'}
@@ -397,7 +402,7 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
               iconStyle={{ width: 22, height: 22, tintColor: '#6b7280' }}
               data={localFilters.city ? [
                 { label: 'All Barangays', value: '' },
-                ...ILOCOS_SUR_LOCATIONS[localFilters.city]?.map(b => ({ label: b, value: b }))
+                ...barangayOptions.map(b => ({ label: b, value: b }))
               ] : []}
               search
               maxHeight={300}
@@ -414,6 +419,7 @@ export function FilterModal({ visible, onClose, filters, setFilters }: FilterMod
               itemTextStyle={{ color: '#374151' }}
               activeColor={'#f3f4f6'}
             />
+          </View>
           </View>
         </View>
 
