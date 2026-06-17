@@ -471,10 +471,10 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                 )}
 
                 <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
-                  {property?.location.address}
+                  {property?.title || "Untitled Property"}
                 </Text>
                 <Text className="text-base text-gray-500 mt-1 font-medium">
-                  {property?.location.barangay}, {property?.location.city}
+                  {[property?.location?.barangay, property?.location?.city].filter(Boolean).join(", ")}
                 </Text>
               </View>
               {!useSidebarLayout && (

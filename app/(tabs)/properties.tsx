@@ -25,7 +25,7 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 
 const PAGE_SIZE = 12;
-const GRID_GAP = 8;
+const GRID_GAP = 16;
 
 type SortField = "createdAt" | "price" | "lotArea" | "city";
 type SortOrder = "asc" | "desc";
@@ -405,7 +405,7 @@ export default function PropertyList() {
   const skeletonData = Array.from({ length: skeletonCount }, (_, i) => i);
 
   const renderGridCell = (child: React.ReactNode) => (
-    <View style={{ width: gridColumnWidth, alignSelf: "flex-start" }}>{child}</View>
+    <View style={{ width: gridColumnWidth, alignSelf: "flex-start", marginBottom: GRID_GAP }}>{child}</View>
   );
 
   const renderItem = ({ item }: { item: Property }) =>
@@ -532,7 +532,7 @@ export default function PropertyList() {
             </View>
 
             {/* Quick filter chips */}
-            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 8, paddingBottom: 12, minWidth: 0 }}>
+            <View style={{ backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 10, paddingBottom: 16, minWidth: 0 }}>
               <FlatList
                 horizontal
                 data={quickFilters}
@@ -572,7 +572,7 @@ export default function PropertyList() {
           </View>
 
           {/* List Body */}
-          <View className={`flex-1 pt-3 min-w-0 ${isWebSplitList ? "px-1" : isWebMobile ? "px-3" : "px-2"}`}>
+          <View className={`flex-1 pt-5 min-w-0 ${isWebSplitList ? "px-1" : isWebMobile ? "px-3" : "px-2"}`}>
             {!isMounted ? null : loading ? (
               <View className={isListView ? "flex-1 min-w-0" : "flex-1 w-full min-w-0"}>
                 <FlatList
@@ -590,6 +590,7 @@ export default function PropertyList() {
                   showsVerticalScrollIndicator={false}
                   className="w-full"
                   columnWrapperStyle={gridColumnWrapperStyle}
+                  contentContainerStyle={{ paddingBottom: GRID_GAP }}
                 />
               </View>
             ) : fetchError ? (
@@ -617,6 +618,7 @@ export default function PropertyList() {
                   showsVerticalScrollIndicator={false}
                   className="w-full"
                   columnWrapperStyle={gridColumnWrapperStyle}
+                  contentContainerStyle={{ paddingBottom: GRID_GAP }}
                   onEndReached={loadNextPage}
                   onEndReachedThreshold={0.4}
                   ListFooterComponent={renderFooter}

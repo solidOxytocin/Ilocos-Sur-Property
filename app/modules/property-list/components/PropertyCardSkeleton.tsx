@@ -20,9 +20,9 @@ export function PropertyCardSkeleton({ viewMode }: PropertyCardSkeletonProps) {
         <Skeleton className="w-full h-36 rounded-none" />
 
         {/* Content Placeholder */}
-        <View className="flex-col p-3 justify-between" style={{ minHeight: 150 }}>
+        <View className="flex-col px-3.5 py-4 justify-between" style={{ minHeight: 158 }}>
           <View>
-            <View className="flex-1 flex-row items-center justify-center mb-1">
+            <View className="flex-1 flex-row items-center justify-center mb-1.5">
               <Skeleton className="w-24 h-5" />
             </View>
             <View className="flex-1 flex-row items-center justify-center mb-3">
@@ -30,7 +30,7 @@ export function PropertyCardSkeleton({ viewMode }: PropertyCardSkeletonProps) {
             </View>
 
             {/* Features Placeholders */}
-            <View className="flex-row flex-wrap min-h-[44px] gap-1">
+            <View className="flex-row flex-wrap min-h-[44px] gap-1 mb-1">
               <Skeleton className="w-16 h-6 rounded-full" />
               <Skeleton className="w-16 h-6 rounded-full" />
               <Skeleton className="w-12 h-6 rounded-full" />
@@ -38,7 +38,7 @@ export function PropertyCardSkeleton({ viewMode }: PropertyCardSkeletonProps) {
           </View>
 
           {/* Bottom Row */}
-          <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-gray-100">
+          <View className="flex-row justify-between items-center pt-3 mt-3 border-t border-gray-100">
             <Skeleton className="w-16 h-4" />
             <Skeleton className="w-20 h-5" />
           </View>

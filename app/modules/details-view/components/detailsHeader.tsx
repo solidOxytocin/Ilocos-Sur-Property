@@ -34,8 +34,8 @@ export default function DetailsHeader({ properties, onClose }: HeaderProps) {
           <MaterialCommunityIcons name="arrow-left" size={size.headerIcon} color="black" />
         </TouchableOpacity>
       )}
-      <Text className="text-xl font-bold flex-1 text-center text-blue-600">
-        {properties.location.city} | {properties.location.barangay}
+      <Text className="text-xl font-bold flex-1 text-center text-blue-600" numberOfLines={2}>
+        {properties.title || "Untitled Property"}
       </Text>
       {/* Empty view to balance the flex-row if needed, but flex-1 text-center handles centering mostly */}
       <View className="w-8" />

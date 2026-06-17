@@ -103,6 +103,8 @@ export function ListViewCardProperty({
   const { width } = useWindowDimensions();
   const isHorizontal = !compact && width >= 768;
   const isSold = property?.status?.toUpperCase() === "SOLD";
+  const status = property?.status?.toUpperCase() || "AVAILABLE";
+  const showStatusPill = status !== "AVAILABLE";
 
   const handlePress = () => {
     if (onPress) {
@@ -138,17 +140,19 @@ export function ListViewCardProperty({
         />
         
         {/* Top Left: Status Pill */}
-        <View className={`absolute ${compact ? "top-2 left-2" : "top-3 left-3"}`}>
-            <Pill 
-                text={property?.status?.toUpperCase() || "AVAILABLE"} 
-                icon="check-circle" 
-                iconSize={compact ? 10 : 12} 
-                textSize="text-[10px]" 
-                backGroundColor={property?.status?.toUpperCase() === "SOLD" ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-orange-500" : "bg-emerald-500"} 
-                textColor="text-white"
-                compact
-            />
-        </View>
+        {showStatusPill && (
+          <View className={`absolute ${compact ? "top-2 left-2" : "top-3 left-3"}`}>
+              <Pill 
+                  text={status} 
+                  icon="check-circle" 
+                  iconSize={compact ? 10 : 12} 
+                  textSize="text-[10px]" 
+                  backGroundColor={status === "SOLD" ? "bg-red-600" : status === "RESERVED" ? "bg-orange-500" : "bg-emerald-500"} 
+                  textColor="text-white"
+                  compact
+              />
+          </View>
+        )}
 
         {/* Bottom Left: Property Type */}
         <View className={`absolute ${compact ? "bottom-2 left-2" : "bottom-3 left-3"}`}>
@@ -180,9 +184,9 @@ export function ListViewCardProperty({
         <View>
           <Text
             className={`font-extrabold text-gray-900 ${compact ? "text-base mb-1" : "text-2xl mb-1.5"}`}
-            numberOfLines={1}
+            numberOfLines={compact ? 1 : 2}
           >
-            {property?.location?.city || "Unknown Location"}
+            {property?.title || "Untitled Property"}
           </Text>
           <View className="flex-row items-center">
             {!compact && (
@@ -192,7 +196,7 @@ export function ListViewCardProperty({
               className={`text-gray-500 ${compact ? "text-sm" : "font-medium text-base ml-1"}`}
               numberOfLines={1}
             >
-              {property?.location?.barangay || "—"}
+              {[property?.location?.barangay, property?.location?.city].filter(Boolean).join(", ") || "—"}
             </Text>
           </View>
 

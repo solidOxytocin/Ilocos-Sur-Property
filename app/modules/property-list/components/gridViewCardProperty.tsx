@@ -100,6 +100,8 @@ export default function gridViewCardProperty({
   const { width } = useWindowDimensions();
   const isWebMobile = Platform.OS === "web" && width < 768;
   const isSold = property?.status?.toUpperCase() === "SOLD";
+  const status = property?.status?.toUpperCase() || "AVAILABLE";
+  const showStatusPill = status !== "AVAILABLE";
 
   return (
     <TouchableOpacity
@@ -129,16 +131,18 @@ export default function gridViewCardProperty({
         )}
 
         {/* Status at top Left */}
-        <View className="absolute top-2 left-1">
-          <Pill 
-              text={property?.status?.toUpperCase() || "AVAILABLE"} 
-              icon="check-circle" 
-              iconSize={10} 
-              textSize="text-[10px]" 
-              backGroundColor={isSold ? "bg-red-600" : property?.status?.toUpperCase() === "RESERVED" ? "bg-orange-500" : "bg-emerald-500"}
-              compact
-          />
-        </View>
+        {showStatusPill && (
+          <View className="absolute top-2 left-1">
+            <Pill 
+                text={status} 
+                icon="check-circle" 
+                iconSize={10} 
+                textSize="text-[10px]" 
+                backGroundColor={isSold ? "bg-red-600" : status === "RESERVED" ? "bg-orange-500" : "bg-emerald-500"}
+                compact
+            />
+          </View>
+        )}
 
         {/* Property type at bottom left */}
         <View className="absolute bottom-2 left-1">
@@ -154,23 +158,23 @@ export default function gridViewCardProperty({
       </View>
 
       {/* Content */}
-      <View className="flex-col p-3 justify-between" style={{ minHeight: 150 }}>
+      <View className="flex-col px-3.5 py-4 justify-between" style={{ minHeight: 158 }}>
         
         {/* Header */}
         <View>
-          <View className="flex-1 flex-row items-center justify-center">
-             <Text className="font-bold text-[15px] text-gray-800" numberOfLines={1}>
-              {property?.location?.city || "Unknown Location"}
+          <View className="flex-1 flex-row items-center justify-center mb-1.5">
+             <Text className="font-bold text-[15px] text-gray-800 leading-5" numberOfLines={2}>
+              {property?.title || "Untitled Property"}
             </Text>
           </View>
           <View className="flex-1 flex-row items-center justify-center">  
-              <Text className="font-normal text-xs text-gray-500 mb-2" numberOfLines={1}>
-                {property?.location?.barangay || " "}
+              <Text className="font-normal text-xs text-gray-500 mb-3" numberOfLines={1}>
+                {[property?.location?.barangay, property?.location?.city].filter(Boolean).join(", ") || " "}
               </Text>
           </View>
         
           
-          <View className="flex-row flex-wrap min-h-[44px]">
+          <View className="flex-row flex-wrap min-h-[44px] gap-1 mb-1">
             {(() => {
               const combined = [
                 ...(property?.features ?? []).map((f) => ({ ...f, isAmenity: false })),
@@ -189,7 +193,7 @@ export default function gridViewCardProperty({
           </View>
         </View>
 
-        <View className="flex-row justify-between items-center pt-2 mt-2 border-t border-gray-100 gap-2">
+        <View className="flex-row justify-between items-center pt-3 mt-3 border-t border-gray-100 gap-2">
            <View className="flex-row items-center shrink-0">
              <MaterialCommunityIcons name="vector-square" size={isWebMobile ? 18 : 21} color="#fb923c" />
              <Text className={`font-bold text-orange-600 ml-1 ${isWebMobile ? "text-xs" : "text-[14px]"}`}>
