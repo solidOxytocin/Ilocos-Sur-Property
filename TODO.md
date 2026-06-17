@@ -130,11 +130,18 @@
     -Verfcel (front-end)
     
 # Changes After Deployment
-- [] Handle UI Mobile Responsiveness
-- [] Handle Loading Page for Warm up of API
+- [x] Handle UI Mobile Responsiveness
+- [x] Handle Loading Page for Warm up of API
+- [] No way to share details (opening url /details/{id} wont work)
+- [] OG image (favicon → real photo)
+- [] Brand color differentiation
+- [] Featured Properties Selector (Admin)
+
+
+- [] Conditional render for Featured Properties
+- [] Add Share button 
 - [] Add more Animation
 - [] Feature and Amenities Management (Admin)
-- [] Featured Selector (Admin)
 - [] Admin Dashboard (Statitstics)
     - Site
         -Visit

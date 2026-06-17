@@ -14,25 +14,36 @@ import PropertyDetailsContent from "../modules/details-view/components/propertyD
 import { PropertyDetailsSkeleton } from "../modules/details-view/components/PropertyDetailsSkeleton";
 import { getPropertyById, type ApiFailure } from "../service/property-service";
 
+// Guaranteed shell so any id (incl. properties added after the last build) can
+// be opened directly / shared without 404ing. Vercel rewrites unknown
+// `/details/:id` paths to this exported file, which then resolves the real id
+// from the URL and fetches client-side. See vercel.json.
+export const DETAILS_FALLBACK_ID = "_fallback";
+
 export async function generateStaticParams(): Promise<{ id: string }[]> {
+  const fallback = { id: DETAILS_FALLBACK_ID };
+
   if (process.env.EXPO_PUBLIC_IS_MOCK === "true") {
     const { mockProperties } = await import("../constants/mock/mock-properties");
-    return mockProperties.map((p) => ({ id: String(p.id) }));
+    return [...mockProperties.map((p) => ({ id: String(p.id) })), fallback];
   }
 
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (!apiUrl) return [];
+  if (!apiUrl) return [fallback];
 
   try {
     const res = await fetch(`${apiUrl}/property/getAll?limit=500`);
-    if (!res.ok) return [];
+    if (!res.ok) return [fallback];
     const json = await res.json();
     const rows = Array.isArray(json) ? json : (json?.data ?? []);
-    return rows
-      .filter((p: { id?: number }) => p?.id != null)
-      .map((p: { id: number }) => ({ id: String(p.id) }));
+    return [
+      ...rows
+        .filter((p: { id?: number }) => p?.id != null)
+        .map((p: { id: number }) => ({ id: String(p.id) })),
+      fallback,
+    ];
   } catch {
-    return [];
+    return [fallback];
   }
 }
 
