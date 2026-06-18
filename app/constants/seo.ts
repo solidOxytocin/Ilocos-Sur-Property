@@ -12,6 +12,9 @@ export const SITE = {
   instagram: "https://www.instagram.com/ilocossurproperty/",
 } as const;
 
+/** Default social-share image (1200×630). Served from the `public/` folder at the site root. */
+export const DEFAULT_OG_IMAGE = "/og-image.png";
+
 export function getSiteUrl(): string {
   return (process.env.EXPO_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
 }

@@ -1,5 +1,6 @@
 import Head from "expo-router/head";
 import {
+  DEFAULT_OG_IMAGE,
   SITE,
   absoluteUrl,
   formatPageTitle,
@@ -33,7 +34,7 @@ export default function SeoHead({
       ? image
       : absoluteUrl(image)
     : getSiteUrl()
-      ? absoluteUrl("/favicon.ico")
+      ? absoluteUrl(DEFAULT_OG_IMAGE)
       : undefined;
 
   return (
