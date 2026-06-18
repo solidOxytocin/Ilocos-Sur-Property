@@ -132,7 +132,7 @@
 # Changes After Deployment
 - [x] Handle UI Mobile Responsiveness
 - [x] Handle Loading Page for Warm up of API
-- [] No way to share details (opening url /details/{id} wont work)
+- [X] No way to share details (opening url /details/{id} wont work)
 - [] OG image (favicon → real photo)
 - [] Brand color differentiation
 - [] Featured Properties Selector (Admin)
