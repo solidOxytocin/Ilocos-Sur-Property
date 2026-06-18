@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { getPropertiesPaginated, getCityPropertyCounts, propertyListFromPaginatedOk } from "../service/property-service";
+import { getCityPropertyCounts, getFeaturedWithFallback } from "../service/property-service";
 import { API_USER_MESSAGES } from "../lib/api-result";
 import { DataFetchState } from "../modules/generics/components/DataFetchState";
 import type { Property } from "../constants/mock/mock-properties";
@@ -122,8 +122,9 @@ export default function HomeScreen() {
     return () => { cancelled = true; };
   }, []);
 
-  // Fetch 5 featured properties from the real data source
+  // Fetch admin-selected featured properties (with newest-fill fallback).
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [featuredShow, setFeaturedShow] = useState(true);
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [featuredError, setFeaturedError] = useState<string | null>(null);
   const [featuredRetryKey, setFeaturedRetryKey] = useState(0);
@@ -133,18 +134,22 @@ export default function HomeScreen() {
     (async () => {
       setFeaturedLoading(true);
       setFeaturedError(null);
-      const result = await getPropertiesPaginated({}, 1, 5);
+      const result = await getFeaturedWithFallback(5, 5);
       if (cancelled) return;
       if (!result.ok) {
         setFeaturedError(result.error.message);
         setFeaturedProperties([]);
+        setFeaturedShow(true);
       } else {
-        setFeaturedProperties(propertyListFromPaginatedOk(result.data));
+        setFeaturedProperties(result.data.list);
+        setFeaturedShow(result.data.show);
       }
       setFeaturedLoading(false);
     })();
     return () => { cancelled = true; };
   }, [featuredRetryKey]);
+
+  const hideFeaturedSection = !featuredLoading && !featuredError && !featuredShow;
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -321,6 +326,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Featured Properties */}
+        {!hideFeaturedSection && (
         <View className="mb-6">
           <View className="px-4 flex-row justify-between items-center mb-3">
             <Text className="text-lg font-bold text-gray-800">Featured Properties</Text>
@@ -435,6 +441,7 @@ export default function HomeScreen() {
             </ScrollView>
           )}
         </View>
+        )}
 
         {/* CTA Section */}
         <View className="px-4 mb-8">

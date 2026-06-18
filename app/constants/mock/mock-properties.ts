@@ -49,6 +49,7 @@ export type Property = {
   bathRooms?: number | null;
   parking?: number | null;
   details?: string;
+  featured?: boolean;
   createdAt: string;
   updatedAt?: string;
   slug?: string;

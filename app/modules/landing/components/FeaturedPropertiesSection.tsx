@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { getPropertiesPaginated, propertyListFromPaginatedOk } from "@/app/service/property-service";
+import { getFeaturedWithFallback } from "@/app/service/property-service";
+import type { Property } from "@/app/constants/mock/mock-properties";
 import { formatPropertyType, isHouseAndLotType, normalizePropertyTypeKey } from "@/app/lib/property-type";
 import { API_USER_MESSAGES } from "@/app/lib/api-result";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
@@ -83,6 +84,7 @@ export default function FeaturedPropertiesSection() {
   const horizontalPadding = landingHorizontalPadding(width);
   const cardWidth = isMobile ? Math.min(280, width - horizontalPadding * 2 - 8) : 280;
   const [featured, setFeatured] = useState<Property[]>([]);
+  const [show, setShow] = useState(true);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -92,18 +94,25 @@ export default function FeaturedPropertiesSection() {
     (async () => {
       setLoading(true);
       setFetchError(null);
-      const result = await getPropertiesPaginated({}, 1, FEATURED_COUNT);
+      const result = await getFeaturedWithFallback(5, FEATURED_COUNT);
       if (cancelled) return;
       if (!result.ok) {
         setFetchError(result.error.message);
         setFeatured([]);
+        setShow(true);
       } else {
-        setFeatured(propertyListFromPaginatedOk(result.data));
+        setFeatured(result.data.list);
+        setShow(result.data.show);
       }
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [retryKey]);
+
+  // Hide the whole section when there aren't enough properties to feature.
+  if (!loading && !fetchError && !show) {
+    return null;
+  }
 
   return (
     <View style={[styles.section, { paddingVertical: isMobile ? 48 : 72 }]}>

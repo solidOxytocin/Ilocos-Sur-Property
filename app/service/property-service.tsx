@@ -119,6 +119,52 @@ export async function getPropertiesPaginated(
   });
 }
 
+export interface FeaturedResult {
+  /** Properties to render in the Featured section. */
+  list: Property[];
+  /** Whether the Featured section should be shown at all. */
+  show: boolean;
+}
+
+/**
+ * Returns the admin-selected featured properties for the landing page.
+ *
+ * - If at least `minCount` properties are featured, returns exactly those.
+ * - Otherwise falls back to filling the remaining slots with the newest
+ *   (non-featured) properties up to `target`.
+ * - `show` is false only when fewer than `minCount` properties exist in total,
+ *   in which case the Featured section should be hidden entirely.
+ */
+export async function getFeaturedWithFallback(
+  minCount = 5,
+  target = 6
+): Promise<ApiResult<FeaturedResult>> {
+  const featuredRes = await getPropertiesPaginated({ featured: true }, 1, 100);
+  if (!featuredRes.ok) return featuredRes;
+
+  const featuredList = propertyListFromPaginatedOk(featuredRes.data);
+  if (featuredList.length >= minCount) {
+    return ok({ list: featuredList, show: true });
+  }
+
+  const fillCount = Math.max(target, minCount);
+  const newestRes = await getPropertiesPaginated({}, 1, fillCount);
+  if (!newestRes.ok) {
+    return ok({ list: featuredList, show: featuredList.length >= minCount });
+  }
+
+  const seen = new Set(featuredList.map((p) => p.id));
+  const list = [...featuredList];
+  for (const candidate of propertyListFromPaginatedOk(newestRes.data)) {
+    if (list.length >= fillCount) break;
+    if (seen.has(candidate.id)) continue;
+    seen.add(candidate.id);
+    list.push(candidate);
+  }
+
+  return ok({ list, show: list.length >= minCount });
+}
+
 /** Fetches all properties in one request (used when a full list is needed). */
 export async function getProperties(filters?: Record<string, any>): Promise<ApiResult<Property[]>> {
   if (isMock()) {
