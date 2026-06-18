@@ -40,7 +40,7 @@ export type Property = {
   media: Media[];
   type: "lot" | "house_and_lot" | "condo" | "commercial";
   status: "available" | "sold" | "reserved";
-  price: number;
+  price?: number | null;
   lotArea?: number | null;
   floorArea?: number | null;
   bedrooms?: number | null;

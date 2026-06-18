@@ -13,6 +13,7 @@ import {
 } from "../constants/material-icon-names";
 import { Feature, Amenity, Property } from "../../../constants/mock/mock-properties";
 import { formatPropertyType } from "@/app/lib/property-type";
+import { formatPrice } from "@/app/lib/format-price";
 
 interface ListViewCardPropertyProps {
   property: Property;
@@ -228,7 +229,7 @@ export function ListViewCardProperty({
           }`}
         >
           <Text className={`font-bold text-blue-600 ${compact ? "text-base" : "text-lg"}`}>
-            ₱{Number(property?.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            {formatPrice(property?.price)}
           </Text>
           <View className="flex-row items-center">
             <MaterialCommunityIcons

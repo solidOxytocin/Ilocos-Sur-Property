@@ -11,15 +11,10 @@ import {
 } from "../constants/material-icon-names";
 import { Feature, Amenity, Property } from "../../../constants/mock/mock-properties";
 import { formatPropertyType } from "@/app/lib/property-type";
+import { formatPrice } from "@/app/lib/format-price";
 
 interface gridViewCardPropertyProps {
   property: Property;
-}
-
-function formatGridPrice(price: number): string {
-  if (price >= 1_000_000) return `₱${(price / 1_000_000).toFixed(1)}M`;
-  if (price >= 1_000) return `₱${(price / 1_000).toFixed(0)}K`;
-  return `₱${Number(price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
 interface ItemPillComponentProps {
@@ -204,7 +199,7 @@ export default function gridViewCardProperty({
              className={`font-extrabold text-blue-600 shrink ${isWebMobile ? "text-sm" : "text-base"}`}
              numberOfLines={1}
            >
-             {property?.price != null ? formatGridPrice(Number(property.price)) : ""}
+             {formatPrice(property?.price, { compact: true })}
            </Text>
         </View>
       </View>

@@ -1,5 +1,6 @@
 import type { Property } from "./mock/mock-properties";
 import { formatPropertyType } from "../lib/property-type";
+import { formatPrice, hasPrice } from "../lib/format-price";
 
 export const SITE = {
   name: "Ilocos Sur Property",
@@ -30,13 +31,6 @@ export function formatPageTitle(pageTitle?: string): string {
   return `${pageTitle} | ${SITE.name}`;
 }
 
-function formatPrice(price: number): string {
-  if (price >= 1_000_000) {
-    return `₱${(price / 1_000_000).toFixed(price % 1_000_000 === 0 ? 0 : 1)}M`;
-  }
-  return `₱${price.toLocaleString("en-PH")}`;
-}
-
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
@@ -44,10 +38,12 @@ function capitalize(value: string): string {
 export function propertySeoDescription(property: Property): string {
   const city = property.location?.city;
   const type = formatPropertyType(property.type);
-  const price = formatPrice(property.price);
+  const priceText = hasPrice(property.price)
+    ? `Listed at ${formatPrice(property.price, { compact: true })}`
+    : "Price on Request";
   const location = [property.location?.barangay, city, "Ilocos Sur"].filter(Boolean).join(", ");
   const status = capitalize(property.status);
-  return `${property.title} — ${type} for sale in ${location}. Listed at ${price}. Status: ${status}. View photos, amenities, and contact the agent on Ilocos Sur Property.`;
+  return `${property.title} — ${type} for sale in ${location}. ${priceText}. Status: ${status}. View photos, amenities, and contact the agent on Ilocos Sur Property.`;
 }
 
 export function propertyDetailPath(id: string | number): string {
@@ -103,8 +99,7 @@ export function propertyListingJsonLd(property: Property) {
     ...(image ? { image } : {}),
     offers: {
       "@type": "Offer",
-      price: property.price,
-      priceCurrency: "PHP",
+      ...(hasPrice(property.price) ? { price: property.price, priceCurrency: "PHP" } : {}),
       availability:
         property.status === "available"
           ? "https://schema.org/InStock"

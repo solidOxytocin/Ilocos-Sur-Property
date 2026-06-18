@@ -24,6 +24,7 @@ import {
 } from "../../property-list/constants/material-icon-names";
 import { Property } from "../../../constants/mock/mock-properties";
 import { formatPropertyType } from "@/app/lib/property-type";
+import { formatPrice, hasPrice } from "@/app/lib/format-price";
 import { size } from "../../../theme/size";
 import PropertyMapView from "./propertyMapView";
 
@@ -34,12 +35,6 @@ interface PropertyDetailsContentProps {
 
 const AGENT_EMAIL = "ilocossurproperty@gmail.com";
 const CAROUSEL_AUTO_SLIDE_MS = 4000;
-
-function formatInquiryPrice(price: number): string {
-  if (price >= 1_000_000) return `₱${(price / 1_000_000).toFixed(1)}M`;
-  if (price >= 1_000) return `₱${(price / 1_000).toFixed(0)}K`;
-  return `₱${price.toLocaleString()}`;
-}
 
 export default function PropertyDetailsContent({ property, onClose }: PropertyDetailsContentProps) {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -73,7 +68,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   const inquiryPropertySummary = [
     property?.location?.city,
     property?.location?.barangay,
-    property?.price != null ? formatInquiryPrice(property.price) : null,
+    hasPrice(property?.price) ? formatPrice(property.price, { compact: true }) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -480,7 +475,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
               {!useSidebarLayout && (
                 <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 shrink-0">
                   <Text className={`font-bold text-blue-700 ${isSplitPanel ? "text-2xl" : "text-xl"}`}>
-                    &#x20B1;{property?.price.toLocaleString()}
+                    {formatPrice(property?.price)}
                   </Text>
                 </View>
               )}
@@ -597,7 +592,7 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
-                  &#x20B1;{property?.price.toLocaleString()}
+                  {formatPrice(property?.price)}
                 </Text>
                 
                 <TouchableOpacity

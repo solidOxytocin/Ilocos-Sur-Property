@@ -1,4 +1,5 @@
 import { formatPropertyType, isHouseAndLotType, normalizePropertyTypeKey } from "@/app/lib/property-type";
+import { formatPrice } from "@/app/lib/format-price";
 import {
   View,
   Text,
@@ -368,10 +369,6 @@ export default function HomeScreen() {
                   : normalizePropertyTypeKey(property.type) === "CONDO" ? "#7c3aed"
                   : "#d97706";
                 const isSold = property.status?.toUpperCase() === "SOLD";
-                const formatPrice = (p: number) =>
-                  p >= 1_000_000 ? `₱${(p / 1_000_000).toFixed(1)}M`
-                  : p >= 1_000 ? `₱${(p / 1_000).toFixed(0)}K`
-                  : `₱${p}`;
                 return (
                   <TouchableOpacity
                     key={property.id}
@@ -421,7 +418,7 @@ export default function HomeScreen() {
                     {/* Info */}
                     <View style={{ padding: 12 }}>
                       <Text style={{ fontSize: 15, fontWeight: "800", color: "#1d4ed8", marginBottom: 2 }}>
-                        {formatPrice(property.price)}
+                        {formatPrice(property.price, { compact: true })}
                       </Text>
                       <Text style={{ fontSize: 12, fontWeight: "600", color: "#1e293b", marginBottom: 4 }} numberOfLines={1}>
                         {property.title}

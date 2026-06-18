@@ -13,18 +13,13 @@ import { useRouter } from "expo-router";
 import { getFeaturedWithFallback } from "@/app/service/property-service";
 import type { Property } from "@/app/constants/mock/mock-properties";
 import { formatPropertyType, isHouseAndLotType, normalizePropertyTypeKey } from "@/app/lib/property-type";
+import { formatPrice } from "@/app/lib/format-price";
 import { API_USER_MESSAGES } from "@/app/lib/api-result";
 import { DataFetchState } from "@/app/modules/generics/components/DataFetchState";
 import { Skeleton } from "@/app/modules/generics/components/Skeleton";
 import { isLandingMobile, landingHorizontalPadding } from "../landingBreakpoints";
 
 const FEATURED_COUNT = 6;
-
-function formatPrice(price: number): string {
-  if (price >= 1_000_000) return `₱${(price / 1_000_000).toFixed(1)}M`;
-  if (price >= 1_000) return `₱${(price / 1_000).toFixed(0)}K`;
-  return `₱${price}`;
-}
 
 function PropertyCard({ property, cardWidth }: { property: any; cardWidth: number }) {
   const router = useRouter();
@@ -62,7 +57,7 @@ function PropertyCard({ property, cardWidth }: { property: any; cardWidth: numbe
 
       {/* Info */}
       <View style={styles.cardBody}>
-        <Text style={styles.cardPrice}>{formatPrice(property.price)}</Text>
+        <Text style={styles.cardPrice}>{formatPrice(property.price, { compact: true })}</Text>
         <Text style={styles.cardTitle} numberOfLines={2}>
           {property.title}
         </Text>

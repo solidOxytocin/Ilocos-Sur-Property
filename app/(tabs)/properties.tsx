@@ -207,8 +207,8 @@ export default function PropertyList() {
           if (filters.province && p.location?.province?.toLowerCase() !== filters.province.toLowerCase()) return false;
           if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
           if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;
-          if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
-          if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
+          if (filters.minPrice > 0 && (p.price ?? 0) < filters.minPrice) return false;
+          if (filters.maxPrice > 0 && (p.price ?? 0) > filters.maxPrice) return false;
           if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
           if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
           if (filters.features.length > 0) {
@@ -274,8 +274,8 @@ export default function PropertyList() {
         if (filters.status.length > 0 && !filters.status.map(s => s.toLowerCase()).includes(p.status)) return false;
         if (filters.city && p.location?.city?.toLowerCase() !== filters.city.toLowerCase()) return false;
         if (filters.barangay && p.location?.barangay?.toLowerCase() !== filters.barangay.toLowerCase()) return false;
-        if (filters.minPrice > 0 && p.price < filters.minPrice) return false;
-        if (filters.maxPrice > 0 && p.price > filters.maxPrice) return false;
+        if (filters.minPrice > 0 && (p.price ?? 0) < filters.minPrice) return false;
+        if (filters.maxPrice > 0 && (p.price ?? 0) > filters.maxPrice) return false;
         if (filters.minArea > 0 && (p.lotArea ?? 0) < filters.minArea) return false;
         if (filters.maxArea > 0 && (p.lotArea ?? 0) > filters.maxArea) return false;
         if (filters.features.length > 0) {
