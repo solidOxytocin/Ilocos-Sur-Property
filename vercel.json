@@ -11,7 +11,7 @@
     },
     {
       "source": "/details/:id",
-      "destination": "/details/_fallback.html"
+      "destination": "/details/_fallback"
     }
   ],
   "headers": [
