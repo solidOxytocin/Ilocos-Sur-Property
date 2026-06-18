@@ -133,13 +133,10 @@
 - [x] Handle UI Mobile Responsiveness
 - [x] Handle Loading Page for Warm up of API
 - [X] No way to share details (opening url /details/{id} wont work)
-- [] OG image (favicon → real photo)
-- [] Brand color differentiation
-- [] Featured Properties Selector (Admin)
-
-
-- [] Conditional render for Featured Properties
-- [] Add Share button 
+- [x] OG image (favicon → real photo)
+- [x] Featured Properties Selector (Admin)
+- [x] Conditional render for Featured Properties
+- [x] Add Share button 
 - [] Add more Animation
 - [] Feature and Amenities Management (Admin)
 - [] Admin Dashboard (Statitstics)
