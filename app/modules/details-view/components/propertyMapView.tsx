@@ -7,9 +7,10 @@ interface PropertyMapViewProps {
   coordinates?: Coordinate;
   boundaries?: Coordinate[];
   address: string;
+  height?: number;
 }
 
-export default function PropertyMapView({ coordinates, boundaries, address }: PropertyMapViewProps) {
+export default function PropertyMapView({ coordinates, boundaries, address, height }: PropertyMapViewProps) {
   if (!coordinates) return null;
 
   // On Web, we simply render the WebMapView.
@@ -19,7 +20,7 @@ export default function PropertyMapView({ coordinates, boundaries, address }: Pr
       <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">
         Location Map
       </Text>
-      <WebMapView coordinates={coordinates} boundaries={boundaries} address={address} />
+      <WebMapView coordinates={coordinates} boundaries={boundaries} address={address} height={height} />
     </View>
   );
 }

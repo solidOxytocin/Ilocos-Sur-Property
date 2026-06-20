@@ -50,7 +50,17 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
   const isSplitPanel = Boolean(onClose);
   const useSidebarLayout = isDesktopLayout && !isSplitPanel;
   const contentWidthClass = isSplitPanel ? "w-full" : "w-full max-w-7xl mx-auto";
-  const heroImageHeight = isSplitPanel ? 280 : isDesktopLayout ? 400 : 288;
+  // In the full-screen web (sidebar) layout the carousel lives in a narrower
+  // left column; keep it roughly square but cap the height so it isn't too tall.
+  const heroImageHeight = useSidebarLayout
+    ? containerWidth > 0
+      ? Math.min(containerWidth, 440)
+      : 400
+    : isSplitPanel
+    ? 280
+    : isDesktopLayout
+    ? 400
+    : 288;
 
   const propertyAddress = property?.location?.address ? `${property.location.address}, ` : "";
   const propertyBarangay = property?.location?.barangay ? `${property.location.barangay}, ` : "";
@@ -279,6 +289,331 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
         }
       : {};
 
+  const carouselCard = (
+    <View
+      className="shadow-lg shadow-gray-300 rounded-[2rem] bg-gray-100 overflow-hidden relative"
+      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+    >
+      {/* Mouse-drag wrapper (web only); on native this is a transparent View */}
+      <View {...webWrapperProps}>
+        <ScrollView
+          ref={carouselScrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          // On web, let mouse events control scrolling; on native use touch swipe
+          scrollEnabled={Platform.OS === "web" ? false : true}
+          onScroll={(e) => {
+            currentScrollX.current = e.nativeEvent.contentOffset.x;
+            if (containerWidth > 0) {
+              const idx = Math.round(e.nativeEvent.contentOffset.x / containerWidth);
+              if (idx !== activeSlide) setActiveSlide(idx);
+            }
+          }}
+        >
+          {property?.media?.map((media, index) =>
+            Platform.OS !== "web" ? (
+              // Native: wrap in TouchableOpacity for lightbox tap
+              <TouchableOpacity
+                key={media.id || index}
+                activeOpacity={0.9}
+                onPress={() => openLightbox(index)}
+                style={{ width: containerWidth > 0 ? containerWidth : undefined }}
+              >
+                <View>
+                  <Image
+                    source={{ uri: media.url }}
+                    style={[
+                      { width: containerWidth > 0 ? containerWidth : "100%", height: heroImageHeight },
+                      isSold ? { opacity: 0.45 } : undefined
+                    ]}
+                    className="bg-gray-200"
+                    resizeMode="cover"
+                  />
+                  {/* Grayscale overlay for sold properties */}
+                  {isSold && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(120,120,120,0.45)",
+                      }}
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+            ) : (
+              // Web: click handled by onMouseUp above
+              <View key={media.id || index} style={{ width: containerWidth > 0 ? containerWidth : "100%" }}>
+                <Image
+                  source={{ uri: media.url }}
+                  style={[
+                    { width: containerWidth > 0 ? containerWidth : "100%", height: heroImageHeight },
+                    isSold ? { opacity: 0.45 } : undefined
+                  ]}
+                  className="bg-gray-200"
+                  resizeMode="cover"
+                />
+                {/* Grayscale overlay for sold properties */}
+                {isSold && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(120,120,120,0.45)",
+                    }}
+                  />
+                )}
+              </View>
+            )
+          )}
+        </ScrollView>
+      </View>
+
+      {/* Expand icon hint */}
+      {mediaCount > 0 && (
+        <View
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            backgroundColor: "rgba(0,0,0,0.38)",
+            borderRadius: 100,
+            padding: 6,
+            pointerEvents: "none",
+          }}
+        >
+          <MaterialCommunityIcons name="arrow-expand-all" size={15} color="white" />
+        </View>
+      )}
+
+      {/* Dot indicators */}
+      {mediaCount > 1 && (
+        <View
+          className="absolute bottom-4 left-0 right-0 flex-row justify-center gap-2"
+          style={{ pointerEvents: "none" } as any}
+        >
+          {property.media.map((_, i) => (
+            <View
+              key={i}
+              className={`h-2 rounded-full ${i === activeSlide ? "w-4 bg-white" : "w-2 bg-white/60"}`}
+            />
+          ))}
+        </View>
+      )}
+
+      {/* Sold Banner Overlay */}
+      {isSold && (
+        <View
+          className="absolute left-0 right-0 bg-red-600/90 py-2 items-center justify-center pointer-events-none shadow-lg"
+          style={{ bottom: 40 }}
+        >
+          <Text className="text-white font-black text-3xl tracking-widest uppercase">
+            SOLD
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const titleBlock = (
+    <View className="flex-row justify-between items-start flex-wrap gap-4">
+      <View className="flex-1 min-w-[200px]">
+        <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
+          {[
+            property?.location?.barangay,
+            property?.location?.city,
+            property?.location?.province,
+          ]
+            .filter(Boolean)
+            .join(", ") || "Location unavailable"}
+        </Text>
+
+        {(!useSidebarLayout || !onClose) && (
+          <View className="flex-row gap-2 mt-3 flex-wrap">
+            <Pill
+              text={formatPropertyType(property?.type)}
+              icon="home-city"
+              iconSize={14}
+              textSize="text-xs"
+              backGroundColor="bg-purple-600"
+            />
+            <Pill
+              text={property?.status?.toUpperCase() || "AVAILABLE"}
+              icon="check-circle"
+              iconSize={14}
+              textSize="text-xs"
+              backGroundColor={
+                property?.status?.toUpperCase() === "SOLD"
+                  ? "bg-red-600"
+                  : property?.status?.toUpperCase() === "RESERVED"
+                  ? "bg-yellow-600"
+                  : "bg-teal-600"
+              }
+            />
+          </View>
+        )}
+      </View>
+      {!useSidebarLayout && (
+        <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 shrink-0">
+          <Text className={`font-bold text-blue-700 ${isSplitPanel ? "text-2xl" : "text-xl"}`}>
+            {formatPrice(property?.price)}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const metricsBlock = (
+    <View className="flex-row justify-evenly gap-x-2 w-full bg-white border border-gray-100 shadow-sm shadow-gray-200 rounded-[24px] py-4 px-3 my-2">
+      <View className="items-center">
+        <MaterialCommunityIcons name="texture-box" size={24} color="#9ca3af" />
+        <Text className="text-base font-bold text-gray-800 mt-1.5">
+          {property?.lotArea != null ? (
+            <>
+              {property.lotArea}
+              <Text className="text-sm text-gray-500 font-semibold ml-0.5"> m²</Text>
+            </>
+          ) : (
+            "—"
+          )}
+        </Text>
+        <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Lot</Text>
+      </View>
+      <View className="items-center">
+        <MaterialCommunityIcons name="floor-plan" size={24} color="#9ca3af" />
+        <Text className="text-base font-bold text-gray-800 mt-1.5">
+          {property?.floorArea != null ? (
+            <>
+              {property.floorArea}
+              <Text className="text-sm text-gray-500 font-semibold ml-0.5"> m²</Text>
+            </>
+          ) : (
+            "—"
+          )}
+        </Text>
+        <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Floor</Text>
+      </View>
+      <View className="items-center">
+        <MaterialCommunityIcons name="bed-empty" size={24} color="#9ca3af" />
+        <Text className="text-base font-bold text-gray-800 mt-1.5">
+          {property?.bedrooms ?? (property as any)?.bedRooms ?? "—"}
+        </Text>
+        <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Beds</Text>
+      </View>
+      <View className="items-center">
+        <MaterialCommunityIcons name="shower" size={24} color="#9ca3af" />
+        <Text className="text-base font-bold text-gray-800 mt-1.5">
+          {property?.bathrooms ?? (property as any)?.bathRooms ?? "—"}
+        </Text>
+        <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Baths</Text>
+      </View>
+      <View className="items-center">
+        <MaterialCommunityIcons name="car" size={24} color="#9ca3af" />
+        <Text className="text-base font-bold text-gray-800 mt-1.5">{property?.parking ?? "—"}</Text>
+        <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Parking</Text>
+      </View>
+    </View>
+  );
+
+  const descriptionBlock = (
+    <View className="mt-2">
+      <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2">
+        About this property
+      </Text>
+      <Text className="text-base text-gray-600 leading-relaxed">{property?.details}</Text>
+    </View>
+  );
+
+  const highlightsAmenitiesBlock = (
+    <View className="mt-4 gap-6">
+      {property?.features?.length > 0 && (
+        <View>
+          <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3">Highlights</Text>
+          <View className="flex-row flex-wrap gap-2">
+            {property.features.map((feature, index) => (
+              <Pill
+                key={`feat-${index}`}
+                text={feature.name}
+                icon={FEATURE_ICONS[feature.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY]}
+                iconSize={16}
+                textSize="text-xs"
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {property?.amenities?.length > 0 && (
+        <View>
+          <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3">Amenities</Text>
+          <View className="flex-row flex-wrap gap-2">
+            {property.amenities.map((amenity, index) => (
+              <Pill
+                key={`ame-${index}`}
+                text={amenity.name}
+                icon={AMENITY_ICONS[amenity.key] ?? AMENITY_ICONS[EMPTY_ICON_KEY]}
+                iconSize={16}
+                textSize="text-xs"
+                backGroundColor="bg-green-600"
+              />
+            ))}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+
+  const sidebarCard = (
+    <View
+      className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-gray-200"
+      style={{ position: 'sticky' as any, top: 32 }}
+    >
+      <Text className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Price</Text>
+      <Text 
+        className="text-3xl font-extrabold text-blue-700 mb-6"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {formatPrice(property?.price)}
+      </Text>
+      
+      <TouchableOpacity
+        className="bg-blue-600 rounded-[20px] py-4 shadow-md shadow-blue-200 flex-row justify-center items-center gap-2 hover:bg-blue-700 transition-colors mb-6"
+        activeOpacity={0.8}
+        onPress={() => setModalVisible(true)}
+      >
+        <MaterialCommunityIcons name="email-fast" size={24} color="white" />
+        <Text className="text-lg font-bold text-white text-center tracking-wide">Inquire Now</Text>
+      </TouchableOpacity>
+
+      <View className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+        <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Contact Agent</Text>
+        {/* <Text className="text-base font-extrabold text-gray-800 mb-1">Clark Adam Arconado</Text> */}
+        <Text className="text-sm text-gray-600 mb-1 font-medium">Email: ilocossurproperty@gmail.com</Text>
+        {/* <Text className="text-sm text-gray-600 font-medium">Mobile: 09261849580</Text> */}
+      </View>
+    </View>
+  );
+
+  const mapsBlock = property?.location?.coordinates ? (
+    <View className={isSplitPanel ? "w-full px-4 mb-8" : isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mb-12" : "px-5 mb-8"}>
+      <PropertyMapView
+        coordinates={property.location.coordinates}
+        boundaries={property.location.boundaries}
+        address={`${property.location.address}, ${property.location.barangay}, ${property.location.city}`}
+        height={useSidebarLayout ? 480 : 250}
+      />
+    </View>
+  ) : null;
+
   return (
     <View className="flex-1 relative bg-white">
       <ScrollView
@@ -290,342 +625,42 @@ export default function PropertyDetailsContent({ property, onClose }: PropertyDe
           <DetailsHeader properties={property} onClose={onClose} />
         </View>
 
-        {/* Image Carousel */}
-        <View className={isSplitPanel ? "w-full px-4 mt-4" : isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mt-6" : "px-5 mt-5"}>
-          <View
-            className="shadow-lg shadow-gray-300 rounded-[2rem] bg-gray-100 overflow-hidden relative"
-            onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
-          >
-            {/* Mouse-drag wrapper (web only); on native this is a transparent View */}
-            <View {...webWrapperProps}>
-              <ScrollView
-                ref={carouselScrollRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                scrollEventThrottle={16}
-                // On web, let mouse events control scrolling; on native use touch swipe
-                scrollEnabled={Platform.OS === "web" ? false : true}
-                onScroll={(e) => {
-                  currentScrollX.current = e.nativeEvent.contentOffset.x;
-                  if (containerWidth > 0) {
-                    const idx = Math.round(e.nativeEvent.contentOffset.x / containerWidth);
-                    if (idx !== activeSlide) setActiveSlide(idx);
-                  }
-                }}
-              >
-                {property?.media?.map((media, index) =>
-                  Platform.OS !== "web" ? (
-                    // Native: wrap in TouchableOpacity for lightbox tap
-                    <TouchableOpacity
-                      key={media.id || index}
-                      activeOpacity={0.9}
-                      onPress={() => openLightbox(index)}
-                      style={{ width: containerWidth > 0 ? containerWidth : undefined }}
-                    >
-                      <View>
-                        <Image
-                          source={{ uri: media.url }}
-                          style={[
-                            { width: containerWidth > 0 ? containerWidth : "100%", height: heroImageHeight },
-                            isSold ? { opacity: 0.45 } : undefined
-                          ]}
-                          className="bg-gray-200"
-                          resizeMode="cover"
-                        />
-                        {/* Grayscale overlay for sold properties */}
-                        {isSold && (
-                          <View
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundColor: "rgba(120,120,120,0.45)",
-                            }}
-                          />
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  ) : (
-                    // Web: click handled by onMouseUp above
-                    <View key={media.id || index} style={{ width: containerWidth > 0 ? containerWidth : "100%" }}>
-                      <Image
-                        source={{ uri: media.url }}
-                        style={[
-                          { width: containerWidth > 0 ? containerWidth : "100%", height: heroImageHeight },
-                          isSold ? { opacity: 0.45 } : undefined
-                        ]}
-                        className="bg-gray-200"
-                        resizeMode="cover"
-                      />
-                      {/* Grayscale overlay for sold properties */}
-                      {isSold && (
-                        <View
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: "rgba(120,120,120,0.45)",
-                          }}
-                        />
-                      )}
-                    </View>
-                  )
-                )}
-              </ScrollView>
-            </View>
-
-            {/* Expand icon hint */}
-            {mediaCount > 0 && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: 12,
-                  right: 12,
-                  backgroundColor: "rgba(0,0,0,0.38)",
-                  borderRadius: 100,
-                  padding: 6,
-                  pointerEvents: "none",
-                }}
-              >
-                <MaterialCommunityIcons name="arrow-expand-all" size={15} color="white" />
+        {useSidebarLayout ? (
+          <>
+            {/* Full-screen web: photo + highlights/about (left) | title/metrics/contact (right) */}
+            <View className="w-full max-w-7xl mx-auto px-5 mt-6 mb-12 flex-row gap-8 items-start">
+              <View className="flex-[0.55] w-full gap-6">
+                {carouselCard}
+                {highlightsAmenitiesBlock}
+                {descriptionBlock}
               </View>
-            )}
-
-            {/* Dot indicators */}
-            {mediaCount > 1 && (
-              <View
-                className="absolute bottom-4 left-0 right-0 flex-row justify-center gap-2"
-                style={{ pointerEvents: "none" } as any}
-              >
-                {property.media.map((_, i) => (
-                  <View
-                    key={i}
-                    className={`h-2 rounded-full ${i === activeSlide ? "w-4 bg-white" : "w-2 bg-white/60"}`}
-                  />
-                ))}
-              </View>
-            )}
-
-            {/* Sold Banner Overlay */}
-            {isSold && (
-              <View
-                className="absolute left-0 right-0 bg-red-600/90 py-2 items-center justify-center pointer-events-none shadow-lg"
-                style={{ bottom: 40 }}
-              >
-                <Text className="text-white font-black text-3xl tracking-widest uppercase">
-                  SOLD
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        <View
-          className={
-            useSidebarLayout
-              ? "w-full max-w-7xl mx-auto px-5 mt-8 mb-12 flex-row gap-8 items-start"
-              : isSplitPanel
-              ? "w-full px-4 mt-5 mb-8 gap-5"
-              : "px-5 mt-6 mb-8 gap-6"
-          }
-        >
-          {/* Left Column for Full Screen Web / Only Column for others */}
-          <View className={useSidebarLayout ? "flex-[0.65] gap-6" : "gap-6 w-full"}>
-            
-            {/* Title & Price */}
-            <View className="flex-row justify-between items-start flex-wrap gap-4">
-              <View className="flex-1 min-w-[200px]">
-                {(!useSidebarLayout || !onClose) && (
-                  <View className="flex-row gap-2 mb-2 flex-wrap">
-                    <Pill
-                      text={formatPropertyType(property?.type)}
-                      icon="home-city"
-                      iconSize={14}
-                      textSize="text-xs"
-                      backGroundColor="bg-purple-600"
-                    />
-                    <Pill
-                      text={property?.status?.toUpperCase() || "AVAILABLE"}
-                      icon="check-circle"
-                      iconSize={14}
-                      textSize="text-xs"
-                      backGroundColor={
-                        property?.status?.toUpperCase() === "SOLD"
-                          ? "bg-red-600"
-                          : property?.status?.toUpperCase() === "RESERVED"
-                          ? "bg-yellow-600"
-                          : "bg-teal-600"
-                      }
-                    />
-                  </View>
-                )}
-
-                <Text className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mt-1">
-                  {property?.title || "Untitled Property"}
-                </Text>
-                <Text className="text-base text-gray-500 mt-1 font-medium">
-                  {[property?.location?.barangay, property?.location?.city].filter(Boolean).join(", ")}
-                </Text>
-              </View>
-              {!useSidebarLayout && (
-                <View className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 shrink-0">
-                  <Text className={`font-bold text-blue-700 ${isSplitPanel ? "text-2xl" : "text-xl"}`}>
-                    {formatPrice(property?.price)}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-          {/* Core Metrics */}
-          <View className="flex-row justify-evenly gap-x-2 w-full bg-white border border-gray-100 shadow-sm shadow-gray-200 rounded-[24px] py-4 px-3 my-2">
-            <View className="items-center">
-              <MaterialCommunityIcons name="texture-box" size={24} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-1.5">
-                {property?.lotArea != null ? (
-                  <>
-                    {property.lotArea}
-                    <Text className="text-sm text-gray-500 font-semibold ml-0.5"> m²</Text>
-                  </>
-                ) : (
-                  "—"
-                )}
-              </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Lot</Text>
-            </View>
-            <View className="items-center">
-              <MaterialCommunityIcons name="floor-plan" size={24} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-1.5">
-                {property?.floorArea != null ? (
-                  <>
-                    {property.floorArea}
-                    <Text className="text-sm text-gray-500 font-semibold ml-0.5"> m²</Text>
-                  </>
-                ) : (
-                  "—"
-                )}
-              </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Floor</Text>
-            </View>
-            <View className="items-center">
-              <MaterialCommunityIcons name="bed-empty" size={24} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-1.5">
-                {property?.bedrooms ?? (property as any)?.bedRooms ?? "—"}
-              </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Beds</Text>
-            </View>
-            <View className="items-center">
-              <MaterialCommunityIcons name="shower" size={24} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-1.5">
-                {property?.bathrooms ?? (property as any)?.bathRooms ?? "—"}
-              </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Baths</Text>
-            </View>
-            <View className="items-center">
-              <MaterialCommunityIcons name="car" size={24} color="#9ca3af" />
-              <Text className="text-base font-bold text-gray-800 mt-1.5">{property?.parking ?? "—"}</Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Parking</Text>
-            </View>
-          </View>
-
-          {/* Description */}
-          <View className="mt-2">
-            <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2">
-              About this property
-            </Text>
-            <Text className="text-base text-gray-600 leading-relaxed">{property?.details}</Text>
-          </View>
-
-          {/* Highlights & Amenities */}
-          <View className="mt-4 gap-6">
-            {property?.features?.length > 0 && (
-              <View>
-                <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3">Highlights</Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {property.features.map((feature, index) => (
-                    <Pill
-                      key={`feat-${index}`}
-                      text={feature.name}
-                      icon={FEATURE_ICONS[feature.key] ?? FEATURE_ICONS[EMPTY_ICON_KEY]}
-                      iconSize={16}
-                      textSize="text-xs"
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {property?.amenities?.length > 0 && (
-              <View>
-                <Text className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3">Amenities</Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {property.amenities.map((amenity, index) => (
-                    <Pill
-                      key={`ame-${index}`}
-                      text={amenity.name}
-                      icon={AMENITY_ICONS[amenity.key] ?? AMENITY_ICONS[EMPTY_ICON_KEY]}
-                      iconSize={16}
-                      textSize="text-xs"
-                      backGroundColor="bg-green-600"
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-            </View>
-          </View>
-
-          {/* Right Column (Sticky Sidebar) for Full Screen Web */}
-          {useSidebarLayout && (
-            <View className="flex-[0.35] w-full">
-              <View
-                className="bg-white border border-gray-100 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-gray-200"
-                style={{ position: 'sticky' as any, top: 32 }}
-              >
-                <Text className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Price</Text>
-                <Text 
-                  className="text-3xl font-extrabold text-blue-700 mb-6"
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
-                  {formatPrice(property?.price)}
-                </Text>
-                
-                <TouchableOpacity
-                  className="bg-blue-600 rounded-[20px] py-4 shadow-md shadow-blue-200 flex-row justify-center items-center gap-2 hover:bg-blue-700 transition-colors mb-6"
-                  activeOpacity={0.8}
-                  onPress={() => setModalVisible(true)}
-                >
-                  <MaterialCommunityIcons name="email-fast" size={24} color="white" />
-                  <Text className="text-lg font-bold text-white text-center tracking-wide">Inquire Now</Text>
-                </TouchableOpacity>
-
-                <View className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                  <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Contact Agent</Text>
-                  {/* <Text className="text-base font-extrabold text-gray-800 mb-1">Clark Adam Arconado</Text> */}
-                  <Text className="text-sm text-gray-600 mb-1 font-medium">Email: ilocossurproperty@gmail.com</Text>
-                  {/* <Text className="text-sm text-gray-600 font-medium">Mobile: 09261849580</Text> */}
-                </View>
+              <View className="flex-[0.45] w-full gap-6">
+                {titleBlock}
+                {metricsBlock}
+                {sidebarCard}
               </View>
             </View>
-          )}
+          </>
+        ) : (
+          <>
+            {/* Image Carousel */}
+            <View className={isSplitPanel ? "w-full px-4 mt-4" : "px-5 mt-5"}>
+              {carouselCard}
+            </View>
 
-        </View>
+            <View className={isSplitPanel ? "w-full px-4 mt-5 mb-8 gap-5" : "px-5 mt-6 mb-8 gap-6"}>
+              <View className="gap-6 w-full">
+                {titleBlock}
+                {metricsBlock}
+                {descriptionBlock}
+                {highlightsAmenitiesBlock}
+              </View>
+            </View>
+          </>
+        )}
 
         {/* MAPS - Full Width */}
-        {property?.location?.coordinates && (
-          <View className={isSplitPanel ? "w-full px-4 mb-8" : isDesktopLayout ? "w-full max-w-7xl mx-auto px-5 mb-12" : "px-5 mb-8"}>
-            <PropertyMapView
-              coordinates={property.location.coordinates}
-              boundaries={property.location.boundaries}
-              address={`${property.location.address}, ${property.location.barangay}, ${property.location.city}`}
-            />
-          </View>
-        )}
+        {mapsBlock}
       </ScrollView>
 
       {/* Sticky Inquire Button (Hidden on Full Screen Web) */}

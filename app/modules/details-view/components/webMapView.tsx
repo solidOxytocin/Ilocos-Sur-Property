@@ -7,21 +7,18 @@ interface WebMapViewProps {
   coordinates: Coordinate;
   boundaries?: Coordinate[];
   address: string;
+  height?: number;
 }
 
-const containerStyle = {
-  width: '100%',
-  height: '250px',
-  borderRadius: '24px',
-};
+const DEFAULT_MAP_HEIGHT = 250;
 
 // Fallback plain iframe component
-const IframeFallback = ({ coordinates, boundaries }: { coordinates: Coordinate, boundaries?: Coordinate[] }) => (
+const IframeFallback = ({ coordinates, boundaries, height = DEFAULT_MAP_HEIGHT }: { coordinates: Coordinate, boundaries?: Coordinate[], height?: number }) => (
   <View className="mb-2">
     <View className="rounded-[24px] overflow-hidden border border-gray-200">
       <iframe
         width="100%"
-        height="250"
+        height={height}
         style={{ border: 0 }}
         loading="lazy"
         allowFullScreen
@@ -36,11 +33,17 @@ const IframeFallback = ({ coordinates, boundaries }: { coordinates: Coordinate, 
   </View>
 );
 
-export default function WebMapView({ coordinates, boundaries, address }: WebMapViewProps) {
+export default function WebMapView({ coordinates, boundaries, address, height = DEFAULT_MAP_HEIGHT }: WebMapViewProps) {
   const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+  const containerStyle = {
+    width: '100%',
+    height: `${height}px`,
+    borderRadius: '24px',
+  };
+
   if (!apiKey) {
-    return <IframeFallback coordinates={coordinates} boundaries={boundaries} />;
+    return <IframeFallback coordinates={coordinates} boundaries={boundaries} height={height} />;
   }
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -60,12 +63,15 @@ export default function WebMapView({ coordinates, boundaries, address }: WebMapV
 
   if (loadError) {
     // If the API key is invalid, or quota is reached, or network fails, fallback to iframe
-    return <IframeFallback coordinates={coordinates} boundaries={boundaries} />;
+    return <IframeFallback coordinates={coordinates} boundaries={boundaries} height={height} />;
   }
 
   if (!isLoaded) {
     return (
-      <View className="rounded-[24px] overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center h-[250px]">
+      <View
+        className="rounded-[24px] overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center"
+        style={{ height }}
+      >
         <Text className="text-gray-500">Loading Map...</Text>
       </View>
     );
